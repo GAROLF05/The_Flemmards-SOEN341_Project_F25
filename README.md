@@ -17,4 +17,5 @@
 
 
 ## Languages & Frameworks
-TBD
+*Front-end: HTML, CSS, Javascript
+*Back-end: Node.js, MySQL
