@@ -17,5 +17,7 @@
 
 
 ## Languages & Frameworks
-*Front-end: HTML, CSS, Javascript
-*Back-end: Node.js, MySQL
+**Frontend:** HTML, CSS, JavaScript  
+**Backend:** Node.js, Express  
+**Database:** MySQL (XAMPP for local development)  
+**Other:** Cookie-based session handling 
