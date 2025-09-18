@@ -14,4 +14,7 @@
 | Nihit Patel | 40307885 | @Nihit-patel |
 | Hesham Rabie | 40280570 | @TBD |
 | Bijoy Sengupta | 40299807 | @BijoySengupta |
+
+
 ## Languages & Frameworks
+* HTML * CSS * Node.js * Javascript 
