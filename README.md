@@ -7,12 +7,12 @@
 ## Team Members
 | Name | Student ID | GitHub Username |
 |------|------------|-----------------|
-| Elliot Boismartel | 40315629 | @TBD |
+| Elliot Boismartel | 40315629 | @Elliotbmt |
 | Omar Dbaa | 40328411 | @TBD |
 | Nameer Hanif | 40315360 | @GAROLF05 |
-| Curtis Moxebo | 40296254 | @TBD |
+| Curtis Moxebo | 40296254 | @CurtisMoxebo |
 | Nihit Patel | 40307885 | @Nihit-patel |
-| Hesham Rabie | 40280570 | @TBD |
+| Hesham Rabie | 40280570 | @Hesham-Rabie |
 | Bijoy Sengupta | 40299807 | @BijoySengupta |
 
 
