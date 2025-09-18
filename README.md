@@ -17,6 +17,4 @@
 
 
 ## Languages & Frameworks
-* HTML
-* CSS
-* Javascript 
+TBD
