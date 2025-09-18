@@ -17,4 +17,6 @@
 
 
 ## Languages & Frameworks
-* HTML * CSS * Node.js * Javascript 
+* HTML
+* CSS
+* Javascript 
