@@ -8,7 +8,7 @@
 | Name | Student ID | GitHub Username |
 |------|------------|-----------------|
 | Elliot Boismartel | 40315629 | @Elliotbmt |
-| Omar Dbaa | 40328411 | @TBD |
+| Omar Dbaa | 40328411 | @omardba |
 | Nameer Hanif | 40315360 | @GAROLF05 |
 | Curtis Moxebo | 40296254 | @CurtisMoxebo |
 | Nihit Patel | 40307885 | @Nihit-patel |
