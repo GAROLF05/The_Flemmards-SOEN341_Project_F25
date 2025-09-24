@@ -14,6 +14,9 @@
 | Nihit Patel | 40307885 | @Nihit-patel | Backend (DB)|
 | Hesham Rabie | 40280570 | @Hesham-Rabie | Backend |
 | Bijoy Sengupta | 40299807 | @BijoySengupta | Frontend |
+| Mostafa Maraie | 40261020 | @MostafaMaraie | Frontend |
+
+
 
 
 ## Languages & Frameworks
