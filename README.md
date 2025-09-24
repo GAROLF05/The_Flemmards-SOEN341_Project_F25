@@ -7,7 +7,7 @@
 ## Team Members
 | Name | Student ID | GitHub Username | Roles |
 |------|------------|-----------------|-------------|
-| Elliot Boismartel | 40315629 | @Elliotbmt | TBD |
+| Elliot Boismartel | 40315629 | @Elliotbmt | Backend |
 | Omar Dbaa | 40328411 | @omardba | Frontend |
 | Nameer Hanif | 40315360 | @GAROLF05 | Backend |
 | Curtis Moxebo | 40296254 | @CurtisMoxebo | Frontend |
@@ -23,7 +23,7 @@
 **Other:** Cookie-based session handling 
 
 ## Each Team Member Role in the Project
-**Back-end:** Nameer, ...
+**Back-end:** Nameer, Elliot, ...
 **Database:** Nihit
 **Front-end:** Bijoy, Curtis, ...
 **Management:** 
