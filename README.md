@@ -20,13 +20,7 @@
 
 
 ## Languages & Frameworks
-**Frontend:** HTML, CSS, JavaScript, ReactJS
-**Backend:** Node.js, Express
-**Database:** MySQL (XAMPP for local development)
-**Other:** Cookie-based session handling
-
-## Each Team Member Role in the Project
-**Back-end:** Nameer, Elliot, ...
-**Database:** Nihit
-**Front-end:** Bijoy, Curtis, ...
-**Management:**
+- **Frontend:** HTML, CSS, JavaScript, ReactJS
+- **Backend:** Node.js, Express
+- **Database:** MySQL (XAMPP for local development)
+- **Other:** Cookie-based session handling
