@@ -12,7 +12,7 @@
 | Nameer Hanif | 40315360 | @GAROLF05 | Backend |
 | Curtis Moxebo | 40296254 | @CurtisMoxebo | Frontend |
 | Nihit Patel | 40307885 | @Nihit-patel | Backend (DB)|
-| Hesham Rabie | 40280570 | @Hesham-Rabie | Backend |
+| Hesham Rabie | 40280570 | @Hesham582 | Backend |
 | Bijoy Sengupta | 40299807 | @BijoySengupta | Frontend |
 | Mostafa Maraie | 40261020 | @MostafaMaraie | Frontend |
 
