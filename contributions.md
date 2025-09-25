@@ -49,9 +49,7 @@ This document highlights the individual work done by each member of **The Flemma
   - US.8
 - Helped organize and assign tasks in GitHub Issues.
 
-### Nihit Patel
-- Wrote and Formatted the **Meeting Minutes 1** and **Meeting Minutes 2**.  
-- Created and documented the **README file**, including the tech stack, project description, objectives, and core features.  
+### Nihit Patel 
 - Wrote and formatted the **Meeting Minutes 1** and **Meeting Minutes 2**.  
 - Created and documented the **README file**, including the tech stack, project description, objectives, and core features.
 - Created and documented the contributions page.
