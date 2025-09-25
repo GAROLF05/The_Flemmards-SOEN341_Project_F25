@@ -41,7 +41,7 @@ This is a web-app for Campus Event & Ticketing Application to help students disc
 | Mostafa Maraie | 40261020 | @MostafaMaraie | Frontend |
 
 ## Languages & Frameworks
-- **Frontend:** HTML, CSS, JavaScript, ReactJS
+- **Frontend:** HTML, CSS, JavaScript, tailwind css, ReactJS
 - **Backend:** Node.js, Express.js
 - **Database:** MySQL (XAMPP for local development)
 - **Other:** Cookie-based session handling
