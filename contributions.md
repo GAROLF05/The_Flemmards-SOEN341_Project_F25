@@ -28,6 +28,7 @@ This document highlights the individual work done by each member of **The Flemma
   - US.11 - US.12
 - Reviewed assigned User Stories and identified tasks that are frontend responsibilities.
 - Helped organize and assign tasks in GitHub Issues.
+- time spent : 2.5 h 
 
 ### Hesham Rabie
 - Conceptualized and detailed the ideas for:
