@@ -1,0 +1,23 @@
+{
+    "mainTitle": "Flemmards",
+    "mainSubtitle": "Votre plateforme ultime pour découvrir et réserver des événements incroyables.",
+    "formTitle": "Bon retour!",
+    "formSubtitle": "Veuillez sélectionner votre rôle et vous connecter pour continuer.",
+    "roleStudent": "Étudiant",
+    "roleManager": "Gérant",
+    "roleAdmin": "Admin",
+    "emailPlaceholder": "Adresse e-mail",
+    "passwordPlaceholder": "Mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié?",
+    "signIn": "Se connecter",
+    "notMember": "Pas encore membre?",
+    "signUp": "Inscrivez-vous maintenant",
+    "createAccount": "Créez votre compte",
+    "createAccountSubtitle": "Rejoignez notre communauté d'amateurs d'événements.",
+    "fullNamePlaceholder": "Nom complet",
+    "confirmPasswordPlaceholder": "Confirmez le mot de passe",
+    "alreadyMember": "Déjà membre?",
+    "signUpButton": "S'inscrire",
+    "goBack": "Retourner"
+}
