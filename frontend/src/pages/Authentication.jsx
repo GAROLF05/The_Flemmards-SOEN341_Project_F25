@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLanguage } from './hooks/useLanguage';
+import { useLanguage } from '../hooks/useLanguage';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useNotification } from '../hooks/useNotification';
 
 const UserIcon = () => (
 	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
@@ -30,6 +31,7 @@ export default function Authentication() {
 	const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 	const langDropdownRef = useRef(null);
 	const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
+	const { showNotification } = useNotification();
 	const navigate = useNavigate();
 
 	const location = useLocation();
@@ -175,7 +177,13 @@ export default function Authentication() {
 							</div>
 						</div>
 						<div>
-							<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer">{translate("signIn")}</button>
+							<button
+								type="submit"
+								className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer"
+								onClick={() => showNotification('This is just a test for notifications.', 'success')}
+							>
+								{translate("signIn")}
+							</button>
 						</div>
 					</form>
 					<p className="mt-8 text-center text-sm text-gray-600">
@@ -220,7 +228,13 @@ export default function Authentication() {
 								<input name="confirm-password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("confirmPasswordPlaceholder")} />
 							</div>
 							<div className="pt-2">
-								<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer">{translate("signUpButton")}</button>
+								<button
+									type="submit"
+									className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer"
+									onClick={() => showNotification('This is just a test for notifications.', 'error')}
+								>
+									{translate("signUpButton")}
+								</button>
 							</div>
 						</form>
 						<p className="mt-8 text-center text-sm text-gray-600">
