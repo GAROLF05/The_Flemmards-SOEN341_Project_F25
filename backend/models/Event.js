@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const EVENT_STATUS = {
   UPCOMING: 'upcoming',
@@ -12,13 +12,13 @@ const eventSchema = new mongoose.Schema({
     organization: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Organization',
-        required: true,
+        required: [true, 'Organization is required to create an event'],
         index: true,
     },
 
     title: {
         type: String,
-        required: true,
+        required: [true, 'Title of event is required'],
         index: true,
         trim: true,
     },
@@ -30,13 +30,13 @@ const eventSchema = new mongoose.Schema({
 
     start_at:{
         type: Date,
-        required: true,
+        required: [true, 'Starting date and time are required'],
         index: true,
     },
 
     end_at:{
         type: Date,
-        required: true,
+        required: [true, 'Ending date and time are required'],
         index: true,
         validate: {
         validator(v) {
@@ -48,7 +48,7 @@ const eventSchema = new mongoose.Schema({
 
     capacity:{
         type: Number,
-        required: true,
+        required: [true, 'Capacity of event is required'],
         index: true,
         min: [1, 'capacity must be at least 1'],
     },
@@ -63,7 +63,7 @@ const eventSchema = new mongoose.Schema({
         type: String,
         enum: Object.values(EVENT_STATUS),
         default: EVENT_STATUS.UPCOMING,
-        required: true,
+        required: [true, 'Status of event is required'],
         index: true,
     },
 
@@ -71,13 +71,13 @@ const eventSchema = new mongoose.Schema({
         name:{
             type: String,
             trim: true,
-            required: true,
+            required: [true, 'Name of location is required'],
         },
 
         address:{
             type: String,
             trim: true,
-            required: true,
+            required: [true, 'Address of location is required'],
         },
     }
     

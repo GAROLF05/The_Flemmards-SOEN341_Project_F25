@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, 'Name is required'],
     index: true,
     trim: true,
   },
@@ -11,7 +11,8 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     unique: true,
-    required: true,
+    lowercase: true,
+    required: [true, 'Email is required'],
     trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
   },
@@ -19,7 +20,7 @@ const userSchema = new mongoose.Schema({
   student_id: {
     type: String,
     unique: true,
-    required: true,
+    required: [true, 'Student ID is required'],
     index: true,
     trim: true,
   },
