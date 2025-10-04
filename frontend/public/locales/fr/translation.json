@@ -19,5 +19,8 @@
     "confirmPasswordPlaceholder": "Confirmez le mot de passe",
     "alreadyMember": "Déjà membre?",
     "signUpButton": "S'inscrire",
-    "goBack": "Retourner"
+    "goBack": "Retourner",
+    "returnToHomePage": "Retourner à la page d'accueil",
+    "pageNotFound": "Page introuvable",
+    "pageNotFoundMessage": "Oops! La page que vous recherchez n'existe pas. Elle peut avoir été déplacée ou supprimée."
 }

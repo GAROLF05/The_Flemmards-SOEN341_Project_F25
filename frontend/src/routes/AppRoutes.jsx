@@ -1,12 +1,12 @@
 import { useRoutes } from 'react-router-dom';
 import AuthenticationRoutes from './AuthenticationRoutes';
-import NotFoundRoutes from './NotFoundRoutes';
 import HomeRoutes from './HomeRoutes';
+import PageNotFoundRoutes from './PageNotFoundRoutes';
 
 const routes = [
     ...HomeRoutes,
     ...AuthenticationRoutes,
-    ...NotFoundRoutes,
+    ...PageNotFoundRoutes,
 ];
 
 const AppRoutes = () => {
