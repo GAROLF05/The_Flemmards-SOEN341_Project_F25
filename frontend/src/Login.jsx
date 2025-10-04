@@ -199,7 +199,7 @@ export default function Login() {
 			{/* Left Panel: Welcome Message & Background Image */}
 			<div className="hidden lg:flex w-1/2 items-center justify-center bg-indigo-800 relative">
 				<img
-					src="./public/login-background.png"
+					src="/login-background.png"
 					alt="Abstract background of an event"
 					className="absolute h-full w-full object-cover opacity-30"
 				/>
