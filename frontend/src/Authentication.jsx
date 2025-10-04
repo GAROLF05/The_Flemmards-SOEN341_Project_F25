@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from './hooks/useLanguage';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-// You can replace these with your actual SVG icons or use a library like lucide-react
 const UserIcon = () => (
 	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
 		<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
@@ -23,14 +23,20 @@ const ArrowLeftIcon = () => (
 	</svg>
 );
 
-export default function Login() {
+export default function Authentication() {
 	const [role, setRole] = useState('student');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
-	const [isSignUp, setIsSignUp] = useState(false);
 	const langDropdownRef = useRef(null);
 	const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
+	const navigate = useNavigate();
+
+	const location = useLocation();
+	const isSignUp = location.pathname
+		.split('/')
+		.filter(Boolean)
+		.includes('signup');
 
 	useEffect(() => {
 		const handleClickOutside = (event) => {
@@ -69,11 +75,11 @@ export default function Login() {
 						key={r.id}
 						type="button"
 						onClick={() => setRole(r.id)}
-						className={`w-full py-2.5 text-sm font-semibold text-center rounded-md transition-all duration-300 ease-in-out
+						className={`w-full py-2.5 text-sm font-semibold text-center rounded-md transition-all duration-300 ease-in-out cursor-pointer
 						${currentRole === r.id
-							? 'bg-white text-indigo-600 shadow-sm'
-							: 'text-gray-500 hover:bg-gray-200'
-						}`}
+								? 'bg-white text-indigo-600 shadow-sm'
+								: 'text-gray-500 hover:bg-gray-200'
+							}`}
 					>
 						{r.label}
 					</button>
@@ -88,7 +94,7 @@ export default function Login() {
 				<button
 					type="button"
 					onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-					className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all"
+					className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all cursor-pointer"
 				>
 					{currentLanguage.toUpperCase()}
 					<svg className="-mr-1 ml-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -106,7 +112,7 @@ export default function Login() {
 										changeLanguage(lang);
 										setIsLangDropdownOpen(false);
 									}}
-									className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
+									className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer"
 								>
 									{lang.toUpperCase()}
 								</button>
@@ -169,12 +175,12 @@ export default function Login() {
 							</div>
 						</div>
 						<div>
-							<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">{translate("signIn")}</button>
+							<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer">{translate("signIn")}</button>
 						</div>
 					</form>
 					<p className="mt-8 text-center text-sm text-gray-600">
 						{translate("notMember")}{' '}
-						<button onClick={() => setIsSignUp(true)} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none">
+						<button onClick={() => navigate("/signup")} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none cursor-pointer">
 							{translate("signUp")}
 						</button>
 					</p>
@@ -184,8 +190,8 @@ export default function Login() {
 				<div className={`absolute top-0 left-0 h-full w-full bg-white p-6 sm:p-8 lg:p-12 flex items-center justify-center transition-transform duration-700 ease-in-out transform z-10 ${isSignUp ? 'translate-x-0' : 'translate-x-full'}`}>
 					<button
 						type="button"
-						onClick={() => setIsSignUp(false)}
-						className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors"
+						onClick={() => navigate("/login")}
+						className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
 						aria-label={translate("goBack")}
 					>
 						<ArrowLeftIcon />
@@ -214,12 +220,12 @@ export default function Login() {
 								<input name="confirm-password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("confirmPasswordPlaceholder")} />
 							</div>
 							<div className="pt-2">
-								<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">{translate("signUpButton")}</button>
+								<button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer">{translate("signUpButton")}</button>
 							</div>
 						</form>
 						<p className="mt-8 text-center text-sm text-gray-600">
 							{translate("alreadyMember")}{' '}
-							<button onClick={() => setIsSignUp(false)} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none">
+							<button onClick={() => navigate("/login")} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none cursor-pointer">
 								{translate("signIn")}
 							</button>
 						</p>
