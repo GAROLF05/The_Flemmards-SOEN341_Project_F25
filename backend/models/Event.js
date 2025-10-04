@@ -1,0 +1,106 @@
+const mongoose = require('mongoose')
+
+const EVENT_STATUS = {
+  UPCOMING: 'upcoming',
+  ONGOING: 'ongoing',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled'
+};
+
+const eventSchema = new mongoose.Schema({
+    
+    organization: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization',
+        required: true,
+        index: true,
+    },
+
+    title: {
+        type: String,
+        required: true,
+        index: true,
+        trim: true,
+    },
+
+    description:{
+        type: String,
+        required: true,
+    },
+
+    start_at:{
+        type: Date,
+        required: true,
+        index: true,
+    },
+
+    end_at:{
+        type: Date,
+        required: true,
+        index: true,
+        validate: {
+        validator(v) {
+            return this.start_at && v > this.start_at;
+        },
+        message: 'end_at must be after start_at'
+        }
+    },
+
+    capacity:{
+        type: Number,
+        required: true,
+        index: true,
+        min: [1, 'capacity must be at least 1'],
+    },
+
+    registrations_count: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+
+    status: {
+        type: String,
+        enum: Object.values(EVENT_STATUS),
+        default: EVENT_STATUS.UPCOMING,
+        required: true,
+        index: true,
+    },
+
+    location:{
+        name:{
+            type: String,
+            trim: true,
+            required: true,
+        },
+
+        address:{
+            type: String,
+            trim: true,
+            required: true,
+        },
+    }
+    
+}, {
+    timestamps: true,
+    versionKey: false,
+    toJSON: { 
+        virtuals: true 
+    },
+    toObject: { 
+        virtuals: true 
+    }
+});
+
+// No two events can exist in the same organization with same title and same start time
+eventSchema.index({ organization: 1, title: 1, start_at: 1 }, { unique: true });
+
+// Virtual field that can calculate the number of seats left on the go without storing it in DB
+eventSchema.virtual('seats_left').get(function () {
+  const left = this.capacity - this.registrations_count;
+  return left < 0 ? 0 : left;
+});
+
+// Export everything
+const Event = mongoose.model('Event', eventSchema);
+module.exports = {Event, EVENT_STATUS}
