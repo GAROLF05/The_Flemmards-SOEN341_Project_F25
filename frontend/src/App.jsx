@@ -3,7 +3,9 @@ import './App.css'
 const App = () => {
     return (
         <>
-            The content
+            <h1 class="text-3xl font-bold underline">
+                Hello world!
+            </h1>
         </>
     )
 }
