@@ -72,6 +72,7 @@ const ticketSchema = new mongoose.Schema({
     scannedBy: { type: String, trim: true }
     
 }, {
+    collection: 'tickets',
     timestamps: true,
     versionKey: false,
 })

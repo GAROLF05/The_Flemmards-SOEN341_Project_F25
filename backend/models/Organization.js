@@ -74,10 +74,11 @@ const organizationSchema = new mongoose.Schema({
     }
 
 }, {
-  timestamps: true,          
-  versionKey: false,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+    collection: 'organizations',
+    timestamps: true,          
+    versionKey: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 // Text search across name & description (for search bar or filters)

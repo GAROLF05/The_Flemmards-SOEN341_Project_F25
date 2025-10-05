@@ -51,6 +51,7 @@ const registrationSchema = new mongoose.Schema({
 
 	
 }, {
+    collection: 'registrations',
     timestamps: true,
     versionKey: false,
     toJSON:  { virtuals: true },

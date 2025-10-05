@@ -83,6 +83,7 @@ const eventSchema = new mongoose.Schema({
     }
     
 }, {
+    collection: 'events',
     timestamps: true,
     versionKey: false,
     toJSON: { 

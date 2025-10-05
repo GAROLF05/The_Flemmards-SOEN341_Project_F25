@@ -39,16 +39,17 @@ const userSchema = new mongoose.Schema({
     }
   ]
 }, {
-  timestamps: true, 
-  versionKey: false,
-  toJSON: {
-    virtuals: true,
-    transform: (_doc, ret) => {
-      delete ret.password;   // extra safety if password was ever selected
-      return ret;
-    }
-  },
-  toObject: { virtuals: true }
+    collection: 'users',
+    timestamps: true, 
+    versionKey: false,
+    toJSON: {
+        virtuals: true,
+        transform: (_doc, ret) => {
+        delete ret.password;   // extra safety if password was ever selected
+        return ret;
+        }
+    },
+    toObject: { virtuals: true }
 });
 
 // Dynamically return the number of events registered to
