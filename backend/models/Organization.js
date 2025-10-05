@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+// Database of all organizers/organizations on the website
 const organizationSchema = new mongoose.Schema({
 
     name:{
@@ -82,7 +83,7 @@ const organizationSchema = new mongoose.Schema({
 // Text search across name & description (for search bar or filters)
 organizationSchema.index({ name: 'text', description: 'text' });
 
-// Returns the array of events (populate to fetch)
+// Returns the array of events 
 organizationSchema.virtual('events', {
   ref: 'Event',
   localField: '_id',

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Database that will contain all the users of the website
 const userSchema = new mongoose.Schema({
   name: {
     type: String,

@@ -7,6 +7,7 @@ const EVENT_STATUS = {
   CANCELLED: 'cancelled'
 };
 
+// Database that will contain all events on the website
 const eventSchema = new mongoose.Schema({
     
     organization: {
