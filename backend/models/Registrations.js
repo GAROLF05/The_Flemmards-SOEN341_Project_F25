@@ -14,8 +14,8 @@ const registrationSchema = new mongoose.Schema({
 		type: String,
 		required: [true, 'Registration ID is required'],
 		unique: true,
-		default: ()=> 'REG-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
-        
+		default: ()=> 'REG-' + crypto.randomBytes(8).toString('hex').toUpperCase(),
+        trim: true,
 	},
 
 	user: { 
