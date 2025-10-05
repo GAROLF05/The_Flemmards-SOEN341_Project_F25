@@ -1,28 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { UserIcon, EnvelopeIcon,  ArrowLeftIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../hooks/useLanguage';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotification } from '../hooks/useNotification';
-
-const UserIcon = () => (
-	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
-		<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-		<circle cx="12" cy="7" r="4"></circle>
-	</svg>
-);
-
-const LockIcon = () => (
-	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400">
-		<rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-		<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-	</svg>
-);
-
-const ArrowLeftIcon = () => (
-	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
-		<line x1="19" y1="12" x2="5" y2="12"></line>
-		<polyline points="12 19 5 12 12 5"></polyline>
-	</svg>
-);
 
 export default function Authentication() {
 	const [role, setRole] = useState('student');
@@ -60,7 +40,7 @@ export default function Authentication() {
 
 	const handleSignUp = (e) => {
 		e.preventDefault();
-		// In a real app, you would handle new user registration here
+		// todo: handle signup call here
 	};
 
 	const RoleSelector = ({ currentRole, setRole }) => {
@@ -159,11 +139,11 @@ export default function Authentication() {
 					<form className="space-y-6" onSubmit={handleLogin}>
 						<div className="space-y-4">
 							<div className="relative">
-								<UserIcon />
+								<UserIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input id="email-address" name="email" type="email" autoComplete="email" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} />
 							</div>
 							<div className="relative">
-								<LockIcon />
+								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input id="password" name="password" type="password" autoComplete="current-password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} />
 							</div>
 						</div>
@@ -202,7 +182,7 @@ export default function Authentication() {
 						className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
 						aria-label={translate("goBack")}
 					>
-						<ArrowLeftIcon />
+						<ArrowLeftIcon className="h-6 w-6 text-gray-900" />
 					</button>
 					<div className="w-full max-w-md">
 						<div className="text-center lg:text-left mb-8">
@@ -212,19 +192,19 @@ export default function Authentication() {
 
 						<form className="space-y-4" onSubmit={handleSignUp}>
 							<div className="relative">
-								<UserIcon />
+								<UserIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input name="fullname" type="text" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("fullNamePlaceholder")} />
 							</div>
 							<div className="relative">
-								<UserIcon />
+								<EnvelopeIcon  className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input name="email" type="email" autoComplete="email" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("emailPlaceholder")} />
 							</div>
 							<div className="relative">
-								<LockIcon />
+								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input name="password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("passwordPlaceholder")} />
 							</div>
 							<div className="relative">
-								<LockIcon />
+								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
 								<input name="confirm-password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("confirmPasswordPlaceholder")} />
 							</div>
 							<div className="pt-2">
