@@ -1,0 +1,47 @@
+import { CheckBadgeIcon, XCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+
+export default function Notification({ message, type, onClose, isExiting }) {
+    const styles = {
+        info: {
+            bg: 'bg-blue-500',
+            icon: (
+                <InformationCircleIcon className="h-6 w-6" />
+            ),
+        },
+        success: {
+            bg: 'bg-green-500',
+            icon: (
+                <CheckBadgeIcon className="h-6 w-6" />
+            ),
+        },
+        warning: {
+            bg: 'bg-yellow-500',
+            icon: (
+                <ExclamationTriangleIcon className="h-6 w-6" />
+            ),
+        },
+        error: {
+            bg: 'bg-red-500',
+            icon: (
+                <XCircleIcon className="h-6 w-6" />
+            ),
+        },
+    };
+
+    const { bg, icon } = styles[type];
+
+    return (
+        <div className={`
+            ${bg} text-white rounded-lg shadow-2xl p-4 flex items-start gap-4 mb-4
+            transform transition-all duration-500 ease-in-out
+            ${isExiting ? 'opacity-0 translate-x-full' : 'opacity-100 translate-x-0'}
+        `}>
+            <div className="flex-shrink-0">{icon}</div>
+            <div className="flex-grow text-sm sm:text-base">{message}</div>
+            <button onClick={onClose} className="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity cursor-pointer">
+                <XMarkIcon className="h-5 w-5" />
+            </button>
+        </div>
+    );
+}
+
