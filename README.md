@@ -35,13 +35,13 @@ This is a web-app for Campus Event & Ticketing Application to help students disc
 | Omar Dbaa | 40328411 | @omardba | Frontend |
 | Nameer Hanif | 40315360 | @GAROLF05 | Backend |
 | Curtis Moxebo | 40296254 | @CurtisMoxebo | Frontend |
-| Nihit Patel | 40307885 | @Nihit-patel | Backend (DB)|
+| Nihit Patel | 40307885 | @Nihit-patel | Backend |
 | Hesham Rabie | 40280570 | @Hesham-Rabie | Backend |
 | Bijoy Sengupta | 40299807 | @BijoySengupta | Frontend |
 | Mostafa Maraie | 40261020 | @MostafaMaraie | Frontend |
 
 ## Languages & Frameworks
-- **Frontend:** HTML, CSS, JavaScript, tailwind css, ReactJS
+- **Frontend:** HTML, CSS, JavaScript, Tailwind CSS, ReactJS
 - **Backend:** Node.js, Express.js
-- **Database:** MySQL (XAMPP for local development)
+- **Database:** MongoDB (mongoose)
 - **Other:** Cookie-based session handling
