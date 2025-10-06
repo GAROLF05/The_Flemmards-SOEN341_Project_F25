@@ -1,38 +1,55 @@
-const express = require('express')
-const app = express()
-const PORT = 3000
-const mongoose = require('mongoose')
+const path = require('path');
+// Express setup
+const express = require('express');
+const app = express();
+const PORT = 3000;
 
-// 1. Connect to your MongoDB database
-mongoose.connect('mongodb://127.0.0.1:27017/conuvents')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ Connection error:', err));
+// Dotenv setup
+const dotenv = require('dotenv');
+dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-// 2. Define a simple schema (like a table structure)
-const ticketSchema = new mongoose.Schema({
-  event: String,
-  price: Number,
-  buyer: String
-});
+// QR Code setup (npm install qrcode)
+const qrcode = require('qrcode');
 
-// 3. Create a model (like a table interface)
-const Ticket = mongoose.model('Ticket', ticketSchema);
+// MongoDB setup
+const mongoose = require('mongoose');
 
-// 4. Add (insert) one document to the collection
-async function addTicket() {
-  const newTicket = new Ticket({
-    event: 'Homecoming Party',
-    price: 25,
-    buyer: 'Nameer'
-  });
+// Models of DB
+const Administrator = require('./models/Administrators');
+const User = require('./models/User');
+const { Event } = require('./models/Event');
+const Organization = require('./models/Organization');
+const Registration = require('./models/Registrations');
+const Ticket = require('./models/Ticket');
 
-  await newTicket.save(); // save it to MongoDB
-  console.log('🎟️ Ticket saved:', newTicket);
-  mongoose.connection.close(); // optional: close connection after saving
-}
+// DB connection
+const connectToDB = require('./config/database')
 
-// 5. Run it
-addTicket();
+app.use(express.json())
+
+// connect to MongoDB before starting the server
+(async () => {
+    try {
+        await connectToDB({ retries: 3, backoffMs: 500 });
+        console.log('✅ MongoDB connected');
+
+        // only start server *after* DB is ready
+        app.listen(PORT, () => {
+        console.log(`🚀 Server running at http://localhost:${PORT}`);
+        });
+    } catch (err) {
+        console.error('❌ Failed to connect to MongoDB:', err.message);
+        process.exit(1); // stop the server if DB connection fails
+    }
+
+    // graceful shutdown
+    process.on('SIGINT', async () => {
+        await mongoose.connection.close();
+        console.log('🛑 MongoDB connection closed');
+        process.exit(0);
+    });
+})();
+
 
 
 app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}/`));

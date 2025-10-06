@@ -34,7 +34,7 @@ const administratorSchema = new mongoose.Schema({
 
 }, {
     
-    collection: 'admins',
+    collection: 'administrators',
     timestamps: true,
     versionKey: false,
   })

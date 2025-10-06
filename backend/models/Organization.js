@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
+const validator = require('validator'); // npm install validator
 
 // Database of all organizers/organizations on the website
 const organizationSchema = new mongoose.Schema({
