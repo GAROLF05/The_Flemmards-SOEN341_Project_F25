@@ -80,6 +80,11 @@ const eventSchema = new mongoose.Schema({
             trim: true,
             required: [true, 'Address of location is required'],
         },
+    },
+
+    registered_users:{
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
     }
     
 }, {
