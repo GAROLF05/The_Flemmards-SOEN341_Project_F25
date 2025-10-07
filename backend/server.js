@@ -26,6 +26,23 @@ const Ticket = require('./models/Ticket');
 const connectToDB = require('./config/database')
 
 app.use(express.json())
+app.use(express.text({ type: 'text/plain' }))
+
+// Add CORS middleware to handle cross-origin requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
+
+const ticketController = require('./controllers/ticketController');
+app.post('/api/tickets/create', ticketController.createTicket);
 
 // connect to MongoDB before starting the server
 (async () => {
@@ -51,5 +68,3 @@ app.use(express.json())
 })();
 
 
-
-app.listen(PORT, () => console.log(`Server started on http://localhost:${PORT}/`));
