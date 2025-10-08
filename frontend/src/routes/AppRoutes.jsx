@@ -1,18 +1,16 @@
-import { useRoutes } from 'react-router-dom';
-import AuthenticationRoutes from './AuthenticationRoutes';
-import HomeRoutes from './HomeRoutes';
-import PageNotFoundRoutes from './PageNotFoundRoutes';
+import { Routes, Route } from "react-router-dom";
+import Authentication from "../pages/Authentication";
+import PageNotFound from "../pages/PageNotFound";
+import StudentHome from "../pages/StudentHome";
+import EventDetail from "../pages/EventDetail";
 
-const routes = [
-    ...HomeRoutes,
-    ...AuthenticationRoutes,
-    ...PageNotFoundRoutes,
-];
-
-const AppRoutes = () => {
-    const element = useRoutes(routes);
-
-    return element;
-};
-
-export default AppRoutes;
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<StudentHome />} />
+      <Route path="/event/:id" element={<EventDetail />} />
+      <Route path="/auth" element={<Authentication />} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
+}
