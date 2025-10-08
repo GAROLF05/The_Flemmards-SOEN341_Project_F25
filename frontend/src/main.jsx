@@ -4,11 +4,16 @@ import './index.css'
 import App from './App.jsx'
 import './i18n/index.js';
 import { AppProviders } from './context/index.jsx';
+import { ThemeProvider } from './context/ThemeProvider.jsx';
 
-createRoot(document.getElementById('root')).render(
+var root = document.getElementById('root');
+
+createRoot(root).render(
 	<StrictMode>
-		<AppProviders>
-			<App />
-		</AppProviders>
+		<ThemeProvider>
+			<AppProviders>
+				<App />
+			</AppProviders>
+		</ThemeProvider>
 	</StrictMode>,
 )

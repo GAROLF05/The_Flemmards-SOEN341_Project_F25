@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useTheme } from '../../hooks/useTheme';
 
 // --- MOCK DATA ---
 // In a real application, this data would come from an API
@@ -752,28 +753,7 @@ export default function HomePage() {
   const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
   const [activeFilters, setActiveFilters] = useState(initialFilters);
   const [modalFilters, setModalFilters] = useState(initialFilters);
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        return savedTheme;
-    }
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return prefersDark ? 'dark' : 'light';
-  });
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+  const {theme, toggleTheme} = useTheme();
 
   const openEventModal = (event) => setSelectedEvent(event);
   const closeEventModal = () => setSelectedEvent(null);
