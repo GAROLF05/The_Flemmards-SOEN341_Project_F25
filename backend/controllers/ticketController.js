@@ -167,7 +167,10 @@ exports.getTicketsById = async (req,res)=>{
         }).lean().exec();
         
 
-        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+        if (!ticket) return res.status(404).json({ 
+            error: 'Ticket not found' 
+        });
+
         return res.status(200).json({ ticket });
 
     } catch(e){
@@ -216,7 +219,7 @@ exports.deleteTicket = async (req,res)=>{
 
 
 /* VALIDATION */
-exports.validateTicket = async (req,res)=>{
+exports.validateTicket = async (req,res)=>{ 
 
 }
 
@@ -225,16 +228,95 @@ exports.markTicketAsUsed = async (req,res)=>{
 }
 
 exports.regenerateQrCode = async (req,res)=>{
+    try{
 
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error:"Qr code could not be regenerated"});
+    }
 }
 
 /* ANALYTICS + ADMIN */
 exports.getTicketsByEvent = async (req,res)=>{
+    try{
+        const {eventId} = req.params;
+        if (!eventId)
+            return res.status(400).json({error: "TicketId required"});
 
+        if (!mongoose.Types.ObjectId.isValid(eventId))
+            return res.status(400).json({ error: "Invalid event ID format" });
+
+        const eventTickets = await Ticket.find({event: eventId})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+                path: 'organization',
+                select: 'name website',
+            }})
+        .populate({
+            path: 'registration',
+            select: 'registrationId quantity'
+        }).lean().exec();
+
+        if (!eventTickets || eventTickets.length === 0)
+            return res.status(404).json({ error: 'No tickets found for this event' });
+
+        return res.status(200).json({
+            count: eventTickets.length,
+            tickets: eventTickets
+        });
+
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error:"Failed to fetch tickets"})
+    }
 }
 
+// Get all tickets to events user registered to
 exports.getTicketsByUser = async (req,res)=>{
-    
+    try{
+        const {userId} = req.params;
+        if (!userId)
+            return res.status(400).json({error: "UserId required"});
+        
+
+        if (!mongoose.Types.ObjectId.isValid(userId))
+            return res.status(400).json({ error: "Invalid user ID format" });
+
+        const userTickets = await Ticket.find({user: userId})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+                path: 'organization',
+                select: 'name website',
+            }})
+        .populate({
+            path: 'registration',
+            select: 'registrationId quantity'
+        }).lean().exec();
+
+        if (!userTickets || userTickets.length === 0)
+            return res.status(404).json({ error: 'No tickets found for this user' });
+
+        return res.status(200).json({
+            count: userTickets.length,
+            tickets: userTickets
+        });
+
+        
+    } catch(e){
+        console.error(e);
+        res.status(500).json({error: "Failed to fetch tickets"})
+    }
 }
 
 exports.countTickets = async (req,res)=>{
@@ -253,6 +335,7 @@ exports.registerToEvent = async (req, res) => {
 
         const { eventId, quantity = 1 } = req.body || {};
         const qty = Number(quantity);
+
         // Check if event id is valid
         if (!mongoose.Types.ObjectId.isValid(eventId)) 
             return res.status(400).json({ 
@@ -331,7 +414,7 @@ exports.registerToEvent = async (req, res) => {
         } catch (e) {
             // If registration exists due to unique index on (user,event), rollback event capacity and return conflict
             try { 
-                // Change capacity back to original due to duplicate registration
+                // Change capacity back to original if registration creation fails
                 await Event.findByIdAndUpdate(
                     eventId, 
                     { $inc: { capacity: qty } }
