@@ -1,9 +1,16 @@
+import MainLayout from "../layouts/MainLayout";
 import Organizer from "../pages/organizer/Organizer";
 
 const OrganizerRoutes = [
     {
         path: '/organizer',
-        element: <Organizer />,
+        element: <MainLayout />,
+        children: [
+            {
+                path: '',
+                element: <Organizer />
+            }
+        ]
     }
 ];
 

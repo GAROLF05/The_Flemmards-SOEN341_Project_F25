@@ -1,5 +1,6 @@
 {
     "admin": "Admin",
+    "allRightsReserved": "{{date}} Flemmards. All rights reserved.",
     "alreadyMember": "Already a member?",
     "appTitle": "Flemmards",
     "createAccount": "Create your account",
@@ -9,6 +10,7 @@
     "forgotPassword": "Forgot password?",
     "fullName": "Full Name",
     "goBack": "Go back",
+    "language": "Language",
     "loginSubtitle": "Your ultimate platform for discovering and booking amazing events.",
     "notMember": "Not a member yet?",
     "organizer": "Organizer",

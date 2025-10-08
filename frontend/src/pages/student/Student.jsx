@@ -1,300 +1,185 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { useTheme } from '../../hooks/useTheme';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { AdjustmentsHorizontalIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 // --- MOCK DATA ---
-// In a real application, this data would come from an API
 const eventsData = [
-  {
-    id: 1,
-    title: 'Montreal International Jazz Festival',
-    category: 'Featured',
-    date: '2026-06-25T19:00:00',
-    location: 'Place des Arts, Montreal',
-    description: 'Experience the world\'s largest jazz festival, featuring legendary artists and rising stars in the heart of downtown Montreal.',
-    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'Indie Music Festival',
-    category: 'Music',
-    date: '2025-11-12T18:00:00',
-    location: 'Parc Jean-Drapeau, Montreal',
-    description: 'A two-day festival showcasing the best up-and-coming indie bands from across the country.',
-    imageUrl: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 3,
-    title: 'Startup Pitch Night',
-    category: 'Business',
-    date: '2025-11-05T19:00:00',
-    location: 'Innovation Hub, Montreal',
-    description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
-    imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 4,
-    title: 'Advanced React Workshop',
-    category: 'Technology',
-    date: '2025-11-18T10:00:00',
-    location: 'Online',
-    description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
-    imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 5,
-    title: 'City Marathon 2025',
-    category: 'Sports',
-    date: '2025-10-19T07:00:00',
-    location: 'Mount Royal Park, Montreal',
-    description: 'Join thousands of runners in the annual city marathon. All skill levels welcome.',
-    imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 6,
-    title: 'Artisan Market Fair',
-    category: 'Community',
-    date: '2025-10-26T11:00:00',
-    location: 'Old Port, Montreal',
-    description: 'Discover unique handmade crafts, local food, and live music at our weekend market.',
-    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 7,
-    title: 'Annual Tech Summit 2025',
-    category: 'Featured',
-    date: '2025-10-25T09:00:00',
-    location: 'Convention Center, Montreal',
-    description: 'Join industry leaders to discuss the future of technology, from AI to quantum computing.',
-    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 8,
-    title: 'Cinephile\'s Dream: Film Noir Retrospective',
-    category: 'Arts & Culture',
-    date: '2025-11-20T19:00:00',
-    location: 'Cinéma du Parc, Montreal',
-    description: 'A month-long retrospective celebrating the dark and stylish world of classic film noir.',
-    imageUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963e?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 9,
-    title: 'Oktoberfest Montreal',
-    category: 'Food & Drink',
-    date: '2025-10-11T14:00:00',
-    location: 'Lachine Canal, Montreal',
-    description: 'Enjoy a taste of Bavaria with craft beer, traditional food, and live oompah bands.',
-    imageUrl: 'https://images.unsplash.com/photo-1598801269323-315159d84f83?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 10,
-    title: 'Digital Marketing Conference',
-    category: 'Education',
-    date: '2025-11-22T09:00:00',
-    location: 'Palais des congrès, Montreal',
-    description: 'Learn the latest trends in SEO, social media, and content marketing from industry experts.',
-    imageUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 11,
-    title: 'Yoga & Mindfulness Retreat',
-    category: 'Health & Wellness',
-    date: '2025-12-06T10:00:00',
-    location: 'Eastern Townships, QC',
-    description: 'A full-day retreat to de-stress before exams. Includes guided meditation and yoga sessions.',
-    imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop',
-  },
-  {
-    id: 12,
-    title: 'Holiday Baking Masterclass',
-    category: 'Food & Drink',
-    date: '2025-12-13T13:00:00',
-    location: 'Ateliers & Saveurs, Montreal',
-    description: 'Learn how to create delicious holiday treats from a professional pastry chef.',
-    imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1964&auto=format&fit=crop',
-  },
-  {
-    id: 13,
-    title: 'Community Volunteer Day',
-    category: 'Community',
-    date: '2025-11-30T10:00:00',
-    location: 'Multiple Locations, Montreal',
-    description: 'Join us in giving back to the community. Choose from various projects across the city.',
-    imageUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 14,
-    title: 'Charity Soccer Tournament',
-    category: 'Sports',
-    date: '2025-11-15T09:00:00',
-    location: 'Concordia Stadium, Montreal',
-    description: 'Form a team and compete for a good cause. All proceeds go to local youth sports programs.',
-    imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 15,
-    title: 'Networking for Young Professionals',
-    category: 'Business',
-    date: '2025-11-28T18:30:00',
-    location: 'Downtown Rooftop Bar, Montreal',
-    description: 'Expand your professional network in a relaxed and friendly atmosphere. Light appetizers provided.',
-    imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 16,
-    title: 'Modern Art Exhibition Opening',
-    category: 'Featured',
-    date: '2025-12-05T19:00:00',
-    location: 'Galerie d\'Art Contemporain, Montreal',
-    description: 'Be the first to see the new collection from groundbreaking international and local artists.',
-    imageUrl: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 17,
-    title: 'The Ethics of AI: A Public Debate',
-    category: 'Technology',
-    date: '2025-11-26T18:00:00',
-    location: 'McGill University, Leacock 132',
-    description: 'Leading experts debate the moral and ethical implications of artificial intelligence in our society.',
-    imageUrl: 'https://images.unsplash.com/photo-1677756119517-756a188d2d94?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 18,
-    title: 'Public Speaking Workshop',
-    category: 'Education',
-    date: '2025-12-02T13:00:00',
-    location: 'Concordia University, Webster Library',
-    description: 'Conquer your fear of public speaking and learn to deliver presentations with confidence.',
-    imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop',
-  }
+    {
+        id: 1,
+        title: 'Montreal International Jazz Festival',
+        category: 'Featured',
+        date: '2026-06-25T19:00:00',
+        location: 'Place des Arts, Montreal',
+        description: 'Experience the world\'s largest jazz festival, featuring legendary artists and rising stars in the heart of downtown Montreal.',
+        imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 2,
+        title: 'Indie Music Festival',
+        category: 'Music',
+        date: '2025-11-12T18:00:00',
+        location: 'Parc Jean-Drapeau, Montreal',
+        description: 'A two-day festival showcasing the best up-and-coming indie bands from across the country.',
+        imageUrl: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 3,
+        title: 'Startup Pitch Night',
+        category: 'Business',
+        date: '2025-11-05T19:00:00',
+        location: 'Innovation Hub, Montreal',
+        description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
+        imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 4,
+        title: 'Advanced React Workshop',
+        category: 'Technology',
+        date: '2025-11-18T10:00:00',
+        location: 'Online',
+        description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
+        imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 5,
+        title: 'City Marathon 2025',
+        category: 'Sports',
+        date: '2025-10-19T07:00:00',
+        location: 'Mount Royal Park, Montreal',
+        description: 'Join thousands of runners in the annual city marathon. All skill levels welcome.',
+        imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 6,
+        title: 'Artisan Market Fair',
+        category: 'Community',
+        date: '2025-10-26T11:00:00',
+        location: 'Old Port, Montreal',
+        description: 'Discover unique handmade crafts, local food, and live music at our weekend market.',
+        imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 7,
+        title: 'Annual Tech Summit 2025',
+        category: 'Featured',
+        date: '2025-10-25T09:00:00',
+        location: 'Convention Center, Montreal',
+        description: 'Join industry leaders to discuss the future of technology, from AI to quantum computing.',
+        imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 8,
+        title: 'Cinephile\'s Dream: Film Noir Retrospective',
+        category: 'Arts & Culture',
+        date: '2025-11-20T19:00:00',
+        location: 'Cinéma du Parc, Montreal',
+        description: 'A month-long retrospective celebrating the dark and stylish world of classic film noir.',
+        imageUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963e?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 9,
+        title: 'Oktoberfest Montreal',
+        category: 'Food & Drink',
+        date: '2025-10-11T14:00:00',
+        location: 'Lachine Canal, Montreal',
+        description: 'Enjoy a taste of Bavaria with craft beer, traditional food, and live oompah bands.',
+        imageUrl: 'https://images.unsplash.com/photo-1598801269323-315159d84f83?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 10,
+        title: 'Digital Marketing Conference',
+        category: 'Education',
+        date: '2025-11-22T09:00:00',
+        location: 'Palais des congrès, Montreal',
+        description: 'Learn the latest trends in SEO, social media, and content marketing from industry experts.',
+        imageUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 11,
+        title: 'Yoga & Mindfulness Retreat',
+        category: 'Health & Wellness',
+        date: '2025-12-06T10:00:00',
+        location: 'Eastern Townships, QC',
+        description: 'A full-day retreat to de-stress before exams. Includes guided meditation and yoga sessions.',
+        imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop',
+    },
+    {
+        id: 12,
+        title: 'Holiday Baking Masterclass',
+        category: 'Food & Drink',
+        date: '2025-12-13T13:00:00',
+        location: 'Ateliers & Saveurs, Montreal',
+        description: 'Learn how to create delicious holiday treats from a professional pastry chef.',
+        imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1964&auto=format&fit=crop',
+    },
+    {
+        id: 13,
+        title: 'Community Volunteer Day',
+        category: 'Community',
+        date: '2025-11-30T10:00:00',
+        location: 'Multiple Locations, Montreal',
+        description: 'Join us in giving back to the community. Choose from various projects across the city.',
+        imageUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 14,
+        title: 'Charity Soccer Tournament',
+        category: 'Sports',
+        date: '2025-11-15T09:00:00',
+        location: 'Concordia Stadium, Montreal',
+        description: 'Form a team and compete for a good cause. All proceeds go to local youth sports programs.',
+        imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 15,
+        title: 'Networking for Young Professionals',
+        category: 'Business',
+        date: '2025-11-28T18:30:00',
+        location: 'Downtown Rooftop Bar, Montreal',
+        description: 'Expand your professional network in a relaxed and friendly atmosphere. Light appetizers provided.',
+        imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 16,
+        title: 'Modern Art Exhibition Opening',
+        category: 'Featured',
+        date: '2025-12-05T19:00:00',
+        location: 'Galerie d\'Art Contemporain, Montreal',
+        description: 'Be the first to see the new collection from groundbreaking international and local artists.',
+        imageUrl: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 17,
+        title: 'The Ethics of AI: A Public Debate',
+        category: 'Technology',
+        date: '2025-11-26T18:00:00',
+        location: 'McGill University, Leacock 132',
+        description: 'Leading experts debate the moral and ethical implications of artificial intelligence in our society.',
+        imageUrl: 'https://images.unsplash.com/photo-1677756119517-756a188d2d94?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        id: 18,
+        title: 'Public Speaking Workshop',
+        category: 'Education',
+        date: '2025-12-02T13:00:00',
+        location: 'Concordia University, Webster Library',
+        description: 'Conquer your fear of public speaking and learn to deliver presentations with confidence.',
+        imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop',
+    }
 ];
 
 const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
 const uniqueLocations = [...new Set(eventsData.map(event => event.location))].sort();
 
-
-// --- ICONS ---
-const SearchIcon = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="11" cy="11" r="8"></circle>
-    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-  </svg>
-);
-
-const UserCircleIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <circle cx="12" cy="12" r="10"></circle>
-        <circle cx="12" cy="10" r="3"></circle>
-        <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
-    </svg>
-);
-
-const LogoutIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-        <polyline points="16 17 21 12 16 7"></polyline>
-        <line x1="21" y1="12" x2="9" y2="12"></line>
-    </svg>
-);
-
-const ChevronLeftIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>
-);
-
-const ChevronRightIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
-);
-
-const AdjustmentsHorizontalIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-    </svg>
-);
-
-const XMarkIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-);
-
-const CalendarDaysIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M-3 14.25h.008v.008H-3v-.008z" />
-    </svg>
-);
-
-const MapPinIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-    </svg>
-);
-
-const TagIcon = ({ className }) => (
-     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-    </svg>
-);
-
-const HeartIcon = ({ className, isLiked }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill={isLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-    </svg>
-);
-
-const GlobeAltIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12.033m-9.284 0a9.009 9.009 0 01-5.026 2.67M11.716 12.033c-.16.953-.29 1.912-.425 2.867" />
-    </svg>
-);
-
-const SunIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-    </svg>
-);
-
-const MoonIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-    </svg>
-);
-
-const Bars3Icon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-    </svg>
-);
-
-const HomeIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a.75.75 0 011.06 0l8.955 8.955M3 10.5v.75A2.25 2.25 0 005.25 13.5h13.5A2.25 2.25 0 0021 11.25v-.75M4.5 12v7.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V12" />
-    </svg>
-);
-
-const CalendarIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18" />
-    </svg>
-);
-
-const CompassIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 8.09l-2.82 5.64-5.64-2.82 2.82-5.64 5.64 2.82z" />
-    </svg>
-);
-
-
-
 // --- HOOKS ---
 const useCountdown = (targetDate) => {
     const countDownDate = new Date(targetDate).getTime();
     const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
+
     useEffect(() => {
         const interval = setInterval(() => {
             setCountDown(countDownDate - new Date().getTime());
         }, 1000);
+
         return () => clearInterval(interval);
     }, [countDownDate]);
     return getReturnValues(countDown);
@@ -305,126 +190,13 @@ const getReturnValues = (countDown) => {
     const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
+
     return [days, hours, minutes, seconds];
-};
-
-
-// --- COMPONENTS ---
-const Header = ({ theme, toggleTheme, onMenuClick }) => {
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const userDropdownRef = useRef(null);
-  const langDropdownRef = useRef(null);
-
-  const useOutsideAlerter = (ref, setOpenState) => {
-      useEffect(() => {
-        function handleClickOutside(event) {
-          if (ref.current && !ref.current.contains(event.target)) {
-            setOpenState(false);
-          }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-          document.removeEventListener("mousedown", handleClickOutside);
-        };
-      }, [ref, setOpenState]);
-  }
-
-  useOutsideAlerter(userDropdownRef, setIsUserMenuOpen);
-  useOutsideAlerter(langDropdownRef, setIsLangMenuOpen);
-
-  return (
-    <header className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-50 transition-colors duration-300">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-4">
-             <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                <Bars3Icon className="h-6 w-6"/>
-            </button>
-            <a href="#" className="text-2xl font-bold text-indigo-600">Flemmards</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <button onClick={toggleTheme} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300">
-                {theme === 'light' ? <MoonIcon className="w-6 h-6"/> : <SunIcon className="w-6 h-6"/>}
-                <span className="font-medium text-sm hidden sm:block">{theme === 'light' ? 'Dark' : 'Light'}</span>
-            </button>
-            <div className="relative" ref={langDropdownRef}>
-                <button onClick={() => setIsLangMenuOpen(prev => !prev)} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300">
-                    <GlobeAltIcon className="w-6 h-6"/>
-                    <span className="font-medium text-sm">EN</span>
-                </button>
-                {isLangMenuOpen && (
-                    <div className="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transition-colors duration-300">
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300">English (EN)</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300">Français (FR)</a>
-                        <a href="#" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300">Español (ES)</a>
-                    </div>
-                )}
-            </div>
-            <div className="relative" ref={userDropdownRef}>
-              <button onClick={() => setIsUserMenuOpen(prev => !prev)} className="flex items-center gap-2 cursor-pointer rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300 py-2 pl-2 pr-4">
-                <UserCircleIcon className="h-8 w-8 text-gray-600 dark:text-gray-300 transition-colors duration-300"/>
-                <span className="hidden sm:block font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">Curtis</span>
-              </button>
-              {isUserMenuOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
-                  <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
-                    <UserCircleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
-                    Profile
-                  </a>
-                  <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
-                    <LogoutIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
-                    Logout
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-};
-
-const MobileMenu = ({ isOpen, onClose }) => {
-    return (
-        <div className={`fixed inset-0 z-[60] ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-            {/* Overlay */}
-            <div
-                className="fixed inset-0 bg-black/60 transition-opacity duration-300"
-                onClick={onClose}
-                style={{ opacity: isOpen ? 1 : 0 }}
-            ></div>
-
-            {/* Menu Panel */}
-            <div
-                className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transition-transform duration-300 ease-in-out"
-                style={{ transform: isOpen ? 'translateX(0)' : 'translateX(-100%)' }}
-            >
-                <div className="p-4 flex justify-between items-center border-b dark:border-gray-700">
-                    <h2 className="font-bold text-lg dark:text-white">Menu</h2>
-                    <button onClick={onClose} className="text-gray-600 dark:text-gray-300">
-                        <XMarkIcon className="h-6 w-6"/>
-                    </button>
-                </div>
-                <nav className="p-4 flex flex-col gap-2">
-                    <a href="#" className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300">
-                        <HomeIcon className="w-6 h-6"/> Home
-                    </a>
-                    <a href="#" className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300">
-                        <CalendarIcon className="w-6 h-6"/> My Events
-                    </a>
-                    <a href="#" className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300">
-                        <CompassIcon className="w-6 h-6"/> Explore
-                    </a>
-                </nav>
-            </div>
-        </div>
-    );
 };
 
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const [days, hours, minutes, seconds] = useCountdown(event.date);
+
     return (
         <div className="relative w-full h-96 flex-shrink-0">
             <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover"/>
@@ -490,7 +262,6 @@ const FeaturedEventCarousel = ({ events, onViewDetails }) => {
         </div>
     );
 };
-
 
 const EventCard = ({ event, onViewDetails }) => {
     const eventDate = new Date(event.date);
@@ -742,152 +513,143 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 };
 
 
-export default function HomePage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategories, setActiveCategories] = useState(['All']);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+const Student = () => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeCategories, setActiveCategories] = useState(['All']);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
-  const [activeFilters, setActiveFilters] = useState(initialFilters);
-  const [modalFilters, setModalFilters] = useState(initialFilters);
-  const {theme, toggleTheme} = useTheme();
+    const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
+    const [activeFilters, setActiveFilters] = useState(initialFilters);
+    const [modalFilters, setModalFilters] = useState(initialFilters);
 
-  const openEventModal = (event) => setSelectedEvent(event);
-  const closeEventModal = () => setSelectedEvent(null);
+    const openEventModal = (event) => setSelectedEvent(event);
+    const closeEventModal = () => setSelectedEvent(null);
 
-  const eventsPerPage = 9;
+    const eventsPerPage = 9;
 
-  const featuredEvents = useMemo(() =>
-    eventsData.filter(e => e.category === 'Featured'),
-  []);
+    const featuredEvents = useMemo(() =>
+        eventsData.filter(e => e.category === 'Featured'),
+    []);
 
-  const filteredEvents = useMemo(() => {
-    let events = eventsData.filter(event => event.category !== 'Featured');
+    const filteredEvents = useMemo(() => {
+        let events = eventsData.filter(event => event.category !== 'Featured');
 
-    // Category Filter (from main page)
-    if (!activeCategories.includes('All')) {
-        events = events.filter(event => activeCategories.includes(event.category));
-    }
+        // Category Filter (from main page)
+        if (!activeCategories.includes('All')) {
+            events = events.filter(event => activeCategories.includes(event.category));
+        }
 
-    // Advanced Filters (from modal)
-    if (activeFilters.fromDate) {
-        events = events.filter(event => new Date(event.date) >= new Date(activeFilters.fromDate));
-    }
-    if (activeFilters.toDate) {
-        events = events.filter(event => new Date(event.date) <= new Date(activeFilters.toDate).setHours(23, 59, 59, 999));
-    }
-    if (activeFilters.eventType) {
-        events = events.filter(event => event.category === activeFilters.eventType);
-    }
-    if (activeFilters.location) {
-        events = events.filter(event => event.location === activeFilters.location);
-    }
+        // Advanced Filters (from modal)
+        if (activeFilters.fromDate) {
+            events = events.filter(event => new Date(event.date) >= new Date(activeFilters.fromDate));
+        }
+        if (activeFilters.toDate) {
+            events = events.filter(event => new Date(event.date) <= new Date(activeFilters.toDate).setHours(23, 59, 59, 999));
+        }
+        if (activeFilters.eventType) {
+            events = events.filter(event => event.category === activeFilters.eventType);
+        }
+        if (activeFilters.location) {
+            events = events.filter(event => event.location === activeFilters.location);
+        }
 
-    // Search Term Filter
-    if (searchTerm) {
-      events = events.filter(event =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    return events;
-  }, [searchTerm, activeCategories, activeFilters]);
+        // Search Term Filter
+        if (searchTerm) {
+        events = events.filter(event =>
+            event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        }
+        return events;
+    }, [searchTerm, activeCategories, activeFilters]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, activeCategories, activeFilters]);
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, activeCategories, activeFilters]);
 
-  const handleApplyFilters = () => {
-      setActiveFilters(modalFilters);
-      setIsFilterModalOpen(false);
-  };
+    const handleApplyFilters = () => {
+        setActiveFilters(modalFilters);
+        setIsFilterModalOpen(false);
+    };
 
-  const handleClearFilters = () => {
-      setModalFilters(initialFilters);
-      setActiveFilters(initialFilters);
-      setIsFilterModalOpen(false);
-  };
+    const handleClearFilters = () => {
+        setModalFilters(initialFilters);
+        setActiveFilters(initialFilters);
+        setIsFilterModalOpen(false);
+    };
 
-  const indexOfLastEvent = currentPage * eventsPerPage;
-  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-  const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-  const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+    const indexOfLastEvent = currentPage * eventsPerPage;
+    const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+    const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+    const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
 
-  return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-300">
-      <Header theme={theme} toggleTheme={toggleTheme} onMenuClick={() => setIsMobileMenuOpen(true)}/>
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    return (
+        <>
+            <FeaturedEventCarousel events={featuredEvents} onViewDetails={openEventModal} />
 
-        <FeaturedEventCarousel events={featuredEvents} onViewDetails={openEventModal} />
+            <div className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-grow group w-full">
+                    <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors duration-300" />
 
-        <div className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
-             <div className="relative flex-grow group w-full">
-                <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors duration-300" />
-                <input
-                    type="text"
-                    placeholder="Search for events, categories..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600 transition-colors duration-300"
-                />
-                {searchTerm && (
-                    <button
-                        onClick={() => setSearchTerm('')}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300"
-                        aria-label="Clear search"
-                    >
-                        <XMarkIcon className="h-5 w-5" />
-                    </button>
-                )}
+                    <input
+                        type="text"
+                        placeholder="Search for events, categories..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600 transition-colors duration-300"
+                    />
+
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300"
+                            aria-label="Clear search"
+                        >
+                            <XMarkIcon className="h-5 w-5" />
+                        </button>
+                    )}
+                </div>
+
+                <button onClick={() => setIsFilterModalOpen(true)} className="flex-shrink-0 p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600">
+                    <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
             </div>
-            <button onClick={() => setIsFilterModalOpen(true)} className="flex-shrink-0 p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-300 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600">
-                <AdjustmentsHorizontalIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-            </button>
-        </div>
 
-        <CategoryFilter categories={categories} activeCategories={activeCategories} setActiveCategories={setActiveCategories} />
+            <CategoryFilter categories={categories} activeCategories={activeCategories} setActiveCategories={setActiveCategories} />
 
-        {currentEvents.length > 0 ? (
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {currentEvents.map(event => (
-              <EventCard key={event.id} event={event} onViewDetails={openEventModal} />
-            ))}
-          </div>
-        ) : (
-            <div className="text-center py-16">
-                <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">No Events Found</h3>
-                <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">Try adjusting your search or filter.</p>
-            </div>
-        )}
+            {currentEvents.length > 0 ? (
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {currentEvents.map(event => (
+                    <EventCard key={event.id} event={event} onViewDetails={openEventModal} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16">
+                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">No Events Found</h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">Try adjusting your search or filter.</p>
+                </div>
+            )}
 
-        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-      </main>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
-      <FilterModal
-          isOpen={isFilterModalOpen}
-          onClose={() => setIsFilterModalOpen(false)}
-          filters={modalFilters}
-          setFilters={setModalFilters}
-          applyFilters={handleApplyFilters}
-          clearFilters={handleClearFilters}
-      />
+            <FilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                filters={modalFilters}
+                setFilters={setModalFilters}
+                applyFilters={handleApplyFilters}
+                clearFilters={handleClearFilters}
+            />
 
-      <EventDetailModal
-        isOpen={!!selectedEvent}
-        onClose={closeEventModal}
-        event={selectedEvent}
-      />
-
-      <footer className="bg-white dark:bg-gray-800 mt-12 py-4 transition-colors duration-300">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 dark:text-gray-400 transition-colors duration-300">
-            &copy; {new Date().getFullYear()} Flemmards. All rights reserved.
-        </div>
-      </footer>
-    </div>
+            <EventDetailModal
+                isOpen={!!selectedEvent}
+                onClose={closeEventModal}
+                event={selectedEvent}
+            />
+        </>
   );
 }
 
+export default Student;

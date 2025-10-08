@@ -13,7 +13,7 @@ const Login = ({ loginForm, setLoginForm, handleLogin }) => {
     const roles = [
 		{ value: 'student', label: translate("student") },
 		{ value: 'organizer', label: translate("organizer") },
-		{ value: 'admin', label: translate("roleAdmin") },
+		{ value: 'admin', label: translate("admin") },
 	];
 
     return (

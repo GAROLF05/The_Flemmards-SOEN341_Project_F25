@@ -1,9 +1,16 @@
+import MainLayout from "../layouts/MainLayout";
 import Student from "../pages/student/Student";
 
 const StudentRoutes = [
     {
         path: '/student',
-        element: <Student />,
+        element: <MainLayout />,
+        children: [
+            {
+                path: '',
+                element: <Student />
+            }
+        ]
     }
 ];
 
