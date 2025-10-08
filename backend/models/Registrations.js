@@ -49,6 +49,16 @@ const registrationSchema = new mongoose.Schema({
         index: true,
     },
 
+    ticketIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ticket'
+    }],
+
+    ticketsIssued: {
+        type: Number,
+        default: 0
+    },
+
 	
 }, {
     collection: 'registrations',

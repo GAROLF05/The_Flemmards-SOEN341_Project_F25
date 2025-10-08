@@ -1,34 +1,33 @@
+/* NOTE: This file should only contain the following:
+- Express App setup
+- Dotenv Setup
+- DB setup and connection
+- Middlewares
+- Route mounting (i.e. app.use(/api/route, routeName))
+- Server startup (app.listen(PORT, ...))
+*/
+
 const path = require('path');
 // Express setup
 const express = require('express');
-const app = express();
-const PORT = 3000;
 
 // Dotenv setup
 const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-// QR Code setup (npm install qrcode)
-const qrcode = require('qrcode');
-
 // MongoDB setup
 const mongoose = require('mongoose');
-
-// Models of DB
-const Administrator = require('./models/Administrators');
-const User = require('./models/User');
-const { Event } = require('./models/Event');
-const Organization = require('./models/Organization');
-const Registration = require('./models/Registrations');
-const Ticket = require('./models/Ticket');
-
-// DB connection
 const connectToDB = require('./config/database')
 
+// App setup
+const app = express();
+const PORT = 3000;
+
+// Middlewares
 app.use(express.json())
 app.use(express.text({ type: 'text/plain' }))
 
-// Add CORS middleware to handle cross-origin requests
+// CORS middleware to handle cross-origin requests
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -41,8 +40,11 @@ app.use((req, res, next) => {
     }
 });
 
-const ticketController = require('./controllers/ticketController');
-app.post('/api/tickets/create', ticketController.createTicket);
+// Import routes
+const ticketRoutes = require('./routes/tickets');
+
+// Mount routes
+app.use('/api/tickets', ticketRoutes);
 
 // connect to MongoDB before starting the server
 (async () => {
