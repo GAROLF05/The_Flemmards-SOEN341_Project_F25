@@ -4,7 +4,7 @@
     "formTitle": "Welcome Back!",
     "formSubtitle": "Please select your role and sign in to continue.",
     "roleStudent": "Student",
-    "roleManager": "Manager",
+    "roleOrganizer": "Organizer",
     "roleAdmin": "Admin",
     "emailPlaceholder": "Email address",
     "passwordPlaceholder": "Password",

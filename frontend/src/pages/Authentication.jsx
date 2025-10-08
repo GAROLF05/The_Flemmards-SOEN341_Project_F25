@@ -28,19 +28,26 @@ export default function Authentication() {
 
 	const handleLogin = (e) => {
 		e.preventDefault();
-		showNotification('This is just a test for notifications.', 'success');
+
+		if (role === "student")
+			navigate("/student");
+		else if (role === "organizer")
+			navigate("/organizer");
+		else if (role === "admin")
+			navigate("/admin");
 	};
 
 	const handleSignUp = (e) => {
 		e.preventDefault();
 		showNotification('This is just a test for notifications.', 'error');
+		
 		// todo: handle signup call here
 	};
 
 	const RoleSelector = ({ currentRole, setRole }) => {
 		const roles = [
 			{ value: 'student', label: translate("roleStudent") },
-			{ value: 'manager', label: translate("roleManager") },
+			{ value: 'organizer', label: translate("roleOrganizer") },
 			{ value: 'admin', label: translate("roleAdmin") },
 		];
 
