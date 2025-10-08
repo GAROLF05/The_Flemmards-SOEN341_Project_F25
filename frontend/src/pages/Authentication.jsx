@@ -1,15 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
-import { UserIcon, EnvelopeIcon,  ArrowLeftIcon, LockClosedIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react';
+import { UserIcon, EnvelopeIcon,  ArrowLeftIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../hooks/useLanguage';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotification } from '../hooks/useNotification';
+import Button from '../components/button/Button';
+import Checkbox from '../components/checkbox/Checkbox';
+import TextField from '../components/textField/TextField';
+import ButtonGroup from '../components/button/ButtonGroup';
+import Select from '../components/select/Select';
 
 export default function Authentication() {
 	const [role, setRole] = useState('student');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
-	const langDropdownRef = useRef(null);
+	const [rememberMe, setRememberMe] = useState(false);
+	const [fullName, setFullName] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
 	const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
 	const { showNotification } = useNotification();
 	const navigate = useNavigate();
@@ -20,89 +26,33 @@ export default function Authentication() {
 		.filter(Boolean)
 		.includes('signup');
 
-	useEffect(() => {
-		const handleClickOutside = (event) => {
-			if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
-				setIsLangDropdownOpen(false);
-			}
-		};
-
-		document.addEventListener("mousedown", handleClickOutside);
-
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, [langDropdownRef]);
-
 	const handleLogin = (e) => {
 		e.preventDefault();
+		showNotification('This is just a test for notifications.', 'success');
 	};
 
 	const handleSignUp = (e) => {
 		e.preventDefault();
+		showNotification('This is just a test for notifications.', 'error');
 		// todo: handle signup call here
 	};
 
 	const RoleSelector = ({ currentRole, setRole }) => {
 		const roles = [
-			{ id: 'student', label: translate("roleStudent") },
-			{ id: 'manager', label: translate("roleManager") },
-			{ id: 'admin', label: translate("roleAdmin") },
+			{ value: 'student', label: translate("roleStudent") },
+			{ value: 'manager', label: translate("roleManager") },
+			{ value: 'admin', label: translate("roleAdmin") },
 		];
 
 		return (
-			<div className="flex w-full rounded-lg bg-gray-100 p-1 mb-6">
-				{roles.map(r => (
-					<button
-						key={r.id}
-						type="button"
-						onClick={() => setRole(r.id)}
-						className={`w-full py-2.5 text-sm font-semibold text-center rounded-md transition-all duration-300 ease-in-out cursor-pointer
-						${currentRole === r.id
-								? 'bg-white text-indigo-600 shadow-sm'
-								: 'text-gray-500 hover:bg-gray-200'
-							}`}
-					>
-						{r.label}
-					</button>
-				))}
-			</div>
+			<ButtonGroup
+				options={roles}
+				value={currentRole}
+				onChange={setRole}
+				className="mb-6"
+			/>
 		);
 	};
-
-	const LanguageSelector = () => (
-		<div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-20">
-			<div className="relative" ref={langDropdownRef}>
-				<button
-					type="button"
-					onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-					className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all cursor-pointer"
-				>
-					{currentLanguage.toUpperCase()}
-					<ChevronDownIcon className="-mr-1 ml-2 h-5 w-5 text-gray-400" />
-				</button>
-
-				{isLangDropdownOpen && (
-					<div className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-						<div className="py-1">
-							{availableLanguages.map(lang => (
-								<button
-									key={lang}
-									onClick={() => {
-										changeLanguage(lang);
-										setIsLangDropdownOpen(false);
-									}}
-									className="block w-full px-4 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer"
-								>
-									{lang.toUpperCase()}
-								</button>
-							))}
-						</div>
-					</div>
-				)}
-			</div>
-		</div>
-	);
 
 	return (
 		<div className="flex min-h-screen font-sans bg-white">
@@ -123,7 +73,13 @@ export default function Authentication() {
 
 			{/* Right Panel: Forms */}
 			<div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 relative overflow-hidden">
-				<LanguageSelector />
+				<Select
+					label={translate("language")}
+					value={currentLanguage.toLowerCase()}
+					onChange={lang => changeLanguage(lang)}
+					options={availableLanguages.map(lang => ({ value: lang.toLowerCase(), label: lang.toUpperCase() }))}
+					className="absolute top-6 right-6 sm:top-8 sm:right-8 z-2 w-[90px]"
+				/>
 
 				{/* LOGIN FORM CONTAINER */}
 				<div className="w-full max-w-md">
@@ -136,52 +92,79 @@ export default function Authentication() {
 
 					<form className="space-y-6" onSubmit={handleLogin}>
 						<div className="space-y-4">
-							<div className="relative">
-								<UserIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input id="email-address" name="email" type="email" autoComplete="email" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} />
-							</div>
-							<div className="relative">
-								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input id="password" name="password" type="password" autoComplete="current-password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} />
-							</div>
+							<TextField
+								id="email-address"
+								name="email"
+								type="email"
+								autoComplete="email"
+								required={true}
+								placeholder={translate("emailPlaceholder")}
+								value={email}
+								IconLeft={UserIcon}
+								onChange={(e) => setEmail(e.target.value)}
+								className="w-full"
+							/>
+
+							<TextField
+								id="password"
+								name="password"
+								type="password"
+								required={true}
+								placeholder={translate("passwordPlaceholder")}
+								value={password}
+								IconLeft={LockClosedIcon}
+								onChange={(e) => setPassword(e.target.value)}
+								className="w-full"
+							/>
 						</div>
 						<div className="flex items-center justify-between mt-6">
-							<div className="flex items-center">
-								<input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-								<label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">{translate("rememberMe")}</label>
-							</div>
-							<div className="text-sm">
-								<a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">{translate("forgotPassword")}</a>
-							</div>
+							<Checkbox
+								label={translate("rememberMe")}
+								name="remember-me"
+								id="remember-me"
+								checked={rememberMe}
+								onChange={e => setRememberMe(e.target.checked)}
+							/>
+
+							<Button
+								variant="text"
+								onClick={() => navigate("/login")}
+								className="!px-2"
+							>
+								{translate("forgotPassword")}
+							</Button>
 						</div>
 						<div>
-							<button
+							<Button
 								type="submit"
-								className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer"
-								onClick={() => showNotification('This is just a test for notifications.', 'success')}
+								className="w-full"
 							>
 								{translate("signIn")}
-							</button>
+							</Button>
 						</div>
 					</form>
 					<p className="mt-8 text-center text-sm text-gray-600">
-						{translate("notMember")}{' '}
-						<button onClick={() => navigate("/signup")} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none cursor-pointer">
+						{translate("notMember")}
+						<Button
+							variant="text"
+							onClick={() => navigate("/signup")}
+						>
 							{translate("signUp")}
-						</button>
+						</Button>
 					</p>
 				</div>
 
 				{/* SIGN UP SLIDER PANEL */}
 				<div className={`absolute top-0 left-0 h-full w-full bg-white p-6 sm:p-8 lg:p-12 flex items-center justify-center transition-transform duration-700 ease-in-out transform z-10 ${isSignUp ? 'translate-x-0' : 'translate-x-full'}`}>
-					<button
-						type="button"
+					<Button
+						variant="none"
 						onClick={() => navigate("/login")}
-						className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
 						aria-label={translate("goBack")}
+						className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors"
 					>
 						<ArrowLeftIcon className="h-6 w-6 text-gray-900" />
-					</button>
+					</Button>
+
 					<div className="w-full max-w-md">
 						<div className="text-center lg:text-left mb-8">
 							<h1 className="text-3xl font-bold text-gray-900">{translate("createAccount")}</h1>
@@ -189,37 +172,73 @@ export default function Authentication() {
 						</div>
 
 						<form className="space-y-4" onSubmit={handleSignUp}>
-							<div className="relative">
-								<UserIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input name="fullname" type="text" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("fullNamePlaceholder")} />
-							</div>
-							<div className="relative">
-								<EnvelopeIcon  className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input name="email" type="email" autoComplete="email" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("emailPlaceholder")} />
-							</div>
-							<div className="relative">
-								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input name="password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("passwordPlaceholder")} />
-							</div>
-							<div className="relative">
-								<LockClosedIcon className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-								<input name="confirm-password" type="password" required className="w-full pl-10 pr-3 py-3 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all" placeholder={translate("confirmPasswordPlaceholder")} />
-							</div>
+							<TextField
+								id="fullname"
+								name="fullname"
+								type="text"
+								autoComplete="fullname"
+								required={true}
+								placeholder={translate("fullNamePlaceholder")}
+								value={fullName}
+								IconLeft={UserIcon}
+								onChange={(e) => setFullName(e.target.value)}
+								className="w-full"
+							/>
+
+							<TextField
+								id="email"
+								name="email"
+								type="email"
+								autoComplete="email"
+								required={true}
+								placeholder={translate("emailPlaceholder")}
+								value={email}
+								IconLeft={EnvelopeIcon}
+								onChange={(e) => setEmail(e.target.value)}
+								className="w-full"
+							/>
+
+							<TextField
+								id="reset-password"
+								name="reset-password"
+								type="password"
+								required={true}
+								placeholder={translate("passwordPlaceholder")}
+								value={password}
+								IconLeft={LockClosedIcon}
+								onChange={(e) => setPassword(e.target.value)}
+								className="w-full"
+							/>
+
+							<TextField
+								id="confirm-password"
+								name="confirm-password"
+								type="password"
+								required={true}
+								placeholder={translate("confirmPasswordPlaceholder")}
+								value={confirmPassword}
+								IconLeft={LockClosedIcon}
+								onChange={(e) => setConfirmPassword(e.target.value)}
+								className="w-full"
+							/>
+
 							<div className="pt-2">
-								<button
+								<Button
 									type="submit"
-									className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 cursor-pointer"
-									onClick={() => showNotification('This is just a test for notifications.', 'error')}
+									className="w-full"
 								>
 									{translate("signUpButton")}
-								</button>
+								</Button>
 							</div>
 						</form>
 						<p className="mt-8 text-center text-sm text-gray-600">
-							{translate("alreadyMember")}{' '}
-							<button onClick={() => navigate("/login")} className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none cursor-pointer">
+							{translate("alreadyMember")}
+							<Button
+								variant="text"
+								onClick={() => navigate("/login")}
+							>
 								{translate("signIn")}
-							</button>
+							</Button>
 						</p>
 					</div>
 				</div>
