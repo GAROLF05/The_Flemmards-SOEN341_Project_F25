@@ -17,7 +17,7 @@ const ticketSchema = new mongoose.Schema({
         trim: true,
     },
 
-    code: {
+    code: { // for qr validation
         type: String,
         required: [true, "Ticket code is required"],
         unique: true,

@@ -20,14 +20,17 @@ router.get('/ticket/all', ticketController.getAllTickets);
 router.get('/ticket/by-id/:ticket_id', ticketController.getTicketsById);
 router.get('/ticket/by-ticketid/:ticketID', ticketController.getTicketsByTicketId);
 
-// Count tikets
+// Count tickets
 router.get('/ticket/count/', ticketController.countTickets);
 
+// Validate tickets
+router.get('/ticket/validate', ticketController.validateTicket);
+
 // Ticket CRUD management
-router.post('ticket/create', ticketController.createTicket);
+router.post('/ticket/create', ticketController.createTicket);
 router.put('/ticket/regenqr/:ticket_id', ticketController.regenerateQrCode);
-router.put('/ticket/update/:ticket_id/:field', ticketController.updateTicket);
-router.put('/ticket/used/:ticket_id', ticketController.markTicketAsUsed);
+router.put('/ticket/update/:ticket_id', ticketController.updateTicket); // admin purposes
+router.put('/ticket/used/:ticket_id', ticketController.markTicketAsUsed); // quick endpoint
 
 // Filter tickets by user or event
 router.get('/user/:user_id', ticketController.getTicketsByUser);

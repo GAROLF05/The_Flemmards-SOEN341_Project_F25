@@ -113,7 +113,7 @@ exports.createTicket = async(req, res) =>{
             }); // create initial ticket
             createdTicketIds.push(t._id);
             // generate QR from a stable payload (ticket.code preferred)
-            const payload = t.ticketId || t.code || String(t._id);
+            const payload = t.code || t.ticketId || String(t._id);
             const dataUrl = await qrcode.toDataURL(payload);
             t.qrDataUrl = dataUrl;
             await t.save();
@@ -289,18 +289,55 @@ exports.cancelTicket = async (req,res)=>{
 
 // API endpoint to validate ticket
 exports.validateTicket = async (req,res)=>{ 
-    
+    try{
+        const { code } = req.query; // The code from QR
+
+        if (!code)
+            return res.status(400).json({ error: "Ticket code required" });
+
+        const ticket = await Ticket.findOne({ code: code })
+            .populate("event user registration");
+
+        if (!ticket)
+            return res.status(404).json({ error: "Invalid or non-existent ticket" });
+
+        if (ticket.status === "used")
+            return res.status(409).json({ error: "Ticket already used" });
+
+        if (ticket.status === "cancelled")
+            return res.status(403).json({ error: "Ticket has been cancelled" });
+
+        // Otherwise valid
+        return res.status(200).json({
+            message: "Ticket is valid",
+            ticket,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Could not validate ticket"})
+    }
 }
 
 // API endpoint to mark ticket as used
 exports.markTicketAsUsed = async (req,res)=>{
     try{
-        const {ticketID} = req.params;
-        if (!ticketID)
-            return res.status(400).json({error: "Ticket ID required"});
+        const {ticket_id} = req.params;
+        if (!ticket_id)
+            return res.status(400).json({error: "ticket_id required"});
 
-        if (!mongoose.Types.ObjectId.isValid(ticketID))
-            return res.status(400).json({error: "Invalid ticket ID format"});
+        if (!mongoose.Types.ObjectId.isValid(ticket_id))
+            return res.status(400).json({error: "Invalid ticket_id format"});
+
+        const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: "used"}, {new: true});
+        if (!ticket)
+            return res.status(404).json({error: "Ticket not found"});
+
+        return res.status(200).json({
+            message: "Ticket marked as used",
+            ticket,
+        });
+
         
     } catch(e){
         console.error(e);
@@ -323,7 +360,7 @@ exports.regenerateQrCode = async (req,res)=>{
         if (!ticket)
             return res.status(404).json({error: "Ticket not found"})
 
-        const payload = ticket.ticketId || ticket.code || String(ticket._id);
+        const payload = ticket.code || ticket.ticketId || String(ticket._id);
         const dataUrl = await qrcode.toDataURL(payload);
         ticket.qrDataUrl = dataUrl;
         await ticket.save();
