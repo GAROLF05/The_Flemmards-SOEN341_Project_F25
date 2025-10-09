@@ -1,11 +1,15 @@
-// Models of DB
-const Administrator = require('./models/Administrators');
-const User = require('./models/User');
-const { Event } = require('./models/Event');
-const Organization = require('./models/Organization');
-const Registration = require('./models/Registrations');
-const Ticket = require('./models/Ticket');
+const express = require('express');
+const router = express.Router();
+const Ticket = require('../models/Ticket');
 
-// Dotenv setup
-const dotenv = require('dotenv');
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+// Basic routes
+router.get('/', async (req, res) => {
+    try {
+        const tickets = await Ticket.find();
+        res.json(tickets);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+module.exports = router;

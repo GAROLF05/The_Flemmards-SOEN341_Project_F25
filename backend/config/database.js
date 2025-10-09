@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const path = require('path');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
 async function connectToDB({ retries = 3, backoffMs = 500 } = {}) {
