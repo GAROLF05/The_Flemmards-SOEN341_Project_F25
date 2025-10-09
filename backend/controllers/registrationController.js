@@ -140,7 +140,7 @@ exports.getAllRegistrations = async (req,res)=>{
         }})
         .populate({
             path: 'ticketIds',
-            model: 'Ticket', // optional but explicit
+            model: 'Ticket',
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
@@ -156,11 +156,83 @@ exports.getAllRegistrations = async (req,res)=>{
 };
 
 exports.getRegistrationById = async (req,res)=>{
+    try{
+        const {reg_id} = req.params;
 
+        // Registration id validity
+        if (!reg_id)
+            return res.status(400).json({error: "reg_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(reg_id))
+            return res.status(400).json({error: "Invalid registration id format"});
+        
+        const reg = await Registration.findById(reg_id)
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all registrations"});
+    }
 }
 
 exports.getRegistrationByRegId = async (req,res)=>{
+    try{
+        const {registrationId} = req.params;
+        
+        // registrationId validity
+        if (!registrationId)
+            return res.status(400).json({error: "registrationId is required"});
+        
+        const reg = await Registration.findOne({registrationId: registrationId})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
 
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
 }
 
 exports.getRegistrationByUser = async (req,res)=>{

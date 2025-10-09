@@ -160,6 +160,8 @@ exports.getTicketsById = async (req,res)=>{
         const {ticket_id} = req.params;
         if (!ticket_id)
             return res.status(400).json({error: "ticket_id could not be processed"})
+        if (!mongoose.Types.ObjectId.isValid(ticket_id))
+            return res.status(400).json({error: "Invalid ticket id format"});
         
         const ticket = await Ticket.findById(ticket_id)
         .populate({
