@@ -14,20 +14,22 @@ const ticketController = require("../controllers/ticketController");
 
 // ToDO: Add a verifyUser jwt token
 
-router.post('/create', ticketController.createTicket);
 
-router.get('/', ticketController.getAllTickets);
-
+// Filter tickets by all, _id, or ticketId
+router.get('/ticket/all', ticketController.getAllTickets);
 router.get('/ticket/by-id/:ticket_id', ticketController.getTicketsById);
 router.get('/ticket/by-ticketid/:ticketID', ticketController.getTicketsByTicketId);
 
+// Count tikets
 router.get('/ticket/count/', ticketController.countTickets);
-router.get('/ticket/count/event/:event_id', ticketController.countTicketsPerEvents);
 
+// Ticket CRUD management
+router.post('ticket/create', ticketController.createTicket);
 router.put('/ticket/regenqr/:ticket_id', ticketController.regenerateQrCode);
 router.put('/ticket/update/:ticket_id/:field', ticketController.updateTicket);
 router.put('/ticket/used/:ticket_id', ticketController.markTicketAsUsed);
 
+// Filter tickets by user or event
 router.get('/user/:user_id', ticketController.getTicketsByUser);
 router.get('/event/:event_id', ticketController.getTicketsByEvent);
 

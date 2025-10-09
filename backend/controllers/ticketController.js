@@ -106,7 +106,11 @@ exports.createTicket = async(req, res) =>{
         const qrTickets = [];
 
         for (let i = 0; i < qty; i++){
-            const t = await Ticket.create({ registration: registration._id }); // create initial ticket
+            const t = await Ticket.create({ 
+                user: registration.user,
+                event: registration.event,                
+                registration: registration._id, 
+            }); // create initial ticket
             createdTicketIds.push(t._id);
             // generate QR from a stable payload (ticket.code preferred)
             const payload = t.ticketId || t.code || String(t._id);
@@ -242,21 +246,50 @@ exports.getAllTickets = async (req,res)=>{
     }
 };
 
+// API Endpoint to Update ticket status
 exports.updateTicket = async (req,res)=>{
+    try{
+        const {ticket_id} = req.params; // Acts on ticket_id
+        const {status} =  req.body; // Updating existing status
+        const valid_status = ['valid', 'used', 'cancelled'];
 
+        // Ticket_id validity
+        if (!ticket_id)
+            return res.status(400).json({error: "ticket_id required"});
+        if (!mongoose.Types.ObjectId.isValid(ticket_id))
+            return res.status(400).json({error: "Invalid ticket id format"});
+        
+        // Status validity
+        if (!status)
+            return res.status(400).json({error: "status required"});
+        if (!valid_status.includes(status))
+            return res.status(400).json({error: "Invald status value"});
+
+        const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: status}, {new: true});
+        if (!ticket)
+            return res.status(404).json({error: "Ticket not found"});
+
+        return res.status(200).json({
+            message: "Ticket updated successfully",
+            ticket,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to update ticket"})
+    }
 }
 
-exports.deleteTicket = async (req,res)=>{
+exports.cancelTicket = async (req,res)=>{
 
 }
-
 
 
 /* VALIDATION */
 
 // API endpoint to validate ticket
 exports.validateTicket = async (req,res)=>{ 
-
+    
 }
 
 // API endpoint to mark ticket as used
@@ -271,7 +304,7 @@ exports.markTicketAsUsed = async (req,res)=>{
         
     } catch(e){
         console.error(e);
-        return res.status(500).json({error: "Ticket cannot be found"})
+        return res.status(500).json({error: "Failed to mark ticket as used"})
     }
 
 }
@@ -395,32 +428,22 @@ exports.getTicketsByUser = async (req,res)=>{
     }
 }
 
-// API endpoint to count the total number of tickets
-exports.countTickets = async (req,res)=>{
+exports.countTickets = async (req, res) => {
     try {
-        const count = await Ticket.countDocuments();
-        return res.status(200).json({
-            message: "Total number of tickets in the system",
-            totalTickets: count
-        });
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ error: "Failed to count tickets" });
-    }
-}
+        const { event_id } = req.query;
+        const filter = event_id ? { event: event_id } : {};
+        const count = await Ticket.countDocuments(filter);
 
-// API endpoint to count the total number of tickets per event
-exports.countTicketsPerEvents = async (req,res)=>{
-    try {
-        const {event_id} = req.params;
-        const count = await Ticket.countDocuments({event: event_id});
         return res.status(200).json({
-            message: "Total number of tickets for this event",
+            message: event_id
+                ? `Total number of tickets for event ${event_id}`
+                : "Total number of tickets in the system",
             totalTickets: count
         });
     } catch (e) {
         console.error(e);
         return res.status(500).json({ error: "Failed to count tickets" });
     }
-}
+};
+
 
