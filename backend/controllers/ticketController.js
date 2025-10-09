@@ -157,6 +157,8 @@ exports.createTicket = async(req, res) =>{
 // API endpoint to Get tickets by _id
 exports.getTicketsById = async (req,res)=>{
     try{
+        // Require authentication to view a ticket (owner or admin)
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const {ticket_id} = req.params;
         if (!ticket_id)
             return res.status(400).json({error: "ticket_id could not be processed"})
@@ -180,9 +182,13 @@ exports.getTicketsById = async (req,res)=>{
         }).lean().exec();
         
 
-        if (!ticket) return res.status(404).json({ 
-            error: 'Ticket not found' 
-        });
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        // Owner or admin may view
+        const ticketUserId = ticket.user && (ticket.user._id ? ticket.user._id.toString() : ticket.user.toString());
+        const isOwner = ticketUserId === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
         return res.status(200).json({ ticket });
 
@@ -195,6 +201,8 @@ exports.getTicketsById = async (req,res)=>{
 // API endpoint to Get tickets by ticketId
 exports.getTicketsByTicketId = async (req,res)=>{
     try{
+        // Require authentication to view a ticket (owner or admin)
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const {ticketID} = req.params;
         if (!ticketID)
             return res.status(400).json({error: "TicketId could not be processed"})
@@ -216,9 +224,12 @@ exports.getTicketsByTicketId = async (req,res)=>{
         }).lean().exec();
         
 
-        if (!ticket) return res.status(404).json({ 
-            error: 'Ticket not found' 
-        });
+        if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+        const ticketUserId = ticket.user && (ticket.user._id ? ticket.user._id.toString() : ticket.user.toString());
+        const isOwner = ticketUserId === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
         return res.status(200).json({ ticket });
 
@@ -231,6 +242,11 @@ exports.getTicketsByTicketId = async (req,res)=>{
 // API endpoint to Get all tickets
 exports.getAllTickets = async (req,res)=>{
     try{
+        // Admin-only: list all tickets
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const adminAll = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!adminAll) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
         const tickets = await Ticket.find()
         .populate({
             path: 'user', 
@@ -276,9 +292,13 @@ exports.updateTicket = async (req,res)=>{
         if (!valid_status.includes(status))
             return res.status(400).json({error: "Invald status value"});
 
+        // Only admins may change ticket status
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
         const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: status}, {new: true});
-        if (!ticket)
-            return res.status(404).json({error: "Ticket not found"});
+        if (!ticket) return res.status(404).json({error: "Ticket not found"});
 
         return res.status(200).json({
             message: "Ticket updated successfully",
@@ -301,8 +321,13 @@ exports.deleteTicket = async (req,res) =>{
         if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
 
-        // Delete ticket
-        await Ticket.findByIdAndDelete(ticket_id);
+    // Only admins may delete tickets
+    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+    const adm = await Administrator.findOne({ email: req.user.email }).lean();
+    if (!adm) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+    // Delete ticket
+    await Ticket.findByIdAndDelete(ticket_id);
 
         // Find the event
         const event = await Event.findById(ticket.event._id);
@@ -350,6 +375,12 @@ exports.cancelTicket = async (req,res)=>{
             return res.status(400).json({ error: "Used tickets cannot be cancelled" });
 
         // Cancel the ticket
+        // Owner or admin may cancel
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
+        const adminCancel = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !adminCancel) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
         ticket.status = "cancelled";
         await ticket.save();
 
@@ -424,9 +455,13 @@ exports.markTicketAsUsed = async (req,res)=>{
         if (!mongoose.Types.ObjectId.isValid(ticket_id))
             return res.status(400).json({error: "Invalid ticket_id format"});
 
+        // Only admins (scanner) may mark tickets as used
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const adminUsed = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!adminUsed) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
         const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: "used"}, {new: true});
-        if (!ticket)
-            return res.status(404).json({error: "Ticket not found"});
+        if (!ticket) return res.status(404).json({error: "Ticket not found"});
 
         return res.status(200).json({
             message: "Ticket marked as used",
@@ -451,9 +486,13 @@ exports.regenerateQrCode = async (req,res)=>{
         if(!mongoose.Types.ObjectId.isValid(ticket_id))
             return res.status(400).json({error: "Invalid ticket_id format"})
 
+        // Owner or admin may regenerate QR
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const ticket = await Ticket.findById(ticket_id);
-        if (!ticket)
-            return res.status(404).json({error: "Ticket not found"})
+        if (!ticket) return res.status(404).json({error: "Ticket not found"})
+        const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
+        const adminReg = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !adminReg) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
         const payload = ticket.code || ticket.ticketId || String(ticket._id);
         const dataUrl = await qrcode.toDataURL(payload);

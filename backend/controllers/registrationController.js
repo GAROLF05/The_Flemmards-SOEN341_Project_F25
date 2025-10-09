@@ -127,6 +127,10 @@ exports.registerToEvent = async (req, res) => {
 
 exports.getAllRegistrations = async (req,res)=>{
     try{
+        // Only administrators can fetch all registrations
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
         const reg = await Registration.find()
         .populate({
             path: 'user', 
@@ -165,7 +169,7 @@ exports.getRegistrationById = async (req,res)=>{
         if (!mongoose.Types.ObjectId.isValid(reg_id))
             return res.status(400).json({error: "Invalid registration id format"});
         
-        const reg = await Registration.findById(reg_id)
+    const reg = await Registration.findById(reg_id)
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -182,13 +186,15 @@ exports.getRegistrationById = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg)
-            return res.status(404).json({error: "Registration not found"});
+        if (!reg) return res.status(404).json({error: "Registration not found"});
 
-        return res.status(200).json({
-            count: reg.length,
-            reg,
-        });
+        // Owner or admin can access
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+        return res.status(200).json({ registration: reg });
 
     } catch(e){
         console.error(e);
@@ -204,7 +210,7 @@ exports.getRegistrationByRegId = async (req,res)=>{
         if (!registrationId)
             return res.status(400).json({error: "registrationId is required"});
         
-        const reg = await Registration.findOne({registrationId: registrationId})
+    const reg = await Registration.findOne({registrationId: registrationId})
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -221,13 +227,14 @@ exports.getRegistrationByRegId = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg)
-            return res.status(404).json({error: "Registration not found"});
+        if (!reg) return res.status(404).json({error: "Registration not found"});
 
-        return res.status(200).json({
-            count: reg.length,
-            reg,
-        });
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+        return res.status(200).json({ registration: reg });
 
     } catch(e){
         console.error(e);
@@ -245,7 +252,12 @@ exports.getRegistrationByUser = async (req,res)=>{
         if (!mongoose.Types.ObjectId.isValid(user_id))
             return res.status(400).json({error: "Invalid user_id format"});
         
-        const reg = await Registration.find({user: user_id})
+    // Only owner (same user) or admin can fetch registrations for a user
+    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+    const admin = await Administrator.findOne({ email: req.user.email }).lean();
+    if (req.user._id.toString() !== user_id && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+    const reg = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -262,13 +274,9 @@ exports.getRegistrationByUser = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg)
-            return res.status(404).json({error: "Registration not found"});
+        if (!reg) return res.status(404).json({error: "Registration not found"});
 
-        return res.status(200).json({
-            count: reg.length,
-            reg,
-        });
+        return res.status(200).json({ count: reg.length, reg });
 
     } catch(e){
         console.error(e);
@@ -286,7 +294,12 @@ exports.getRegistrationByEvent = async (req,res)=>{
         if (!mongoose.Types.ObjectId.isValid(event_id))
             return res.status(400).json({error: "Invalid event_id format"});
         
-        const reg = await Registration.find({event: event_id})
+    // Only administrators can fetch registrations by event
+    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+    const admin = await Administrator.findOne({ email: req.user.email }).lean();
+    if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+    const reg = await Registration.find({event: event_id})
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -303,13 +316,9 @@ exports.getRegistrationByEvent = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg)
-            return res.status(404).json({error: "Registration not found"});
+        if (!reg) return res.status(404).json({error: "Registration not found"});
 
-        return res.status(200).json({
-            count: reg.length,
-            reg,
-        });
+        return res.status(200).json({ count: reg.length, reg });
 
     } catch(e){
         console.error(e);
