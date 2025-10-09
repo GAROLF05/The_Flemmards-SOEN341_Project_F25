@@ -38,13 +38,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     select: false,
   },
-
-  events_registered: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Registration', 
-    }
-  ]
+  
 }, {
     collection: 'users',
     timestamps: true, 
@@ -59,9 +53,20 @@ const userSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Dynamically return the number of events registered to
-userSchema.virtual('registrationsCount').get(function () {
-  return Array.isArray(this.events_registered) ? this.events_registered.length : 0;
+// Virtual: list of tickets owned by user (Ticket.user -> User)
+userSchema.virtual('tickets', {
+  ref: 'Ticket',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: false,
+});
+
+// Virtual: list of registrations for this user (Registration.user -> User)
+userSchema.virtual('registrations', {
+  ref: 'Registration',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: false,
 });
 
 const User = mongoose.model('User', userSchema);

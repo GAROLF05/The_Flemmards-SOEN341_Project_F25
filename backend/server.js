@@ -42,6 +42,7 @@ app.use((req, res, next) => {
 
 // Import routes
 const ticketRoutes = require('./routes/tickets');
+const registrationRoutes = require('./routes/registrations')
 
 // Mount routes
 app.use('/api/tickets', ticketRoutes);

@@ -25,6 +25,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const { error } = require('console');
 
+
 // API endpoint to Create a Ticket
 exports.createTicket = async(req, res) =>{
     try{
@@ -90,8 +91,15 @@ exports.createTicket = async(req, res) =>{
 
         /* Light event validation (reservation should be done earlier via registerToEvent) */
         const ev = await Event.findById(registration.event).select('status').lean();
-        if (!ev) return res.status(400).json({ code: 'EVENT_NOT_FOUND', message: 'Event not found' });
-        if (ev.status !== EVENT_STATUS.UPCOMING) return res.status(403).json({ code: 'CLOSED', message: 'Event is not open for ticketing' });
+        if (!ev) 
+            return res.status(400).json({ 
+                code: 'EVENT_NOT_FOUND', 
+                message: 'Event not found' 
+            });
+        if (ev.status !== EVENT_STATUS.UPCOMING) return res.status(403).json({ 
+            code: 'CLOSED', 
+            message: 'Event is not open for ticketing' 
+        });
 
         // Create tickets based on registration quantity (create, generate QR, save)
         const createdTicketIds = [];
@@ -109,7 +117,7 @@ exports.createTicket = async(req, res) =>{
         }
 
     
-        // Update registration to record that tickets were created 
+        // Update registration to record that ticket IDs were created 
         try {
             await Registration.updateOne(
                 { _id: registration._id },
@@ -120,16 +128,6 @@ exports.createTicket = async(req, res) =>{
             );
         } catch (e) {
             console.error('Failed to update registration with ticket IDs', e);
-        }
-
-        // Also update the User document to include this registration in events_registered (avoid duplicates)
-        try {
-            await User.updateOne(
-                { _id: registration.user },
-                { $addToSet: { events_registered: registration._id } }
-            );
-        } catch (e) {
-            console.error('Failed to update user.events_registered', e);
         }
 
         return res.status(201).json({ created: qrTickets.length, tickets: qrTickets });
@@ -143,14 +141,14 @@ exports.createTicket = async(req, res) =>{
 
 /* CORE CRUDS */
 
-// Get a ticket by ID
+// API endpoint to Get tickets by _id
 exports.getTicketsById = async (req,res)=>{
     try{
-        const {ticketID} = req.params;
-        if (!ticketID)
-            return res.status(400).json({error: "Ticket id could not be processed"})
+        const {ticket_id} = req.params;
+        if (!ticket_id)
+            return res.status(400).json({error: "ticket_id could not be processed"})
         
-        const ticket = await Ticket.findById(ticketID)
+        const ticket = await Ticket.findById(ticket_id)
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -179,7 +177,43 @@ exports.getTicketsById = async (req,res)=>{
     }
 }
 
-// Get all tickets
+// API endpoint to Get tickets by ticketId
+exports.getTicketsByTicketId = async (req,res)=>{
+    try{
+        const {ticketID} = req.params;
+        if (!ticketID)
+            return res.status(400).json({error: "TicketId could not be processed"})
+        
+        const ticket = await Ticket.findOne({ticketId: ticketID})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+                path: 'organization',
+                select: 'name website',
+            }})
+        .populate({
+            path: 'registration',
+            select: 'registrationId quantity'
+        }).lean().exec();
+        
+
+        if (!ticket) return res.status(404).json({ 
+            error: 'Ticket not found' 
+        });
+
+        return res.status(200).json({ ticket });
+
+    } catch(e){
+        console.error(e);
+        res.status(500).json({error: "Failed to fetch ticket"})
+    }
+}
+
+// API endpoint to Get all tickets
 exports.getAllTickets = async (req,res)=>{
     try{
         const tickets = await Ticket.find()
@@ -219,16 +253,56 @@ exports.deleteTicket = async (req,res)=>{
 
 
 /* VALIDATION */
+
+// API endpoint to validate ticket
 exports.validateTicket = async (req,res)=>{ 
 
 }
 
+// API endpoint to mark ticket as used
 exports.markTicketAsUsed = async (req,res)=>{
+    try{
+        const {ticketID} = req.params;
+        if (!ticketID)
+            return res.status(400).json({error: "Ticket ID required"});
+
+        if (!mongoose.Types.ObjectId.isValid(ticketID))
+            return res.status(400).json({error: "Invalid ticket ID format"});
+        
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Ticket cannot be found"})
+    }
 
 }
 
+// API endpoint to regenerate QR code
 exports.regenerateQrCode = async (req,res)=>{
     try{
+        const {ticket_id} = req.params;
+        if (!ticket_id)
+            return res.status(400).json({error: "ticket_id required"});
+
+        if(!mongoose.Types.ObjectId.isValid(ticket_id))
+            return res.status(400).json({error: "Invalid ticket_id format"})
+
+        const ticket = await Ticket.findById(ticket_id);
+        if (!ticket)
+            return res.status(404).json({error: "Ticket not found"})
+
+        const payload = ticket.ticketId || ticket.code || String(ticket._id);
+        const dataUrl = await qrcode.toDataURL(payload);
+        ticket.qrDataUrl = dataUrl;
+        await ticket.save();
+
+        return res.status(200).json({
+            message: "QR code regenerated successfully",
+            ticket: {
+                id: ticket._id,
+                ticketId: ticket.ticketId,
+                qrDataUrl: dataUrl
+            }
+        });
 
     } catch(e){
         console.error(e);
@@ -237,16 +311,18 @@ exports.regenerateQrCode = async (req,res)=>{
 }
 
 /* ANALYTICS + ADMIN */
+
+// API endpoint to get all tickets by events
 exports.getTicketsByEvent = async (req,res)=>{
     try{
-        const {eventId} = req.params;
-        if (!eventId)
-            return res.status(400).json({error: "TicketId required"});
+        const {event_id} = req.params;
+        if (!event_id)
+            return res.status(400).json({error: "event_id required"});
 
-        if (!mongoose.Types.ObjectId.isValid(eventId))
-            return res.status(400).json({ error: "Invalid event ID format" });
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({ error: "Invalid event_id format" });
 
-        const eventTickets = await Ticket.find({event: eventId})
+        const eventTickets = await Ticket.find({event: event_id})
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -277,18 +353,18 @@ exports.getTicketsByEvent = async (req,res)=>{
     }
 }
 
-// Get all tickets to events user registered to
+// API endpoint to Get all tickets to events user registered to by _id of user
 exports.getTicketsByUser = async (req,res)=>{
     try{
-        const {userId} = req.params;
-        if (!userId)
-            return res.status(400).json({error: "UserId required"});
+        const {user_id} = req.params;
+        if (!user_id)
+            return res.status(400).json({error: "user_id required"});
         
 
-        if (!mongoose.Types.ObjectId.isValid(userId))
-            return res.status(400).json({ error: "Invalid user ID format" });
+        if (!mongoose.Types.ObjectId.isValid(user_id))
+            return res.status(400).json({ error: "Invalid user_id format" });
 
-        const userTickets = await Ticket.find({user: userId})
+        const userTickets = await Ticket.find({user: user_id})
         .populate({
             path: 'user', 
             select: 'name student_id email'})
@@ -319,121 +395,32 @@ exports.getTicketsByUser = async (req,res)=>{
     }
 }
 
+// API endpoint to count the total number of tickets
 exports.countTickets = async (req,res)=>{
-
-}
-
-// Reserve capacity and create a registration for an event
-exports.registerToEvent = async (req, res) => {
     try {
-        // Check if there's user
-        if (!req.user) 
-            return res.status(401).json({ 
-                code: 'UNAUTHORIZED', 
-                message: 'Authentication required' 
-            });
-
-        const { eventId, quantity = 1 } = req.body || {};
-        const qty = Number(quantity);
-
-        // Check if event id is valid
-        if (!mongoose.Types.ObjectId.isValid(eventId)) 
-            return res.status(400).json({ 
-                code: 'BAD_REQUEST', 
-                message: 'Invalid eventId' 
-            });
-
-        // Check if qty is valid
-        if (!Number.isInteger(qty) || qty < 1) 
-            return res.status(400).json({ 
-                code: 'BAD_REQUEST', 
-                message: 'Quantity invalid' 
-            });
-
-        // Pre-check: avoid duplicate registration before touching event capacity
-        const existingRegistration = await Registration.findOne({ user: req.user._id, event: eventId }).lean();
-        if (existingRegistration) {
-            return res.status(409).json({ code: 'ALREADY_REGISTERED', message: 'User already registered for this event', registration: existingRegistration });
-        }
-
-        // Update event capacity iif it is upcoming and matches eventId
-        const updatedEvent = await Event.findOneAndUpdate(
-            { _id: eventId, capacity: { $gte: qty }, status: EVENT_STATUS.UPCOMING },
-            { $inc: { capacity: -qty } },
-            { new: true }
-        );
-
-        // Upcoming event not found
-        if (!updatedEvent) {
-            const ev = await Event.findById(eventId).select('capacity status').lean();
-
-            // Event not found
-            if (!ev) 
-                return res.status(404).json({ 
-                    code: 'EVENT_NOT_FOUND', 
-                    message: 'Event not found' 
-                });
-
-            // Event not upcoming (closed, ongoing, completed, or cancelled)
-            if (ev.status !== EVENT_STATUS.UPCOMING)
-                return res.status(403).json({ 
-                    code: 'CLOSED', 
-                    message: `Event is ${ev.status}` 
-                });
-
-            // Event full (no capacity left)
-            return res.status(409).json({ 
-                code: 'FULL', 
-                message: 'Not enough capacity' 
-            });
-        }
-
-
-        // Try to create a unique registration for this (user,event)
-        try {
-            const registration = await Registration.create({
-                user: req.user._id,
-                event: eventId,
-                quantity: qty,
-                status: Registration.REGISTRATION_STATUS ? Registration.REGISTRATION_STATUS.PAID : 'paid'
-            });
-
-            // Add registration to user.events_registered
-            await User.updateOne(
-                { _id: req.user._id }, 
-                { $addToSet: { 
-                    events_registered: registration._id 
-                }}
-            );
-
-            return res.status(201).json({ 
-                registrationId: registration.registrationId, 
-                registration 
-            });
-
-        } catch (e) {
-            // If registration exists due to unique index on (user,event), rollback event capacity and return conflict
-            try { 
-                // Change capacity back to original if registration creation fails
-                await Event.findByIdAndUpdate(
-                    eventId, 
-                    { $inc: { capacity: qty } }
-                ); 
-            } catch (er) { 
-                console.error('Rollback failed', er); 
-            }
-
-            return res.status(409).json({ 
-                code: 'ALREADY_REGISTERED', 
-                message: 'User already registered for this event' 
-            });
-        }
-
+        const count = await Ticket.countDocuments();
+        return res.status(200).json({
+            message: "Total number of tickets in the system",
+            totalTickets: count
+        });
     } catch (e) {
         console.error(e);
-        return res.status(500).json({ 
-            code: 'INTERNAL_ERROR', 
-            message: 'Failed to register to event' 
-        });
+        return res.status(500).json({ error: "Failed to count tickets" });
     }
 }
+
+// API endpoint to count the total number of tickets per event
+exports.countTicketsPerEvents = async (req,res)=>{
+    try {
+        const {event_id} = req.params;
+        const count = await Ticket.countDocuments({event: event_id});
+        return res.status(200).json({
+            message: "Total number of tickets for this event",
+            totalTickets: count
+        });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to count tickets" });
+    }
+}
+

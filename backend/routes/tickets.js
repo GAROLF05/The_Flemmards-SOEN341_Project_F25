@@ -13,15 +13,22 @@ const router = express.Router();
 const ticketController = require("../controllers/ticketController");
 
 // ToDO: Add a verifyUser jwt token
-router.post('/register', ticketController.registerToEvent)
+
 router.post('/create', ticketController.createTicket);
 
 router.get('/', ticketController.getAllTickets);
-router.get('/tickets/:ticketID', ticketController.getTicketsById);
-router.get('/user/:userId', ticketController.getTicketsByUser);
-router.get('/event/:eventId', ticketController.getTicketsByEvent);
 
+router.get('/ticket/by-id/:ticket_id', ticketController.getTicketsById);
+router.get('/ticket/by-ticketid/:ticketID', ticketController.getTicketsByTicketId);
 
-router.put('/tickets/update/:field', ticketController.updateTicket);
+router.get('/ticket/count/', ticketController.countTickets);
+router.get('/ticket/count/event/:event_id', ticketController.countTicketsPerEvents);
+
+router.put('/ticket/regenqr/:ticket_id', ticketController.regenerateQrCode);
+router.put('/ticket/update/:ticket_id/:field', ticketController.updateTicket);
+router.put('/ticket/used/:ticket_id', ticketController.markTicketAsUsed);
+
+router.get('/user/:user_id', ticketController.getTicketsByUser);
+router.get('/event/:event_id', ticketController.getTicketsByEvent);
 
 module.exports = router;
