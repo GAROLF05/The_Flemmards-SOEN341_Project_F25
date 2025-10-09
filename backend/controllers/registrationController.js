@@ -318,11 +318,129 @@ exports.getRegistrationByEvent = async (req,res)=>{
 }
 
 exports.updateRegistration = async (req,res)=>{
+    try{
+        const { reg_id } = req.params;
+        const { quantity } = req.body || {};
 
+        // Basic validation
+        if (!req.user) 
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        if (!reg_id) 
+            return res.status(400).json({ error: 'reg_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(reg_id)) 
+            return res.status(400).json({ error: 'Invalid registration id format' });
+
+        const newQty = Number(quantity);
+        if (!Number.isInteger(newQty) || newQty < 1) 
+            return res.status(400).json({ error: 'Quantity invalid' });
+
+        const reg = await Registration.findById(reg_id);
+        if (!reg) 
+            return res.status(404).json({ error: 'Registration not found' });
+
+        // Only the owner (or admins in future) can update
+        if (reg.user.toString() !== req.user._id.toString())
+            return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
+
+        // Fetch event
+        const event = await Event.findById(reg.event);
+        if (!event) 
+            return res.status(400).json({ error: 'Event could not be found with registration' });
+
+        const oldQty = reg.quantity || 0;
+        const delta = newQty - oldQty;
+
+        // If increasing quantity on a confirmed registration, ensure capacity
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED && delta > 0) {
+            if (event.capacity < delta) {
+                return res.status(409).json({ code: 'FULL', message: 'Not enough capacity to increase quantity' });
+            }
+            event.capacity -= delta;
+            await event.save();
+        }
+
+        // If decreasing quantity and tickets were already issued, remove extra tickets
+        let deletedTicketsCount = 0;
+        if (newQty < (reg.ticketsIssued || 0)) {
+            const toRemove = (reg.ticketIds || []).slice(newQty);
+            if (toRemove.length > 0) {
+                await Ticket.deleteMany({ _id: { $in: toRemove } });
+                deletedTicketsCount = toRemove.length;
+                // trim arrays and counters
+                reg.ticketIds = (reg.ticketIds || []).slice(0, newQty);
+                reg.ticketsIssued = Math.max(0, (reg.ticketsIssued || 0) - deletedTicketsCount);
+            }
+        }
+
+        // Update registration quantity
+        reg.quantity = newQty;
+        await reg.save();
+
+        return res.status(200).json({ message: 'Registration updated', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to update registration' });
+    }
 }
 
 exports.cancelRegistration = async (req,res)=>{
+    try{
+        const { reg_id } = req.params;
 
+        if (!req.user) 
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        if (!reg_id) 
+            return res.status(400).json({ error: 'reg_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(reg_id)) return res.status(400).json({ error: 'Invalid registration id format' });
+
+        const reg = await Registration.findById(reg_id);
+        if (!reg) 
+            return res.status(404).json({ error: 'Registration not found' });
+
+        // Only owner can cancel (admins not implemented)
+        if (reg.user.toString() !== req.user._id.toString())
+            return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
+
+        // Fetch event
+        const event = await Event.findById(reg.event);
+        if 
+        (!event) return res.status(400).json({ error: 'Event could not be found with registration' });
+
+        // If already cancelled
+        if (reg.status === REGISTRATION_STATUS.CANCELLED)
+            return res.status(400).json({ error: 'Registration already cancelled' });
+
+        // Release capacity if it was confirmed
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+            event.capacity += reg.quantity;
+            await event.save();
+        }
+
+        // Remove from waitlist if present
+        if (Array.isArray(event.waitlist)) {
+            event.waitlist = event.waitlist.filter(id => id.toString() !== reg._id.toString());
+            await event.save();
+        }
+
+        // Delete issued tickets
+        let deletedTicketsCount = 0;
+        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
+            deletedTicketsCount = reg.ticketIds.length;
+            reg.ticketIds = [];
+            reg.ticketsIssued = 0;
+        }
+
+        reg.status = REGISTRATION_STATUS.CANCELLED;
+        await reg.save();
+
+        return res.status(200).json({ message: 'Registration cancelled', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to cancel registration' });
+    }
 }
 
 exports.deleteRegistration = async (req,res)=>{
