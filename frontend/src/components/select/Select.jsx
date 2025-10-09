@@ -11,7 +11,7 @@ import { classNames } from '../../utils/classNames';
  * @param {Array<Object>} options - An array of option objects. Each object must have a 'value' (string) and a 'label' (string).
  * @param {string} className - Additional custom CSS classes.
  * @param {boolean} disabled - If true, the dropdown will be disabled.
- * @returns {JSX.Element} - The rendered button component.
+ * @returns {JSX.Element} - The rendered dropdown component.
  */
 
 const Select = ({ label, value, onChange, options = [], disabled = false, className = '' }) => {

@@ -9,7 +9,7 @@ const Header = ({ onMenuClick }) => {
     const userDropdownRef = useRef(null);
     const langDropdownRef = useRef(null);
     const {theme, toggleTheme} = useTheme();
-    const { changeLanguage, currentLanguage, availableLanguages } = useLanguage();
+    const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
 
     const useOutsideAlerter = (ref, setOpenState) => {
         useEffect(() => {
@@ -26,24 +26,29 @@ const Header = ({ onMenuClick }) => {
         }, [ref, setOpenState]);
     }
 
+    const handleLanguageChange = (lang) => {
+        changeLanguage(lang);
+        setIsLangMenuOpen(false);
+    };
+
     useOutsideAlerter(userDropdownRef, setIsUserMenuOpen);
     useOutsideAlerter(langDropdownRef, setIsLangMenuOpen);
 
     return (
         <header className="bg-white dark:bg-gray-800 shadow-md sticky top-0 z-100 transition-colors duration-300">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-16">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-4">
                         <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
                             <Bars3Icon className="h-6 w-6"/>
                         </button>
-                        <a href="#" className="text-2xl font-bold text-indigo-600">Flemmards</a>
+                        <a href="javascript:void(0)" className="text-2xl font-bold text-indigo-600">{translate("appTitle")}</a>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <button onClick={toggleTheme} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
                             {theme === 'light' ? <MoonIcon className="w-6 h-6"/> : <SunIcon className="w-6 h-6"/>}
-                            <span className="font-medium text-sm hidden sm:block">{theme === 'light' ? 'Dark' : 'Light'}</span>
+                            <span className="font-medium text-sm hidden sm:block">{theme === 'light' ? translate("dark") : translate("light")}</span>
                         </button>
 
                         <div className="relative" ref={langDropdownRef}>
@@ -55,14 +60,13 @@ const Header = ({ onMenuClick }) => {
                             {isLangMenuOpen && (
                                 <div className="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transition-colors duration-300">
                                     {availableLanguages.map(lang => (
-                                        <a
+                                        <li
                                             key={lang}
-                                            href=""
-                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300"
-                                            onClick={() => changeLanguage(lang)}
+                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300 cursor-pointer"
+                                            onClick={() => handleLanguageChange(lang)}
                                         >
                                             {lang.toUpperCase()}
-                                        </a>
+                                        </li>
                                     ))}
                                 </div>
                             )}
@@ -76,12 +80,12 @@ const Header = ({ onMenuClick }) => {
 
                             {isUserMenuOpen && (
                                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
-                                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
+                                    <a href="javascript:void(0)" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
                                         <UserCircleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
                                         Profile
                                     </a>
 
-                                    <a href="#" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
+                                    <a href="javascript:void(0)" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
                                         <ArrowRightStartOnRectangleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
                                         Logout
                                     </a>

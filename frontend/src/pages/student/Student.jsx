@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { AdjustmentsHorizontalIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
+import Modal from '../../components/modal/Modal';
+import Carousel from '../../components/carousel/Carousel';
+import { useLanguage } from '../../hooks/useLanguage';
 
 // --- MOCK DATA ---
 const eventsData = [
@@ -195,6 +199,8 @@ const getReturnValues = (countDown) => {
 };
 
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
+    const { translate } = useLanguage();
+
     const [days, hours, minutes, seconds] = useCountdown(event.date);
 
     return (
@@ -202,62 +208,20 @@ const FeaturedEventSlide = ({ event, onViewDetails }) => {
             <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover"/>
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 text-white">
-                <span className="inline-block bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">Featured Event</span>
+                <span className="inline-block bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">{translate("featuredEvents")}</span>
                 <h2 className="text-4xl font-extrabold mb-4">{event.title}</h2>
                 <p className="text-lg max-w-2xl mb-6">{event.description}</p>
                 <div className="flex items-center space-x-4">
                     <div className="flex space-x-4 text-center">
-                        <div><span className="text-4xl font-bold">{String(days).padStart(2, '0')}</span><span className="block text-xs">Days</span></div>
-                        <div><span className="text-4xl font-bold">{String(hours).padStart(2, '0')}</span><span className="block text-xs">Hours</span></div>
-                        <div><span className="text-4xl font-bold">{String(minutes).padStart(2, '0')}</span><span className="block text-xs">Minutes</span></div>
-                        <div><span className="text-4xl font-bold">{String(seconds).padStart(2, '0')}</span><span className="block text-xs">Seconds</span></div>
+                        <div><span className="text-4xl font-bold">{String(days).padStart(2, '0')}</span><span className="block text-xs">{translate("days")}</span></div>
+                        <div><span className="text-4xl font-bold">{String(hours).padStart(2, '0')}</span><span className="block text-xs">{translate("hours")}</span></div>
+                        <div><span className="text-4xl font-bold">{String(minutes).padStart(2, '0')}</span><span className="block text-xs">{translate("minutes")}</span></div>
+                        <div><span className="text-4xl font-bold">{String(seconds).padStart(2, '0')}</span><span className="block text-xs">{translate("seconds")}</span></div>
                     </div>
                     <button onClick={() => onViewDetails(event)} className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300 transform hover:scale-105">
-                        Learn More
+                        {translate("learnMore")}
                     </button>
                 </div>
-            </div>
-        </div>
-    );
-};
-
-const FeaturedEventCarousel = ({ events, onViewDetails }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
-
-    const nextSlide = useCallback(() => {
-        const isLastSlide = currentIndex === events.length - 1;
-        const newIndex = isLastSlide ? 0 : currentIndex + 1;
-        setCurrentIndex(newIndex);
-    }, [currentIndex, events.length]);
-
-    const goToSlide = (slideIndex) => {
-        setCurrentIndex(slideIndex);
-    };
-
-    useEffect(() => {
-        const slideInterval = setInterval(nextSlide, 5000);
-        return () => clearInterval(slideInterval);
-    }, [nextSlide]);
-
-    if (!events || events.length === 0) {
-        return null;
-    }
-
-    return (
-        <div className="relative h-96 rounded-xl overflow-hidden mb-12 shadow-2xl">
-            <div className="relative w-full h-full flex transition-transform ease-in-out duration-500" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
-                {events.map((event) => (
-                    <FeaturedEventSlide key={event.id} event={event} onViewDetails={onViewDetails} />
-                ))}
-            </div>
-            <div className="absolute bottom-5 right-0 left-0 z-30 flex justify-center gap-2">
-                {events.map((_, slideIndex) => (
-                    <div
-                        key={slideIndex}
-                        onClick={() => goToSlide(slideIndex)}
-                        className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${currentIndex === slideIndex ? 'bg-white w-6' : 'bg-white/50'}`}
-                    ></div>
-                ))}
             </div>
         </div>
     );
@@ -299,10 +263,8 @@ const EventCard = ({ event, onViewDetails }) => {
                         className="flex-shrink-0 p-2 rounded-full hover:bg-red-50 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300"
                         aria-label="Like event"
                     >
-                        <HeartIcon
-                            isLiked={isLiked}
-                            className={`w-6 h-6 transition-colors duration-200 ${isLiked ? 'text-red-500' : 'text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-500'}`}
-                        />
+                        {isLiked && ( <FilledHeartIcon className="w-6 h-6 text-red-500 transition-colors duration-200" /> )}
+                        {!isLiked && ( <HeartIcon className="w-6 h-6 text-gray-400 transition-colors duration-200 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-500" /> )}
                     </button>
                 </div>
             </div>
@@ -346,6 +308,7 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
 
     useEffect(() => {
         const container = scrollContainerRef.current;
+
         if (container) {
             checkForScroll();
             container.addEventListener('scroll', checkForScroll, { passive: true });
@@ -357,12 +320,14 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
             };
         }
     }, [checkForScroll]);
+
     const scroll = (direction) => {
         if (scrollContainerRef.current) {
             const scrollAmount = direction === 'left' ? -350 : 350;
             scrollContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     };
+
     return (
          <div className="relative flex items-center mb-12">
             {canScrollLeft && ( <button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300" aria-label="Scroll left"> <ChevronLeftIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" /> </button> )}
@@ -376,19 +341,27 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
 };
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    const { translate } = useLanguage();
+
     const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (totalPages <= 1) return null;
+
+    if (totalPages <= 1)
+        return null;
+
     return (
         <div className="mt-12 flex justify-center items-center space-x-2">
-            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> Previous </button>
+            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> {translate("previous")} </button>
             {pageNumbers.map(number => ( <button key={number} onClick={() => onPageChange(number)} className={`px-4 py-2 rounded-md transition-colors duration-300 ${ currentPage === number ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600' }`}> {number} </button> ))}
-            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> Next </button>
+            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> {translate("next")} </button>
         </div>
     );
 };
 
 const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clearFilters }) => {
-    if (!isOpen) return null;
+    const { translate } = useLanguage();
+
+    if (!isOpen)
+        return null;
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -398,19 +371,16 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
     const modalEventTypes = categories.filter(c => c !== 'All' && c !== 'Featured');
 
     return (
-        <div className="fixed inset-0 bg-black/70 bg-opacity-60 z-50 flex justify-center items-center p-4 transition-opacity duration-300 ease-in-out" style={{ opacity: isOpen ? 1 : 0 }}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-8 relative transform transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'translateY(0)' : 'translateY(-20px)', opacity: isOpen ? 1 : 0 }}>
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-300 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <XMarkIcon className="h-6 w-6" />
-                </button>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">Filter Events</h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-8 transition-colors duration-300">Refine your search to find the perfect event.</p>
+        <Modal isOpen={isOpen} onClose={onClose} width="small">
+            <div className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-300">{translate("filterEvents")}</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-8 transition-colors duration-300">{translate("filterEventsSubtitle")}</p>
 
                 <form onSubmit={(e) => { e.preventDefault(); applyFilters(); }}>
                     <div className="space-y-6">
                         {/* Date Range */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Date Range</label>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("dateRange")}</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="relative">
                                     <CalendarDaysIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none"/>
@@ -425,7 +395,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
 
                         {/* Event Type */}
                         <div className="relative">
-                            <label htmlFor="eventType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Event Type</label>
+                            <label htmlFor="eventType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("eventType")}</label>
                             <TagIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none"/>
                             <select name="eventType" id="eventType" value={filters.eventType} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
                                 <option value="">All Types</option>
@@ -436,8 +406,8 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
 
                         {/* Location */}
                         <div className="relative">
-                            <label htmlFor="location" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Location</label>
-                             <MapPinIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none"/>
+                            <label htmlFor="location" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("location")}</label>
+                                <MapPinIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none"/>
                             <select name="location" id="location" value={filters.location} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
                                 <option value="">All Locations</option>
                                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
@@ -449,69 +419,53 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                     {/* Action Buttons */}
                     <div className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-4 transition-colors duration-300">
                         <button type="button" onClick={clearFilters} className="px-5 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-all duration-300">
-                            Clear
+                            {translate("clear")}
                         </button>
                         <button type="submit" className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 dark:hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300">
-                            Apply Filters
+                            {translate("applyFilters")}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
-    );
+        </Modal>
+    )
 };
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
-    if (!event) return null;
+    const { translate } = useLanguage();
+
+    if (!event)
+        return null;
 
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <div className={`fixed inset-0 z-[70] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
-            {/* Overlay */}
-            <div
-                className="fixed inset-0 bg-black/70 transition-opacity duration-300"
-                onClick={onClose}
-                style={{ opacity: isOpen ? 1 : 0 }}
-            ></div>
-
-            {/* Modal Content */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4">
-                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out"
-                    style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}
-                >
-                    <div className="relative">
-                        <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
-                        <button onClick={onClose} className="absolute top-4 right-4 bg-black/30 text-white rounded-full p-2 hover:bg-black/50 transition-colors">
-                            <XMarkIcon className="h-6 w-6"/>
-                        </button>
-                    </div>
-                    <div className="p-8">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
-                        <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
-                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400 mb-6">
-                            <div className="flex items-center gap-2">
-                                <CalendarDaysIcon className="w-5 h-5"/>
-                                <span>{formattedDate}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <MapPinIcon className="w-5 h-5"/>
-                                <span>{event.location}</span>
-                            </div>
+        <Modal isOpen={isOpen} onClose={onClose}>
+            <>
+                <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
+                <div className="p-8">
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
+                    <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
+                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400 mb-6">
+                        <div className="flex items-center gap-2">
+                            <CalendarDaysIcon className="w-5 h-5"/>
+                            <span>{formattedDate}</span>
                         </div>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                            Participate
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <MapPinIcon className="w-5 h-5"/>
+                            <span>{event.location}</span>
+                        </div>
                     </div>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
+                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                        {translate("participate")}
+                    </button>
                 </div>
-            </div>
-        </div>
-    );
+            </>
+        </Modal>
+    )
 };
-
 
 const Student = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -565,6 +519,15 @@ const Student = () => {
         return events;
     }, [searchTerm, activeCategories, activeFilters]);
 
+    let carouselData = featuredEvents.map(event => ({
+        id: event.id,
+        props: {
+            event: event,
+            onViewDetails: openEventModal
+        },
+        Component: FeaturedEventSlide
+    }));
+
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, activeCategories, activeFilters]);
@@ -587,7 +550,7 @@ const Student = () => {
 
     return (
         <>
-            <FeaturedEventCarousel events={featuredEvents} onViewDetails={openEventModal} />
+            <Carousel items={carouselData} />
 
             <div className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-grow group w-full">
