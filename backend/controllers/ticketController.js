@@ -245,7 +245,7 @@ exports.getAllTickets = async (req,res)=>{
             select: 'registrationId quantity'
         }).lean().exec();
 
-        res.status(200).json({
+        return res.status(200).json({
             count: tickets.length,
             tickets
         });

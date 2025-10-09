@@ -125,6 +125,67 @@ exports.registerToEvent = async (req, res) => {
     }
 };
 
+exports.getAllRegistrations = async (req,res)=>{
+    try{
+        const reg = await Registration.find()
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', // optional but explicit
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all registrations"});
+    }
+};
+
+exports.getRegistrationById = async (req,res)=>{
+
+}
+
+exports.getRegistrationByRegId = async (req,res)=>{
+
+}
+
+exports.getRegistrationByUser = async (req,res)=>{
+
+}
+
+exports.getRegistrationByEvent = async (req,res)=>{
+
+}
+
+exports.updateRegistration = async (req,res)=>{
+
+}
+
+exports.cancelRegistration = async (req,res)=>{
+
+}
+
+exports.deleteRegistration = async (req,res)=>{
+
+}
+
+
+
+// API endpoint to promote waitlisted user
 exports.promoteWaitlistedUser = async (req, res) => {
     const { event_id } = req.params;
     const event = await Event.findById(event_id).populate('waitlist');

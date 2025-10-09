@@ -13,6 +13,9 @@ const router = express.Router();
 const registrationController = require("../controllers/registrationController");
 
 
+// CRUD MANAGEMENT
+router.get('/get/all', registrationController.getAllRegistrations)
+
 router.post('/register', registrationController.registerToEvent);
 router.put('/waitlist/promote/:event_id', registrationController.promoteWaitlistedUser);
 
