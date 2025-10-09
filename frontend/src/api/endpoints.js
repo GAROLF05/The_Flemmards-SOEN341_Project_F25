@@ -1,8 +1,9 @@
-const ENDPOINTS = {
-    LOGIN: "/auth/login",
-    SIGNUP: "/auth/signup",
-    LOGOUT: "/auth/logout",
-    GETEVENTS: "/events",
+const endpoints = {
+  events: "/events",
+  event: (id) => `/events/${id}`,
+  registrations: "/registrations",
+  myRegistrations: "/registrations/me",
+  tickets: (registrationId) => `/tickets/${registrationId}`,
 };
 
-export default ENDPOINTS;
+export default endpoints;
