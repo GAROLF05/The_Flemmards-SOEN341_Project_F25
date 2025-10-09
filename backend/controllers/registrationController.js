@@ -236,11 +236,85 @@ exports.getRegistrationByRegId = async (req,res)=>{
 }
 
 exports.getRegistrationByUser = async (req,res)=>{
+    try{
+        const {user_id} = req.params;
+        
+        // registrationId validity
+        if (!user_id)
+            return res.status(400).json({error: "user_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(user_id))
+            return res.status(400).json({error: "Invalid user_id format"});
+        
+        const reg = await Registration.find({user: user_id})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
 
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
 }
 
 exports.getRegistrationByEvent = async (req,res)=>{
+    try{
+        const {event_id} = req.params;
+        
+        // registrationId validity
+        if (!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event_id format"});
+        
+        const reg = await Registration.find({event: event_id})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
 
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
 }
 
 exports.updateRegistration = async (req,res)=>{
@@ -252,6 +326,62 @@ exports.cancelRegistration = async (req,res)=>{
 }
 
 exports.deleteRegistration = async (req,res)=>{
+    try{
+        const {reg_id} = req.params;
+    
+        // Check registration id validity
+        if (!reg_id)
+            return res.status(400).json({error: "reg_id is required"});
+
+        // Find the registration
+        const reg = await Registration.findById(reg_id);
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        // Find the evennt
+        const event = await Event.findById(reg.event._id);
+        if (!event)
+            return res.status(400).json({error: "Event could not be found with registration"})
+
+
+        // Update the capacity
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+            event.capacity += reg.quantity;
+            await event.save();
+        }
+
+
+        // Remove from waitlist reference
+        if (Array.isArray(event.waitlist)) {
+            event.waitlist = event.waitlist.filter(
+                (id) => id.toString() !== reg._id.toString()
+            );
+            await event.save();
+        }
+
+        // Remove from ticketIds issued
+        let deletedTicketsCount = 0;
+        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
+            deletedTicketsCount = reg.ticketIds.length;
+        }
+
+        // Delete the registration
+        await Registration.findByIdAndDelete(reg_id);
+
+
+        return res.status(200).json({
+            message: "Registration and associated tickets deleted successfully",
+            deletedRegistration: reg._id,
+            deletedTicketsCount,
+            eventCapacity: event.capacity
+        });
+
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to delete registration"});
+    }
 
 }
 
