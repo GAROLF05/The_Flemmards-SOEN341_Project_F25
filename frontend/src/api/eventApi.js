@@ -1,5 +1,6 @@
-import axiosClient from "./axiosClient"
-import ENDPOINTS from "./endpoints"
+import api from "./axiosClient";
+import endpoints from "./endpoints";
 
-export const getEvents = (data) =>
-    axiosClient.post(ENDPOINTS.GETEVENTS, data);
+export const getEvents = () => api.get(endpoints.events);
+export const getEventById = (id) => api.get(endpoints.event(id));
+export const createEvent = (payload) => api.post(endpoints.events, payload);

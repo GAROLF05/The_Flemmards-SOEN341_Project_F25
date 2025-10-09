@@ -1,18 +1,25 @@
-import { useRoutes } from 'react-router-dom';
-import AuthenticationRoutes from './AuthenticationRoutes';
-import HomeRoutes from './HomeRoutes';
-import PageNotFoundRoutes from './PageNotFoundRoutes';
+import { Routes, Route } from "react-router-dom";
+import Authentication from "../pages/Authentication";
+import PageNotFound from "../pages/PageNotFound";
+import StudentHome from "../pages/StudentHome";
+import EventDetail from "../pages/EventDetail";
+import MyEvents from "../pages/MyEvents";
+import OrganizerCreateEvent from "../pages/OrganizerCreateEvent";
 
-const routes = [
-    ...HomeRoutes,
-    ...AuthenticationRoutes,
-    ...PageNotFoundRoutes,
-];
+export default function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/auth" element={<Authentication />} />
 
-const AppRoutes = () => {
-    const element = useRoutes(routes);
+      {/* Student flow */}
+      <Route path="/" element={<StudentHome />} />
+      <Route path="/event/:id" element={<EventDetail />} />
+      <Route path="/me/events" element={<MyEvents />} />
 
-    return element;
-};
+      {/* Organizer progress */}
+      <Route path="/organizer/create" element={<OrganizerCreateEvent />} />
 
-export default AppRoutes;
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
+}
