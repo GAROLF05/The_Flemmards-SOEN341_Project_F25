@@ -294,9 +294,27 @@ exports.deleteTicket = async (req,res) =>{
     try {
         const { ticket_id } = req.params;
 
-        const deleted = await Ticket.findByIdAndDelete(ticket_id);
-        if (!deleted)
+        // Find ticket
+        const ticket = await Ticket.findById(ticket_id);
+        if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
+
+        // Delete ticket
+        await Ticket.findByIdAndDelete(ticket_id);
+
+        // Find the event
+        const event = await Event.findById(ticket.event._id);
+        if (!event)
+            return res.status(400).json({error: "Event could not be found with ticket"})
+        
+        // Find the registration
+        const reg = await Registration.findById(ticket.registration._id);
+        if (!reg)
+            return res.status(400).json({error: "Registration info could not be found with ticket"})
+        
+        // Change event capacity
+        event.capacity = (event.capacity || 0) + (reg.quantity || 1);
+        await event.save();
 
         return res.status(200).json({
             message: "Ticket deleted successfully"
@@ -315,15 +333,37 @@ exports.cancelTicket = async (req,res)=>{
         if (!ticket_id)
             return res.status(400).json({ error: "ticket_id required" });
 
-        const ticket = await Ticket.findByIdAndUpdate(
-            ticket_id,
-            { status: "cancelled" },
-            { new: true }
-        );
+        // Find ticket
+        const ticket = await Ticket.findById(ticket_id)
+            .populate("event")
+            .populate("registration");
 
         if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
 
+        // If already cancelled or used, prevent duplicate cancellation
+        if (ticket.status === "cancelled")
+            return res.status(400).json({ error: "Ticket already cancelled" });
+        if (ticket.status === "used")
+            return res.status(400).json({ error: "Used tickets cannot be cancelled" });
+
+        // Cancel the ticket
+        ticket.status = "cancelled";
+        await ticket.save();
+
+        // Find the event
+        const event = await Event.findById(ticket.event._id);
+        if (!event)
+            return res.status(400).json({error: "Event could not be found with ticket"})
+        
+        // Find the registration
+        const reg = await Registration.findById(ticket.registration._id);
+        if (!reg)
+            return res.status(400).json({error: "Registration info could not be found with ticket"})
+        
+        // Change event capacity
+        event.capacity = (event.capacity || 0) + (reg.quantity || 1);
+        await event.save();
         
 
         return res.status(200).json({
