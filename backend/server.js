@@ -46,7 +46,7 @@ const registrationRoutes = require('./routes/registrations')
 
 // Mount routes
 app.use('/api/tickets', ticketRoutes);
-app.use('api/registrations', registrationRoutes);
+app.use('/api/registrations', registrationRoutes);
 
 // connect to MongoDB before starting the server
 (async () => {

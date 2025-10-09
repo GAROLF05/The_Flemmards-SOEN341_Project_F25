@@ -87,5 +87,5 @@ registrationSchema.virtual('ticketsCount', {
 });
 
 
-module.exports = mongoose.model('Registration', registrationSchema);
-module.exports.REGISTRATION_STATUS = REGISTRATION_STATUS;
+const Registration = mongoose.model('Registration', registrationSchema);
+module.exports = {Registration,REGISTRATION_STATUS};

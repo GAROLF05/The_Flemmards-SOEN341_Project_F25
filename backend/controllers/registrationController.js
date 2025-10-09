@@ -125,6 +125,396 @@ exports.registerToEvent = async (req, res) => {
     }
 };
 
+exports.getAllRegistrations = async (req,res)=>{
+    try{
+        // Only administrators can fetch all registrations
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const reg = await Registration.find()
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket',
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        return res.status(200).json({
+            count: reg.length,
+            reg,
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all registrations"});
+    }
+};
+
+exports.getRegistrationById = async (req,res)=>{
+    try{
+        const {reg_id} = req.params;
+
+        // Registration id validity
+        if (!reg_id)
+            return res.status(400).json({error: "reg_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(reg_id))
+            return res.status(400).json({error: "Invalid registration id format"});
+        
+    const reg = await Registration.findById(reg_id)
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        if (!reg) return res.status(404).json({error: "Registration not found"});
+
+        // Owner or admin can access
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+        return res.status(200).json({ registration: reg });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all registrations"});
+    }
+}
+
+exports.getRegistrationByRegId = async (req,res)=>{
+    try{
+        const {registrationId} = req.params;
+        
+        // registrationId validity
+        if (!registrationId)
+            return res.status(400).json({error: "registrationId is required"});
+        
+    const reg = await Registration.findOne({registrationId: registrationId})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        if (!reg) return res.status(404).json({error: "Registration not found"});
+
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+        return res.status(200).json({ registration: reg });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
+}
+
+exports.getRegistrationByUser = async (req,res)=>{
+    try{
+        const {user_id} = req.params;
+        
+        // registrationId validity
+        if (!user_id)
+            return res.status(400).json({error: "user_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(user_id))
+            return res.status(400).json({error: "Invalid user_id format"});
+        
+    // Only owner (same user) or admin can fetch registrations for a user
+    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+    const admin = await Administrator.findOne({ email: req.user.email }).lean();
+    if (req.user._id.toString() !== user_id && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+
+    const reg = await Registration.find({user: user_id})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        if (!reg) return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({ count: reg.length, reg });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
+}
+
+exports.getRegistrationByEvent = async (req,res)=>{
+    try{
+        const {event_id} = req.params;
+        
+        // registrationId validity
+        if (!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event_id format"});
+        
+    // Only administrators can fetch registrations by event
+    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+    const admin = await Administrator.findOne({ email: req.user.email }).lean();
+    if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+    const reg = await Registration.find({event: event_id})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        }).lean().exec();
+
+        if (!reg) return res.status(404).json({error: "Registration not found"});
+
+        return res.status(200).json({ count: reg.length, reg });
+
+    } catch(e){
+        console.error(e);
+        return res.status(400).json({error: "Failed to fetch registration"});
+    }
+}
+
+exports.updateRegistration = async (req,res)=>{
+    try{
+        const { reg_id } = req.params;
+        const { quantity } = req.body || {};
+
+        // Basic validation
+        if (!req.user) 
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        if (!reg_id) 
+            return res.status(400).json({ error: 'reg_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(reg_id)) 
+            return res.status(400).json({ error: 'Invalid registration id format' });
+
+        const newQty = Number(quantity);
+        if (!Number.isInteger(newQty) || newQty < 1) 
+            return res.status(400).json({ error: 'Quantity invalid' });
+
+        const reg = await Registration.findById(reg_id);
+        if (!reg) 
+            return res.status(404).json({ error: 'Registration not found' });
+
+        // Only the owner (or admins in future) can update
+        if (reg.user.toString() !== req.user._id.toString())
+            return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
+
+        // Fetch event
+        const event = await Event.findById(reg.event);
+        if (!event) 
+            return res.status(400).json({ error: 'Event could not be found with registration' });
+
+        const oldQty = reg.quantity || 0;
+        const delta = newQty - oldQty;
+
+        // If increasing quantity on a confirmed registration, ensure capacity
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED && delta > 0) {
+            if (event.capacity < delta) {
+                return res.status(409).json({ code: 'FULL', message: 'Not enough capacity to increase quantity' });
+            }
+            event.capacity -= delta;
+            await event.save();
+        }
+
+        // If decreasing quantity and tickets were already issued, remove extra tickets
+        let deletedTicketsCount = 0;
+        if (newQty < (reg.ticketsIssued || 0)) {
+            const toRemove = (reg.ticketIds || []).slice(newQty);
+            if (toRemove.length > 0) {
+                await Ticket.deleteMany({ _id: { $in: toRemove } });
+                deletedTicketsCount = toRemove.length;
+                // trim arrays and counters
+                reg.ticketIds = (reg.ticketIds || []).slice(0, newQty);
+                reg.ticketsIssued = Math.max(0, (reg.ticketsIssued || 0) - deletedTicketsCount);
+            }
+        }
+
+        // Update registration quantity
+        reg.quantity = newQty;
+        await reg.save();
+
+        return res.status(200).json({ message: 'Registration updated', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to update registration' });
+    }
+}
+
+exports.cancelRegistration = async (req,res)=>{
+    try{
+        const { reg_id } = req.params;
+
+        if (!req.user) 
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        if (!reg_id) 
+            return res.status(400).json({ error: 'reg_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(reg_id)) return res.status(400).json({ error: 'Invalid registration id format' });
+
+        const reg = await Registration.findById(reg_id);
+        if (!reg) 
+            return res.status(404).json({ error: 'Registration not found' });
+
+        // Only owner can cancel (admins not implemented)
+        if (reg.user.toString() !== req.user._id.toString())
+            return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
+
+        // Fetch event
+        const event = await Event.findById(reg.event);
+        if 
+        (!event) return res.status(400).json({ error: 'Event could not be found with registration' });
+
+        // If already cancelled
+        if (reg.status === REGISTRATION_STATUS.CANCELLED)
+            return res.status(400).json({ error: 'Registration already cancelled' });
+
+        // Release capacity if it was confirmed
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+            event.capacity += reg.quantity;
+            await event.save();
+        }
+
+        // Remove from waitlist if present
+        if (Array.isArray(event.waitlist)) {
+            event.waitlist = event.waitlist.filter(id => id.toString() !== reg._id.toString());
+            await event.save();
+        }
+
+        // Delete issued tickets
+        let deletedTicketsCount = 0;
+        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
+            deletedTicketsCount = reg.ticketIds.length;
+            reg.ticketIds = [];
+            reg.ticketsIssued = 0;
+        }
+
+        reg.status = REGISTRATION_STATUS.CANCELLED;
+        await reg.save();
+
+        return res.status(200).json({ message: 'Registration cancelled', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to cancel registration' });
+    }
+}
+
+exports.deleteRegistration = async (req,res)=>{
+    try{
+        const {reg_id} = req.params;
+    
+        // Check registration id validity
+        if (!reg_id)
+            return res.status(400).json({error: "reg_id is required"});
+
+        // Find the registration
+        const reg = await Registration.findById(reg_id);
+        if (!reg)
+            return res.status(404).json({error: "Registration not found"});
+
+        // Find the evennt
+        const event = await Event.findById(reg.event._id);
+        if (!event)
+            return res.status(400).json({error: "Event could not be found with registration"})
+
+
+        // Update the capacity
+        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+            event.capacity += reg.quantity;
+            await event.save();
+        }
+
+
+        // Remove from waitlist reference
+        if (Array.isArray(event.waitlist)) {
+            event.waitlist = event.waitlist.filter(
+                (id) => id.toString() !== reg._id.toString()
+            );
+            await event.save();
+        }
+
+        // Remove from ticketIds issued
+        let deletedTicketsCount = 0;
+        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
+            deletedTicketsCount = reg.ticketIds.length;
+        }
+
+        // Delete the registration
+        await Registration.findByIdAndDelete(reg_id);
+
+
+        return res.status(200).json({
+            message: "Registration and associated tickets deleted successfully",
+            deletedRegistration: reg._id,
+            deletedTicketsCount,
+            eventCapacity: event.capacity
+        });
+
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to delete registration"});
+    }
+
+}
+
+
+
+// API endpoint to promote waitlisted user
 exports.promoteWaitlistedUser = async (req, res) => {
     const { event_id } = req.params;
     const event = await Event.findById(event_id).populate('waitlist');
