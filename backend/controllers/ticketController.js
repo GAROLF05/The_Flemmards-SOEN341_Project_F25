@@ -280,8 +280,50 @@ exports.updateTicket = async (req,res)=>{
     }
 }
 
-exports.cancelTicket = async (req,res)=>{
+// API Endpoint to delete tickets
+exports.deleteTicket = async (req,res) =>{
+    try {
+        const { ticket_id } = req.params;
 
+        const deleted = await Ticket.findByIdAndDelete(ticket_id);
+        if (!deleted)
+            return res.status(404).json({ error: "Ticket not found" });
+
+        return res.status(200).json({
+            message: "Ticket deleted successfully"
+        });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to delete ticket" });
+    }
+}
+
+// API Endpoint to cancel ticket
+exports.cancelTicket = async (req,res)=>{
+    try {
+        const { ticket_id } = req.params;
+
+        if (!ticket_id)
+            return res.status(400).json({ error: "ticket_id required" });
+
+        const ticket = await Ticket.findByIdAndUpdate(
+            ticket_id,
+            { status: "cancelled" },
+            { new: true }
+        );
+
+        if (!ticket)
+            return res.status(404).json({ error: "Ticket not found" });
+
+        return res.status(200).json({
+            message: "Ticket cancelled successfully",
+            ticket
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to cancel ticket" });
+    }
 }
 
 
@@ -482,5 +524,3 @@ exports.countTickets = async (req, res) => {
         return res.status(500).json({ error: "Failed to count tickets" });
     }
 };
-
-

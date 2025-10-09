@@ -31,6 +31,8 @@ router.post('/ticket/create', ticketController.createTicket);
 router.put('/ticket/regenqr/:ticket_id', ticketController.regenerateQrCode);
 router.put('/ticket/update/:ticket_id', ticketController.updateTicket); // admin purposes
 router.put('/ticket/used/:ticket_id', ticketController.markTicketAsUsed); // quick endpoint
+router.put('/ticket/cancel/:ticket_id', ticketController.cancelTicket); // status = "cancelled"
+router.delete('/ticket/delete/:ticket_id', ticketController.deleteTicket); // for admin
 
 // Filter tickets by user or event
 router.get('/user/:user_id', ticketController.getTicketsByUser);
