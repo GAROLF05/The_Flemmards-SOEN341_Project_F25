@@ -17,6 +17,15 @@ const ticketSchema = new mongoose.Schema({
         trim: true,
     },
 
+    code: { // for qr validation
+        type: String,
+        required: [true, "Ticket code is required"],
+        unique: true,
+        trim: true,
+        immutable: true,
+        default: () => 'TK-' + crypto.randomBytes(6).toString('hex').toUpperCase(),
+    },
+
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -41,14 +50,10 @@ const ticketSchema = new mongoose.Schema({
         immutable: true,
     },
 
-    code: {
+    qrDataUrl: { 
         type: String,
-        required: [true, "Ticket code is required"],
-        unique: true,
-        default: () => 'TK-' + crypto.randomBytes(6).toString('hex').toUpperCase(),
         trim: true,
-        immutable: true
-    },
+    }, // stores "data:image/png;base64,...."
 
     qr_expires_at: {
         type: Date,

@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 
 const REGISTRATION_STATUS = {
-  PENDING: 'pending',
-  PAID: 'paid',
+  WAITLISTED: 'waitlisted',
   CANCELLED: 'cancelled',
-  REFUNDED: 'refunded'
+  CONFIRMED: 'confirmed'
+
 };
 
 // Database containing all registrations (1 user - 1 event)
@@ -44,9 +44,19 @@ const registrationSchema = new mongoose.Schema({
 	status:{
         type: String,
         enum: Object.values(REGISTRATION_STATUS),
-        default: REGISTRATION_STATUS.PAID,
+        default: REGISTRATION_STATUS.CONFIRMED,
         required: [true, 'Status of registration is required'],
         index: true,
+    },
+
+    ticketIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Ticket'
+    }],
+
+    ticketsIssued: {
+        type: Number,
+        default: 0
     },
 
 	

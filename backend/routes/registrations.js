@@ -1,15 +1,20 @@
+/* NOTE: This file should only contain the following:
+- Express Router object
+- Reference to controller
+- get(subpath, controller.method) and post(subpath, controller.method) methods 
+- module.exports = router at the end
+*/
+
+// Express
 const express = require('express');
 const router = express.Router();
-const Registration = require('../models/Registrations');
 
-// Basic routes
-router.get('/', async (req, res) => {
-    try {
-        const registrations = await Registration.find();
-        res.json(registrations);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// Controller
+const registrationController = require("../controllers/registrationController");
 
+
+router.post('/register', registrationController.registerToEvent);
+router.put('/waitlist/promote/:event_id', registrationController.promoteWaitlistedUser);
+
+// Export
 module.exports = router;

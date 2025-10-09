@@ -51,7 +51,7 @@ const eventSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Capacity of event is required'],
         index: true,
-        min: [1, 'capacity must be at least 1'],
+        min: [0, 'capacity must be at least 0'],
     },
 
     registrations_count: {
@@ -80,7 +80,17 @@ const eventSchema = new mongoose.Schema({
             trim: true,
             required: [true, 'Address of location is required'],
         },
-    }
+    },
+
+    registered_users:{
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+    },
+
+    waitlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Registration',
+    }],
     
 }, {
     collection: 'events',
@@ -100,7 +110,7 @@ eventSchema.index({ organization: 1, title: 1, start_at: 1 }, { unique: true });
 // Virtual field that can calculate the number of seats left on the go without storing it in DB
 eventSchema.virtual('seats_left').get(function () {
   const left = this.capacity - this.registrations_count;
-  return left < 0 ? 0 : left;
+  return left < 0 ? this.capacity : left;
 });
 
 // Export everything

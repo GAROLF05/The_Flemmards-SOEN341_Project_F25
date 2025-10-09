@@ -1,53 +1,52 @@
+/* NOTE: This file should only contain the following:
+- Express App setup
+- Dotenv Setup
+- DB setup and connection
+- Middlewares
+- Route mounting (i.e. app.use(/api/route, routeName))
+- Server startup (app.listen(PORT, ...))
+*/
+
 const path = require('path');
 // Express setup
 const express = require('express');
-const app = express();
 
 // Dotenv setup
 const dotenv = require('dotenv');
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-const PORT = process.env.PORT || 3000;
-
-// QR Code setup (npm install qrcode)
-const qrcode = require('qrcode');
-
 // MongoDB setup
 const mongoose = require('mongoose');
-
-// Models of DB
-const Administrator = require('./models/Administrators');
-const User = require('./models/User');
-const { Event } = require('./models/Event');
-const Organization = require('./models/Organization');
-const Registration = require('./models/Registrations');
-const Ticket = require('./models/Ticket');
-
-// DB connection
 const connectToDB = require('./config/database')
 
-app.use(express.json());
+// App setup
+const app = express();
+const PORT = 3000;
 
-// Routes
-const userRoutes = require('./routes/users');
-const eventRoutes = require('./routes/events');
-const organizationRoutes = require('./routes/organizations');
-const ticketRoutes = require('./routes/tickets');
-const registrationRoutes = require('./routes/registrations');
-const adminRoutes = require('./routes/admin');
+// Middlewares
+app.use(express.json())
+app.use(express.text({ type: 'text/plain' }))
 
-app.use('/api/users', userRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/organizations', organizationRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/registrations', registrationRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+// CORS middleware to handle cross-origin requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
 });
+
+// Import routes
+const ticketRoutes = require('./routes/tickets');
+const registrationRoutes = require('./routes/registrations')
+
+// Mount routes
+app.use('/api/tickets', ticketRoutes);
+app.use('api/registrations', registrationRoutes);
 
 // connect to MongoDB before starting the server
 (async () => {
@@ -71,3 +70,5 @@ app.use((err, req, res, next) => {
         process.exit(0);
     });
 })();
+
+
