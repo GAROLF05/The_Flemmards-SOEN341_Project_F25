@@ -63,6 +63,13 @@ exports.createTicket = async(req, res) =>{
         if (!registration) { // No registration info found
             return res.status(404).json({ code: 'NOT_FOUND', message: 'Registration not found' });
         }
+        // If there's a waitlist...
+        if (registration.status && registration.status.toLowerCase() === 'waitlisted') {
+            return res.status(403).json({
+                code: 'WAITLISTED',
+                message: 'Tickets cannot be issued while registration is waitlisted. Please wait until you are confirmed.'
+            });
+        }
 
         // Authenticate User
         if (!req.user) {
@@ -100,6 +107,8 @@ exports.createTicket = async(req, res) =>{
             code: 'CLOSED', 
             message: 'Event is not open for ticketing' 
         });
+
+
 
         // Create tickets based on registration quantity (create, generate QR, save)
         const createdTicketIds = [];
@@ -314,6 +323,8 @@ exports.cancelTicket = async (req,res)=>{
 
         if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
+
+        
 
         return res.status(200).json({
             message: "Ticket cancelled successfully",

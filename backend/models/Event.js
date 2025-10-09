@@ -51,7 +51,7 @@ const eventSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Capacity of event is required'],
         index: true,
-        min: [1, 'capacity must be at least 1'],
+        min: [0, 'capacity must be at least 0'],
     },
 
     registrations_count: {
@@ -85,7 +85,12 @@ const eventSchema = new mongoose.Schema({
     registered_users:{
         type: mongoose.Schema.Types.ObjectId,
         index: true,
-    }
+    },
+
+    waitlist: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Registration',
+    }],
     
 }, {
     collection: 'events',

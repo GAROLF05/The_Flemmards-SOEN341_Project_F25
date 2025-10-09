@@ -10,7 +10,7 @@ const Administrator = require('../models/Administrators');
 const User = require('../models/User');
 const { Event, EVENT_STATUS } = require('../models/Event');
 const Organization = require('../models/Organization');
-const Registration = require('../models/Registrations');
+const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
 // QR Code setup (npm install qrcode)
@@ -28,107 +28,118 @@ const { error } = require('console');
 // API Endpoint to register to an event
 exports.registerToEvent = async (req, res) => {
     try {
-        // Check if there's user
-        if (!req.user) 
-            return res.status(401).json({ 
-                code: 'UNAUTHORIZED', 
-                message: 'Authentication required' 
+        
+        // Check if user allowed
+        if (!req.user)
+            return res.status(401).json({
+                code: 'UNAUTHORIZED',
+                message: 'Authentication required'
             });
 
         const { eventId, quantity = 1 } = req.body || {};
         const qty = Number(quantity);
 
-        // Check if event id is valid
-        if (!mongoose.Types.ObjectId.isValid(eventId)) 
-            return res.status(400).json({ 
-                code: 'BAD_REQUEST', 
-                message: 'Invalid eventId' 
+        // Validate event_id
+        if (!mongoose.Types.ObjectId.isValid(eventId))
+            return res.status(400).json({
+                code: 'BAD_REQUEST',
+                message: 'Invalid eventId'
             });
 
-        // Check if qty is valid
-        if (!Number.isInteger(qty) || qty < 1) 
-            return res.status(400).json({ 
-                code: 'BAD_REQUEST', 
-                message: 'Quantity invalid' 
+        // Validate qty 
+        if (!Number.isInteger(qty) || qty < 1)
+            return res.status(400).json({
+                code: 'BAD_REQUEST',
+                message: 'Quantity invalid'
             });
 
-        // Pre-check: avoid duplicate registration before touching event capacity
-        const existingRegistration = await Registration.findOne({ user: req.user._id, event: eventId }).lean();
+        // Avoid duplicate registration
+        const existingRegistration = await Registration.findOne({
+            user: req.user._id,
+            event: eventId
+        }).lean();
+
         if (existingRegistration) {
-            return res.status(409).json({ code: 'ALREADY_REGISTERED', message: 'User already registered for this event', registration: existingRegistration });
-        }
-
-        // Update event capacity iif it is upcoming and matches eventId
-        const updatedEvent = await Event.findOneAndUpdate(
-            { _id: eventId, capacity: { $gte: qty }, status: EVENT_STATUS.UPCOMING },
-            { $inc: { capacity: -qty } },
-            { new: true }
-        );
-
-        // Upcoming event not found
-        if (!updatedEvent) {
-            const ev = await Event.findById(eventId).select('capacity status').lean();
-
-            // Event not found
-            if (!ev) 
-                return res.status(404).json({ 
-                    code: 'EVENT_NOT_FOUND', 
-                    message: 'Event not found' 
-                });
-
-            // Event not upcoming (closed, ongoing, completed, or cancelled)
-            if (ev.status !== EVENT_STATUS.UPCOMING)
-                return res.status(403).json({ 
-                    code: 'CLOSED', 
-                    message: `Event is ${ev.status}` 
-                });
-
-            // Event full (no capacity left)
-            return res.status(409).json({ 
-                code: 'FULL', 
-                message: 'Not enough capacity' 
+            return res.status(409).json({
+                code: 'ALREADY_REGISTERED',
+                message: 'User already registered for this event',
+                registration: existingRegistration
             });
         }
 
-
-        // Try to create a unique registration for this (user,event)
-        try {
-            const registration = await Registration.create({
-                user: req.user._id,
-                event: eventId,
-                quantity: qty,
-                status: Registration.REGISTRATION_STATUS ? Registration.REGISTRATION_STATUS.CONFIRMED : 'confirmed'
+        // Fetch event to check its capacity and status
+        const event = await Event.findById(eventId);
+        if (!event)
+            return res.status(404).json({
+                code: 'EVENT_NOT_FOUND',
+                message: 'Event not found'
             });
 
-        
-            return res.status(201).json({ 
-                registrationId: registration.registrationId, 
-                registration 
+        if (event.status !== EVENT_STATUS.UPCOMING)
+            return res.status(403).json({
+                code: 'CLOSED',
+                message: `Event is ${event.status}`
             });
 
-        } catch (e) {
-            // If registration exists due to unique index on (user,event), rollback event capacity and return conflict
-            try { 
-                // Change capacity back to original if registration creation fails
-                await Event.findByIdAndUpdate(
-                    eventId, 
-                    { $inc: { capacity: qty } }
-                ); 
-            } catch (er) { 
-                console.error('Rollback failed', er); 
-            }
-
-            return res.status(409).json({ 
-                code: 'ALREADY_REGISTERED', 
-                message: 'User already registered for this event' 
-            });
+        // Determine registration type (confirmed vs waitlisted)
+        let registrationStatus = 'confirmed';
+        if (qty> event.capacity) {
+            registrationStatus = 'waitlisted';
         }
+
+        // Create registration
+        const registration = await Registration.create({
+            user: req.user._id,
+            event: eventId,
+            quantity: qty,
+            status: registrationStatus
+        });
+
+        // Update event depending on registration type
+        if (registrationStatus === 'confirmed') {
+            event.capacity -= qty; // reduce available spots
+            await event.save();
+            
+        } else {
+            // Add registration to event's waitlist array
+            event.waitlist = event.waitlist || [];
+            event.waitlist.push(registration._id);
+            await event.save();
+        }
+
+        // Final response
+        return res.status(201).json({
+            code: registrationStatus === 'confirmed' ? REGISTRATION_STATUS.CONFIRMED : REGISTRATION_STATUS.WAITLISTED,
+            message: registrationStatus === 'confirmed'
+                ? 'Registration confirmed successfully!'
+                : 'Event is full — you have been added to the waitlist.',
+            registration
+        });
 
     } catch (e) {
         console.error(e);
-        return res.status(500).json({ 
-            code: 'INTERNAL_ERROR', 
-            message: 'Failed to register to event' 
+        return res.status(500).json({
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to register to event'
         });
     }
-}
+};
+
+exports.promoteWaitlistedUser = async (req, res) => {
+    const { event_id } = req.params;
+    const event = await Event.findById(event_id).populate('waitlist');
+    if (!event || event.waitlist.length === 0)
+        return res.status(404).json({ message: "No waitlisted users" });
+    
+    const next = event.waitlist.shift(); // FIFO
+    next.status = REGISTRATION_STATUS.CONFIRMED; // Change the next person's registration status to confirmed
+    await next.save();
+
+    event.capacity = Math.max(0, event.capacity - next.quantity);
+    await event.save();
+
+    res.status(200).json({
+        message: "Next user promoted from waitlist",
+        promotedUser: next
+    });
+};

@@ -13,7 +13,8 @@ const router = express.Router();
 const registrationController = require("../controllers/registrationController");
 
 
-router.post('/register', registrationController.registerToEvent)
+router.post('/register', registrationController.registerToEvent);
+router.put('/waitlist/promote/:event_id', registrationController.promoteWaitlistedUser);
 
 // Export
 module.exports = router;
