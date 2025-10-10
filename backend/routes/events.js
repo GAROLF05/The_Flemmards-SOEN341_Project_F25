@@ -1,15 +1,23 @@
+/* NOTE: This file should only contain the following:
+- Express Router object
+- Reference to controller
+- get(subpath, controller.method) and post(subpath, controller.method) methods 
+- module.exports = router at the end
+*/
+
+// Express
 const express = require('express');
 const router = express.Router();
-const { Event } = require('../models/Event');
 
-// Basic routes
-router.get('/', async (req, res) => {
-    try {
-        const events = await Event.find();
-        res.json(events);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+// Controller
+const eventController = require("../controllers/eventController");
+
+// ToDO: Add a verifyUser jwt token
+
+
+
+
+// Waitlist
+router.put('/waitlist/promote/:event_id', eventController.promoteWaitlistedUser);
 
 module.exports = router;

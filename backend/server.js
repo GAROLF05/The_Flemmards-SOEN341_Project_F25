@@ -42,11 +42,13 @@ app.use((req, res, next) => {
 
 // Import routes
 const ticketRoutes = require('./routes/tickets');
-const registrationRoutes = require('./routes/registrations')
+const registrationRoutes = require('./routes/registrations');
+const eventRoutes = require('./routes/events');
 
 // Mount routes
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/registrations', registrationRoutes);
+app.use('/api/events', eventRoutes);
 
 // connect to MongoDB before starting the server
 (async () => {

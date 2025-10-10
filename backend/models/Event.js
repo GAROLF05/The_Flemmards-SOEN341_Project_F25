@@ -7,6 +7,18 @@ const EVENT_STATUS = {
   CANCELLED: 'cancelled'
 };
 
+const CATEGORY = {
+  MUSIC: 'music',
+  SPORTS: 'sports',
+  TECHNOLOGY: 'technology',
+  WORKSHOP: 'workshop',
+  NETWORKING: 'networking',
+  FUNDRAISER: 'fundraiser',
+  EDUCATION: 'education',
+  ENTERTAINMENT: 'entertainment',
+  OTHER: 'other'
+};
+
 // Database that will contain all events on the website
 const eventSchema = new mongoose.Schema({
     
@@ -22,6 +34,14 @@ const eventSchema = new mongoose.Schema({
         required: [true, 'Title of event is required'],
         index: true,
         trim: true,
+    },
+
+    category: {
+        type: String,
+        enum: Object.values(CATEGORY),
+        default: CATEGORY.OTHER,
+        required: [true, 'Category is required for the event'],
+        index: true,
     },
 
     description:{
