@@ -8,7 +8,7 @@
 // Models of DB
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
-const { Event, EVENT_STATUS } = require('../models/Event');
+const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
@@ -28,7 +28,45 @@ const { error } = require('console');
 
 
 exports.getAllEvents = async (req,res) => {
+    try{
+        // Only administrators can fetch all registrations
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const events = await Event.find()
+            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .populate({
+                path: 'organization',
+                select: 'name description website contact.email contact.phone contact.socials'
+            })
+            .populate({
+                path: 'registered_users',
+                select: 'name email student_id'
+            })
+            .populate({
+                path: 'waitlist',
+                select: 'registrationId user quantity status',
+                populate: {
+                    path: 'user',
+                    select: 'name email'
+                }
+            })
+            .sort({ start_at: 1 }) // optional: sort by start date
+            .lean()
+            .exec();
+
+        return res.status(200).json({
+            message: 'All events fetched successfully',
+            total: events.length,
+            events,
+        });
+
+        
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all events"})
+    }
 }
 
 exports.getEventById = async (req,res) => {
@@ -39,19 +77,19 @@ exports.getEventByOrganization = async (req,res) =>{
 
 }
 
-exports.getUpcomingEvents = async (req,res) => {
+exports.getEventsByStatus = async (req,res) =>{
 
 }
 
-exports.getOngoingEvents = async (req,res) =>{
+exports.getEventsByCategory = async (req,res)=>{
 
 }
 
-exports.getCompletedEvents = async (req,res) => {
+exports.getEventsByDateRange = async (req,res)=>{
 
 }
 
-exports.getCancelledEvents = async (req,res) =>{
+exports.getEventsByUserRegistrations = async (req,res)=>{
 
 }
 
@@ -71,9 +109,6 @@ exports.deleteEvent = async (req,res) => {
 
 }
 
-// Optional: getEventsByDate, getEventsByStartTime, getEventsByEndTime
-
-
 exports.getAttendees = async (req,res) => {
 
 }
@@ -81,16 +116,6 @@ exports.getAttendees = async (req,res) => {
 exports.getWaitlistedUsers = async (req,res) =>{
 
 }
-
-exports.getAvailabilityOfEvent = async (req,res) => {
-    
-}
-
-
-
-
-
-
 
 // API endpoint to promote waitlisted user
 exports.promoteWaitlistedUser = async (req, res) => {

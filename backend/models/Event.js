@@ -1,22 +1,22 @@
 const mongoose = require('mongoose');
 
 const EVENT_STATUS = {
-  UPCOMING: 'upcoming',
-  ONGOING: 'ongoing',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled'
+    UPCOMING: 'upcoming',
+    ONGOING: 'ongoing',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled'
 };
 
 const CATEGORY = {
-  MUSIC: 'music',
-  SPORTS: 'sports',
-  TECHNOLOGY: 'technology',
-  WORKSHOP: 'workshop',
-  NETWORKING: 'networking',
-  FUNDRAISER: 'fundraiser',
-  EDUCATION: 'education',
-  ENTERTAINMENT: 'entertainment',
-  OTHER: 'other'
+    MUSIC: 'music',
+    SPORTS: 'sports',
+    TECHNOLOGY: 'technology',
+    WORKSHOP: 'workshop',
+    NETWORKING: 'networking',
+    FUNDRAISER: 'fundraiser',
+    EDUCATION: 'education',
+    ENTERTAINMENT: 'entertainment',
+    OTHER: 'other'
 };
 
 // Database that will contain all events on the website
@@ -74,12 +74,6 @@ const eventSchema = new mongoose.Schema({
         min: [0, 'capacity must be at least 0'],
     },
 
-    registrations_count: {
-        type: Number,
-        default: 0,
-        min: 0
-    },
-
     status: {
         type: String,
         enum: Object.values(EVENT_STATUS),
@@ -102,14 +96,16 @@ const eventSchema = new mongoose.Schema({
         },
     },
 
-    registered_users:{
+    registered_users:[{
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         index: true,
-    },
+    }],
 
     waitlist: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Registration',
+        index: true,
     }],
     
 }, {
@@ -127,12 +123,7 @@ const eventSchema = new mongoose.Schema({
 // No two events can exist in the same organization with same title and same start time
 eventSchema.index({ organization: 1, title: 1, start_at: 1 }, { unique: true });
 
-// Virtual field that can calculate the number of seats left on the go without storing it in DB
-eventSchema.virtual('seats_left').get(function () {
-  const left = this.capacity - this.registrations_count;
-  return left < 0 ? this.capacity : left;
-});
 
 // Export everything
 const Event = mongoose.model('Event', eventSchema);
-module.exports = {Event, EVENT_STATUS}
+module.exports = {Event, EVENT_STATUS, CATEGORY};

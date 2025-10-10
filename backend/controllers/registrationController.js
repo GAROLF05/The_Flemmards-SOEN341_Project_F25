@@ -8,7 +8,7 @@
 // Models of DB
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
-const { Event, EVENT_STATUS } = require('../models/Event');
+const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
@@ -98,6 +98,10 @@ exports.registerToEvent = async (req, res) => {
         // Update event depending on registration type
         if (registrationStatus === 'confirmed') {
             event.capacity -= qty; // reduce available spots
+            event.registered_users = event.registered_users || [];
+            if (!event.registered_users.find(id => id.toString() === req.user._id.toString())) {
+                event.registered_users.push(req.user._id);
+            } // add it to the registered_users
             await event.save();
             
         } else {
@@ -428,7 +432,13 @@ exports.cancelRegistration = async (req,res)=>{
 
         // Remove from waitlist if present
         if (Array.isArray(event.waitlist)) {
-            event.waitlist = event.waitlist.filter(id => id.toString() !== reg._id.toString());
+            event.waitlist = event.waitlist.filter(id => id.toString() !== reg.user._id.toString());
+            await event.save();
+        }
+
+        // Remove user from registered_user if present
+        if (Array.isArray(event.registered_users)) {
+            event.registered_users = event.registered_users.filter(id => id.toString() !== reg.user.toString());
             await event.save();
         }
 
