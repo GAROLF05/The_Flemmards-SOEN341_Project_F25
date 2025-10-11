@@ -15,15 +15,10 @@ const routes = [
     ...AdminRoutes
 ];
 
-      {/* Student flow */}
-      <Route path="/" element={<StudentHome />} />
-      <Route path="/event/:id" element={<EventDetail />} />
-      <Route path="/me/events" element={<MyEvents />} />
+const AppRoutes = () => {
+    const element = useRoutes(routes);
 
-      {/* Organizer progress */}
-      <Route path="/organizer/create" element={<OrganizerCreateEvent />} />
+    return element;
+};
 
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
-}
+export default AppRoutes;

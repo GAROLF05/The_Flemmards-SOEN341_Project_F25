@@ -1,6 +1,6 @@
 import api from "./axiosClient";
-import endpoints from "./endpoints";
+import ENDPOINTS from "./endpoints";
 
-export const getEvents = () => api.get(endpoints.events);
-export const getEventById = (id) => api.get(endpoints.event(id));
-export const createEvent = (payload) => api.post(endpoints.events, payload);
+export const getEvents = () => api.get(ENDPOINTS.EVENTS);
+export const getEventById = (id) => api.get(ENDPOINTS.EVENT(id));
+export const createEvent = (payload) => api.post(ENDPOINTS.EVENTS, payload);
