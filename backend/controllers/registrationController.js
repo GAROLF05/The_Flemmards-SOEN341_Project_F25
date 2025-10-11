@@ -87,28 +87,44 @@ exports.registerToEvent = async (req, res) => {
             registrationStatus = 'waitlisted';
         }
 
-        // Create registration
-        const registration = await Registration.create({
-            user: req.user._id,
-            event: eventId,
-            quantity: qty,
-            status: registrationStatus
-        });
+        // Use a transaction to create registration and update event atomically
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        let registration;
+        try {
+            registration = await Registration.create([
+                {
+                    user: req.user._id,
+                    event: eventId,
+                    quantity: qty,
+                    status: registrationStatus
+                }
+            ], { session });
+            registration = registration[0];
 
-        // Update event depending on registration type
-        if (registrationStatus === 'confirmed') {
-            event.capacity -= qty; // reduce available spots
-            event.registered_users = event.registered_users || [];
-            if (!event.registered_users.find(id => id.toString() === req.user._id.toString())) {
-                event.registered_users.push(req.user._id);
-            } // add it to the registered_users
-            await event.save();
-            
-        } else {
-            // Add registration to event's waitlist array
-            event.waitlist = event.waitlist || [];
-            event.waitlist.push(registration._id);
-            await event.save();
+            // Update event depending on registration type
+            if (registrationStatus === 'confirmed') {
+                // atomic decrement and addToSet to prevent duplicates
+                await Event.updateOne(
+                    { _id: event._id },
+                    { $inc: { capacity: -qty }, $addToSet: { registered_users: req.user._id } },
+                    { session }
+                );
+            } else {
+                // push registration to waitlist
+                await Event.updateOne(
+                    { _id: event._id },
+                    { $push: { waitlist: registration._id } },
+                    { session }
+                );
+            }
+
+            await session.commitTransaction();
+            session.endSession();
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
         }
 
         // Final response
@@ -363,31 +379,46 @@ exports.updateRegistration = async (req,res)=>{
         const oldQty = reg.quantity || 0;
         const delta = newQty - oldQty;
 
-        // If increasing quantity on a confirmed registration, ensure capacity
-        if (reg.status === REGISTRATION_STATUS.CONFIRMED && delta > 0) {
-            if (event.capacity < delta) {
-                return res.status(409).json({ code: 'FULL', message: 'Not enough capacity to increase quantity' });
-            }
-            event.capacity -= delta;
-            await event.save();
-        }
 
-        // If decreasing quantity and tickets were already issued, remove extra tickets
+        // Use a session to update registration and event atomically when needed
+        const session = await mongoose.startSession();
+        session.startTransaction();
         let deletedTicketsCount = 0;
-        if (newQty < (reg.ticketsIssued || 0)) {
-            const toRemove = (reg.ticketIds || []).slice(newQty);
-            if (toRemove.length > 0) {
-                await Ticket.deleteMany({ _id: { $in: toRemove } });
-                deletedTicketsCount = toRemove.length;
-                // trim arrays and counters
-                reg.ticketIds = (reg.ticketIds || []).slice(0, newQty);
-                reg.ticketsIssued = Math.max(0, (reg.ticketsIssued || 0) - deletedTicketsCount);
+        try {
+            // If increasing quantity on a confirmed registration, ensure capacity
+            if (reg.status === REGISTRATION_STATUS.CONFIRMED && delta > 0) {
+                const refreshed = await Event.findById(reg.event).session(session);
+                if (refreshed.capacity < delta) {
+                    await session.abortTransaction();
+                    session.endSession();
+                    return res.status(409).json({ code: 'FULL', message: 'Not enough capacity to increase quantity' });
+                }
+                await Event.updateOne({ _id: refreshed._id }, { $inc: { capacity: -delta } }, { session });
             }
-        }
 
-        // Update registration quantity
-        reg.quantity = newQty;
-        await reg.save();
+            // If decreasing quantity and tickets were already issued, remove extra tickets
+            if (newQty < (reg.ticketsIssued || 0)) {
+                const toRemove = (reg.ticketIds || []).slice(newQty);
+                if (toRemove.length > 0) {
+                    await Ticket.deleteMany({ _id: { $in: toRemove } }).session(session);
+                    deletedTicketsCount = toRemove.length;
+                    // trim arrays and counters on the registration doc
+                    reg.ticketIds = (reg.ticketIds || []).slice(0, newQty);
+                    reg.ticketsIssued = Math.max(0, (reg.ticketsIssued || 0) - deletedTicketsCount);
+                }
+            }
+
+            // Update registration quantity
+            reg.quantity = newQty;
+            await reg.save({ session });
+
+            await session.commitTransaction();
+            session.endSession();
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
+        }
 
         return res.status(200).json({ message: 'Registration updated', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
 
@@ -424,35 +455,45 @@ exports.cancelRegistration = async (req,res)=>{
         if (reg.status === REGISTRATION_STATUS.CANCELLED)
             return res.status(400).json({ error: 'Registration already cancelled' });
 
-        // Release capacity if it was confirmed
-        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
-            event.capacity += reg.quantity;
-            await event.save();
-        }
 
-        // Remove from waitlist if present
-        if (Array.isArray(event.waitlist)) {
-            event.waitlist = event.waitlist.filter(id => id.toString() !== reg.user._id.toString());
-            await event.save();
-        }
-
-        // Remove user from registered_user if present
-        if (Array.isArray(event.registered_users)) {
-            event.registered_users = event.registered_users.filter(id => id.toString() !== reg.user.toString());
-            await event.save();
-        }
-
-        // Delete issued tickets
+        // Wrap cancellation steps in a transaction to keep event and registration consistent
+        const session = await mongoose.startSession();
+        session.startTransaction();
         let deletedTicketsCount = 0;
-        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
-            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
-            deletedTicketsCount = reg.ticketIds.length;
-            reg.ticketIds = [];
-            reg.ticketsIssued = 0;
-        }
+        try {
+            // Release capacity if it was confirmed
+            if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+                await Event.updateOne({ _id: event._id }, { $inc: { capacity: reg.quantity } }, { session });
+            }
 
-        reg.status = REGISTRATION_STATUS.CANCELLED;
-        await reg.save();
+            // Remove from waitlist if present
+            if (Array.isArray(event.waitlist) && event.waitlist.length) {
+                await Event.updateOne({ _id: event._id }, { $pull: { waitlist: reg._id } }, { session });
+            }
+
+            // Remove user from registered_users if present
+            if (Array.isArray(event.registered_users) && event.registered_users.length) {
+                await Event.updateOne({ _id: event._id }, { $pull: { registered_users: reg.user } }, { session });
+            }
+
+            // Delete issued tickets
+            if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+                await Ticket.deleteMany({ _id: { $in: reg.ticketIds } }).session(session);
+                deletedTicketsCount = reg.ticketIds.length;
+                reg.ticketIds = [];
+                reg.ticketsIssued = 0;
+            }
+
+            reg.status = REGISTRATION_STATUS.CANCELLED;
+            await reg.save({ session });
+
+            await session.commitTransaction();
+            session.endSession();
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
+        }
 
         return res.status(200).json({ message: 'Registration cancelled', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
 
@@ -481,30 +522,38 @@ exports.deleteRegistration = async (req,res)=>{
             return res.status(400).json({error: "Event could not be found with registration"})
 
 
-        // Update the capacity
-        if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
-            event.capacity += reg.quantity;
-            await event.save();
-        }
 
-
-        // Remove from waitlist reference
-        if (Array.isArray(event.waitlist)) {
-            event.waitlist = event.waitlist.filter(
-                (id) => id.toString() !== reg._id.toString()
-            );
-            await event.save();
-        }
-
-        // Remove from ticketIds issued
+        // Use a session to delete registration and related updates atomically
+        const session = await mongoose.startSession();
+        session.startTransaction();
         let deletedTicketsCount = 0;
-        if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
-            await Ticket.deleteMany({ _id: { $in: reg.ticketIds } });
-            deletedTicketsCount = reg.ticketIds.length;
-        }
+        try {
+            // Update the capacity if confirmed
+            if (reg.status === REGISTRATION_STATUS.CONFIRMED) {
+                await Event.updateOne({ _id: event._id }, { $inc: { capacity: reg.quantity } }, { session });
+            }
 
-        // Delete the registration
-        await Registration.findByIdAndDelete(reg_id);
+            // Remove from waitlist reference
+            if (Array.isArray(event.waitlist) && event.waitlist.length) {
+                await Event.updateOne({ _id: event._id }, { $pull: { waitlist: reg._id } }, { session });
+            }
+
+            // Remove from ticketIds issued
+            if (Array.isArray(reg.ticketIds) && reg.ticketIds.length > 0) {
+                await Ticket.deleteMany({ _id: { $in: reg.ticketIds } }).session(session);
+                deletedTicketsCount = reg.ticketIds.length;
+            }
+
+            // Delete the registration
+            await Registration.findByIdAndDelete(reg_id).session(session);
+
+            await session.commitTransaction();
+            session.endSession();
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
+        }
 
 
         return res.status(200).json({

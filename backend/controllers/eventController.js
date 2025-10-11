@@ -541,36 +541,79 @@ exports.getWaitlistedUsers = async (req,res) =>{
 // API endpoint to promote waitlisted user
 exports.promoteWaitlistedUser = async (req, res) => {
     const { event_id } = req.params;
-    const event = await Event.findById(event_id).populate('waitlist');
-    if (!event || event.waitlist.length === 0)
-        return res.status(404).json({ message: "No waitlisted users" });
+    try {
+        const result = await promoteWaitlistForEvent(event_id);
+        if (!result.promoted || result.promoted.length === 0) {
+            return res.status(404).json({ message: 'No waitlisted users promoted' });
+        }
 
-    // Get next registration on the list
-    const next = event.waitlist.shift(); // FIFO
-
-    const reg = await Registration.findById(next._id);
-    if (!reg)
-        return res.status(400).json({error: "Waitlisted Registration not found"});
-
-    if(reg.capacity > (event.capacity || 0)){
-        event.waitlist.unshift(next); // Not enough room, put it back in the first position of waitlist
-        await event.save();
-        return res.status(400).json({
-            error: "Not enough capacity to promote to next waitlisted user yet",
-            remainingCapacity: event.capacity,
-            required: reg.quantity,
+        return res.status(200).json({
+            message: 'Waitlisted users promoted successfully',
+            promoted: result.promoted,
+            remainingCapacity: result.remainingCapacity,
         });
+    } catch (e) {
+        console.error('Failed to promote waitlist', e);
+        return res.status(500).json({ error: 'Failed to promote waitlist' });
     }
-
-    reg.status = REGISTRATION_STATUS.CONFIRMED; // Change the next person's registration status to confirmed
-    await reg.save();
-
-    event.capacity = Math.max(0, event.capacity - next.quantity);
-    await event.save();
-
-    return res.status(200).json({
-        message: "Next user promoted from waitlist",
-        promotedUser: reg,
-        remainingCapacity: event.capacity,
-    });
 };
+
+// Helper: promote as many waitlisted registrations as capacity allows (transactional)
+async function promoteWaitlistForEvent(eventId) {
+    if (!mongoose.Types.ObjectId.isValid(eventId)) throw new Error('Invalid event id');
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    const promoted = [];
+    try {
+        // Reload event inside the session and populate waitlist
+        const event = await Event.findById(eventId).session(session).populate({ path: 'waitlist' });
+        if (!event) throw new Error('Event not found');
+
+        // Ensure waitlist is an array of registration ids
+        event.waitlist = event.waitlist || [];
+
+        // Process FIFO
+        while (event.capacity > 0 && event.waitlist.length > 0) {
+            const nextRef = event.waitlist[0];
+            const reg = await Registration.findById(nextRef).session(session);
+            if (!reg) {
+                // remove broken ref
+                event.waitlist.shift();
+                continue;
+            }
+
+            // If this registration requires more seats than available, stop
+            if (reg.quantity > event.capacity) break;
+
+            // Promote
+            reg.status = REGISTRATION_STATUS.CONFIRMED;
+            await reg.save({ session });
+
+            // Decrement capacity
+            event.capacity = Math.max(0, event.capacity - reg.quantity);
+
+            // Remove from waitlist
+            event.waitlist.shift();
+
+            // Ensure user is in registered_users
+            event.registered_users = event.registered_users || [];
+            if (!event.registered_users.find(id => id.toString() === reg.user.toString())) {
+                event.registered_users.push(reg.user);
+            }
+
+            // OPTIONAL: ticket creation could happen here
+            promoted.push({ registration: reg._id, user: reg.user, quantity: reg.quantity });
+        }
+
+        await event.save({ session });
+        await session.commitTransaction();
+        session.endSession();
+
+        return { promoted, remainingCapacity: event.capacity };
+    } catch (e) {
+        await session.abortTransaction();
+        session.endSession();
+        throw e;
+    }
+}

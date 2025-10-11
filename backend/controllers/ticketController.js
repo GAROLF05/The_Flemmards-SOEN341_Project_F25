@@ -114,36 +114,46 @@ exports.createTicket = async(req, res) =>{
         const createdTicketIds = [];
         const qrTickets = [];
 
-        for (let i = 0; i < qty; i++){
-            const t = await Ticket.create({ 
-                user: registration.user,
-                event: registration.event,                
-                registration: registration._id, 
-            }); // create initial ticket
-            createdTicketIds.push(t._id);
-            // generate QR from a stable payload (ticket.code preferred)
-            const payload = t.code || t.ticketId || String(t._id);
-            const dataUrl = await qrcode.toDataURL(payload);
-            t.qrDataUrl = dataUrl;
-            await t.save();
-            qrTickets.push({ id: t._id, ticketId: t.ticketId, code: t.code, qrDataUrl: dataUrl });
-        }
-
-    
-        // Update registration to record that ticket IDs were created 
+        const session = await mongoose.startSession();
+        session.startTransaction();
         try {
+            // create tickets in the session
+            for (let i = 0; i < qty; i++){
+                const t = await Ticket.create([{ 
+                    user: registration.user,
+                    event: registration.event,                
+                    registration: registration._id, 
+                }], { session }); // create initial ticket
+                const ticketDoc = t[0];
+                createdTicketIds.push(ticketDoc._id);
+                // generate QR from a stable payload (ticket.code preferred)
+                const payload = ticketDoc.code || ticketDoc.ticketId || String(ticketDoc._id);
+                const dataUrl = await qrcode.toDataURL(payload);
+                ticketDoc.qrDataUrl = dataUrl;
+                await ticketDoc.save({ session });
+                qrTickets.push({ id: ticketDoc._id, ticketId: ticketDoc.ticketId, code: ticketDoc.code, qrDataUrl: dataUrl });
+            }
+
+            // Update registration to record that ticket IDs were created 
             await Registration.updateOne(
                 { _id: registration._id },
                 {
                     $push: { ticketIds: { $each: createdTicketIds } },
                     $inc: { ticketsIssued: createdTicketIds.length }
-                }
+                },
+                { session }
             );
-        } catch (e) {
-            console.error('Failed to update registration with ticket IDs', e);
-        }
 
-        return res.status(201).json({ created: qrTickets.length, tickets: qrTickets });
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(201).json({ created: qrTickets.length, tickets: qrTickets });
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            console.error('Error creating tickets, transaction aborted:', e);
+            return res.status(500).json({ error: 'Failed to create tickets' });
+        }
 
     } catch(e){
         console.error('Error:', e);
@@ -326,26 +336,41 @@ exports.deleteTicket = async (req,res) =>{
     const adm = await Administrator.findOne({ email: req.user.email }).lean();
     if (!adm) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-    // Delete ticket
-    await Ticket.findByIdAndDelete(ticket_id);
+    // Perform deletion and related updates in a session
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        await Ticket.findByIdAndDelete(ticket_id).session(session);
 
         // Find the event
-        const event = await Event.findById(ticket.event._id);
-        if (!event)
-            return res.status(400).json({error: "Event could not be found with ticket"})
-        
-        // Find the registration
-        const reg = await Registration.findById(ticket.registration._id);
-        if (!reg)
-            return res.status(400).json({error: "Registration info could not be found with ticket"})
-        
-        // Change event capacity
-        event.capacity = (event.capacity || 0) + (reg.quantity || 1);
-        await event.save();
+        const event = await Event.findById(ticket.event._id).session(session);
+        if (!event) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({error: "Event could not be found with ticket"});
+        }
 
-        return res.status(200).json({
-            message: "Ticket deleted successfully"
-        });
+        // Find the registration
+        const reg = await Registration.findById(ticket.registration._id).session(session);
+        if (!reg) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({error: "Registration info could not be found with ticket"});
+        }
+
+        // Change event capacity (increment by the registration quantity)
+        await Event.updateOne({ _id: event._id }, { $inc: { capacity: (reg.quantity || 1) } }, { session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({ message: "Ticket deleted successfully" });
+    } catch (e) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error(e);
+        return res.status(500).json({ error: "Failed to delete ticket" });
+    }
     } catch (e) {
         console.error(e);
         return res.status(500).json({ error: "Failed to delete ticket" });
@@ -381,28 +406,42 @@ exports.cancelTicket = async (req,res)=>{
         const adminCancel = await Administrator.findOne({ email: req.user.email }).lean();
         if (!isOwner && !adminCancel) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
-        ticket.status = "cancelled";
-        await ticket.save();
+        // Perform cancellation and related updates in a transaction
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            ticket.status = "cancelled";
+            await ticket.save({ session });
 
-        // Find the event
-        const event = await Event.findById(ticket.event._id);
-        if (!event)
-            return res.status(400).json({error: "Event could not be found with ticket"})
-        
-        // Find the registration
-        const reg = await Registration.findById(ticket.registration._id);
-        if (!reg)
-            return res.status(400).json({error: "Registration info could not be found with ticket"})
-        
-        // Change event capacity
-        event.capacity = (event.capacity || 0) + (reg.quantity || 1);
-        await event.save();
-        
+            // Find the event
+            const event = await Event.findById(ticket.event._id).session(session);
+            if (!event) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({error: "Event could not be found with ticket"});
+            }
 
-        return res.status(200).json({
-            message: "Ticket cancelled successfully",
-            ticket
-        });
+            // Find the registration
+            const reg = await Registration.findById(ticket.registration._id).session(session);
+            if (!reg) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({error: "Registration info could not be found with ticket"});
+            }
+
+            // Change event capacity (increase by registration quantity)
+            await Event.updateOne({ _id: event._id }, { $inc: { capacity: (reg.quantity || 1) } }, { session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(200).json({ message: "Ticket cancelled successfully", ticket });
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            console.error(e);
+            return res.status(500).json({ error: "Failed to cancel ticket" });
+        }
 
     } catch (e) {
         console.error(e);
