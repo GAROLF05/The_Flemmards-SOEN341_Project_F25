@@ -1,5 +1,7 @@
+import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Student from "../pages/student/Student";
+import HomePage from "../pages/student/HomePage";
+import CalendarPage from "../pages/student/CalendarPage";
 
 const StudentRoutes = [
     {
@@ -8,7 +10,23 @@ const StudentRoutes = [
         children: [
             {
                 path: '',
-                element: <Student />
+                element: <HomePage />
+            },
+            {
+                path: 'home',
+                element: <Navigate to="/student" />
+            },
+            {
+                path: 'calendar',
+                element: <CalendarPage />
+            },
+            {
+                path: 'events',
+                element: <div>Events</div>
+            },
+            {
+                path: 'settings',
+                element: <div>Settings</div>
             }
         ]
     }
