@@ -328,7 +328,57 @@ exports.getEventsByDateRange = async (req, res) => {
 
 
 exports.getEventsByUserRegistrations = async (req,res)=>{
+    try{
+        const {user_id} = req.params;
+        if (!user_id)
+            return res.status(400).json({error: "user_id is required"});
+        if(!mongoose.Types.ObjectId.isValid(user_id))
+            return res.status(400).json({error: "Invalid user_id format"});
 
+        const regs = await Registration.find({user: user_id})
+        .populate({
+            path: 'user', 
+            select: 'name student_id email'})
+        .populate({
+            path: 'event', 
+            select: 'organization title start_at end_at',
+            populate:{
+            path: 'organization',
+            select: 'name website',
+        }})
+        .populate({
+            path: 'ticketIds',
+            model: 'Ticket', 
+            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+        })
+        .sort({createdAt: -1})
+        .lean()
+        .exec();
+        
+        if (!regs)
+            return res.status(404).json({error: "No registration found for this user"});
+
+        const events = regs.map(r => ({
+            event: r.event,
+            status: r.status,
+            quantity: r.quantity,
+            ticketsIssued: r.ticketsIssued,
+            registeredAt: r.createdAt,
+        }));
+
+        if (!events) 
+            return res.status(404).json({error: "Events not found"});
+    
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            events
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch events by organization"});
+    }
 }
 
 exports.createEvent = async (req,res)=>{
@@ -348,11 +398,71 @@ exports.deleteEvent = async (req,res) => {
 }
 
 exports.getAttendees = async (req,res) => {
+    try{
+        const {event_id} = req.params;
+        if (!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event_id format"});
 
+        const event = await Event.findById(event_id)
+        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+                path: 'user',
+                select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 }) // optional: sort by start date
+        .lean()
+        .exec();
+
+        if (!event) 
+            return res.status(404).json({error: "Events not found"});
+
+        if (!event.registered_users || event.registered_users.length === 0)
+            return res.status(404).json({ error: "No confirmed attendees found for this event" });
+    
+        const attendees = event.registered_users.map(user => ({
+            _id: user._id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            student_id: user.student_id
+        }));
+
+        return res.status(200).json({
+            message: `Confirmed attendees for event '${event.title}' fetched successfully`,
+            event: {
+                _id: event._id,
+                title: event.title,
+                start_at: event.start_at,
+                end_at: event.end_at,
+                capacity: event.capacity,
+                organization: event.organization
+            },
+            total_attendees: attendees.length,
+            attendees
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch attendees"});
+    }
 }
 
 exports.getWaitlistedUsers = async (req,res) =>{
-
+    
 }
 
 // API endpoint to promote waitlisted user
