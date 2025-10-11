@@ -171,6 +171,10 @@ exports.getEventByOrganization = async (req,res) =>{
 
 exports.getEventsByStatus = async (req,res) =>{
     try{
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        
         const {status} = req.params;
         if (!status)
             return res.status(400).json({error: "status is required"});
@@ -213,12 +217,115 @@ exports.getEventsByStatus = async (req,res) =>{
 }
 
 exports.getEventsByCategory = async (req,res)=>{
+    try{
+        const {category} = req.params;
+        if (!category)
+            return res.status(400).json({error: "category is required"});
+        if (!Object.values(CATEGORY).includes(category)) {
+            return res.status(400).json({
+                error: `Invalid category. Must be one of: ${Object.values(CATEGORY).join(', ')}`
+            });
+        }
+
+        const events = await Event.find({category: category})
+        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+                path: 'user',
+                select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 }) // optional: sort by start date
+        .lean()
+        .exec();
+
+        if (!events) 
+            return res.status(404).json({error: "Events not found"});
+    
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            events
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch events by organization"});
+    }
 
 }
 
-exports.getEventsByDateRange = async (req,res)=>{
+exports.getEventsByDateRange = async (req, res) => {
+  try {
+        const { start, end } = req.query;
 
-}
+        // Validate input
+        if (!start || !end)
+            return res.status(400).json({ error: "Both start and end dates are required (YYYY-MM-DD)" });
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        // Validate format
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()))
+            return res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD." });
+        
+        // Ensure start < end
+        if (endDate < startDate)
+            return res.status(400).json({ error: "End date must be after start date." });
+
+        // Query: events whose start_at or end_at fall within the range
+        const events = await Event.find({
+        $or: [
+            { start_at: { $gte: startDate, $lte: endDate } },
+            { end_at: { $gte: startDate, $lte: endDate } }
+        ]
+        })
+        .select('organization title description category start_at end_at capacity status location registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+            path: 'user',
+            select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 })
+        .lean();
+
+        if (!events)
+            return res.status(404).json({ error: "No events found within the specified date range." });
+
+        return res.status(200).json({
+            message: `Events between ${start} and ${end} fetched successfully.`,
+            total: events.length,
+            events
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to fetch events by date range." });
+    }
+};
+
 
 exports.getEventsByUserRegistrations = async (req,res)=>{
 
