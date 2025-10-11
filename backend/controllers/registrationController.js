@@ -225,11 +225,11 @@ exports.getRegistrationById = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg) return res.status(404).json({error: "Registration not found"});
+        if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
         // Owner or admin can access
         if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const isOwner = reg.user && (reg.user._id ? reg.user._id.toString() : reg.user.toString()) === req.user._id.toString();
         const admin = await Administrator.findOne({ email: req.user.email }).lean();
         if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
@@ -266,10 +266,10 @@ exports.getRegistrationByRegId = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg) return res.status(404).json({error: "Registration not found"});
+        if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
         if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const isOwner = reg.user && reg.user.toString() === req.user._id.toString();
+        const isOwner = reg.user && (reg.user._id ? reg.user._id.toString() : reg.user.toString()) === req.user._id.toString();
         const admin = await Administrator.findOne({ email: req.user.email }).lean();
         if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
 
@@ -313,7 +313,7 @@ exports.getRegistrationByUser = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg) return res.status(404).json({error: "Registration not found"});
+        if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
         return res.status(200).json({ count: reg.length, reg });
 
@@ -355,7 +355,7 @@ exports.getRegistrationByEvent = async (req,res)=>{
             select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
         }).lean().exec();
 
-        if (!reg) return res.status(404).json({error: "Registration not found"});
+        if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
         return res.status(200).json({ count: reg.length, reg });
 
@@ -387,7 +387,7 @@ exports.updateRegistration = async (req,res)=>{
             return res.status(404).json({ error: 'Registration not found' });
 
         // Only the owner (or admins in future) can update
-        if (reg.user.toString() !== req.user._id.toString())
+        if ((reg.user._id ? reg.user._id.toString() : reg.user.toString()) !== req.user._id.toString())
             return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
 
         // Fetch event
@@ -462,13 +462,12 @@ exports.cancelRegistration = async (req,res)=>{
             return res.status(404).json({ error: 'Registration not found' });
 
         // Only owner can cancel (admins not implemented)
-        if (reg.user.toString() !== req.user._id.toString())
+        if ((reg.user._id ? reg.user._id.toString() : reg.user.toString()) !== req.user._id.toString())
             return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
 
         // Fetch event
         const event = await Event.findById(reg.event);
-        if 
-        (!event) return res.status(400).json({ error: 'Event could not be found with registration' });
+        if (!event) return res.status(400).json({ error: 'Event could not be found with registration' });
 
         // If already cancelled
         if (reg.status === REGISTRATION_STATUS.CANCELLED)
@@ -514,6 +513,14 @@ exports.cancelRegistration = async (req,res)=>{
             throw e;
         }
 
+        // Try to promote waitlisted users after capacity increase
+        try {
+            const { promoteWaitlistForEvent } = require('./eventController');
+            await promoteWaitlistForEvent(event._id);
+        } catch (promoteError) {
+            console.log('Waitlist promotion failed (non-critical):', promoteError.message);
+        }
+
         return res.status(200).json({ message: 'Registration cancelled', registration: reg, deletedTicketsCount, eventCapacity: event.capacity });
 
     } catch (e) {
@@ -538,7 +545,7 @@ exports.deleteRegistration = async (req,res)=>{
             return res.status(404).json({error: "Registration not found"});
 
         // Find the evennt
-        const event = await Event.findById(reg.event._id);
+        const event = await Event.findById(reg.event);
         if (!event)
             return res.status(400).json({error: "Event could not be found with registration"})
 
@@ -576,6 +583,14 @@ exports.deleteRegistration = async (req,res)=>{
             throw e;
         }
 
+
+        // Try to promote waitlisted users after capacity increase
+        try {
+            const { promoteWaitlistForEvent } = require('./eventController');
+            await promoteWaitlistForEvent(event._id);
+        } catch (promoteError) {
+            console.log('Waitlist promotion failed (non-critical):', promoteError.message);
+        }
 
         return res.status(200).json({
             message: "Registration and associated tickets deleted successfully",

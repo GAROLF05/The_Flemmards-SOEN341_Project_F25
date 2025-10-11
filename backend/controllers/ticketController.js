@@ -104,18 +104,6 @@ exports.createTicket = async(req, res) =>{
             return res.status(400).json({ code: 'BAD_REQUEST', message: 'Invalid registration user' });
         }
 
-        // Prevents creating duplicate tickets for one registration by comparing how many tickets have the same registration ID
-        // and how many tickets were registered in Registration DB
-        const existingCount = await Ticket.countDocuments({ registration: registration._id });
-        if (existingCount >= registration.quantity) {
-            return res.status(409).json({ code: 'ALREADY_REGISTERED', message: 'Tickets already issued for this registration' });
-        }
-        
-        
-        if (existingCount + qty > registration.quantity) {
-            return res.status(409).json({ code: 'QUANTITY_EXCEEDS', message: 'Requested quantity exceeds registration allocation' });
-        }
-
         /* Light event validation (reservation should be done earlier via registerToEvent) */
         const ev = await Event.findById(registration.event).select('status').lean();
         if (!ev) 
@@ -128,8 +116,6 @@ exports.createTicket = async(req, res) =>{
             message: 'Event is not open for ticketing' 
         });
 
-
-
         // Create tickets based on registration quantity (create, generate QR, save)
         const createdTicketIds = [];
         const qrTickets = [];
@@ -137,7 +123,28 @@ exports.createTicket = async(req, res) =>{
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
-            // create tickets in the session
+            // Reload the registration inside the session to avoid races
+            const regInSession = await Registration.findById(registration._id).session(session);
+            if (!regInSession) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(404).json({ code: 'NOT_FOUND', message: 'Registration not found' });
+            }
+
+            // Count existing tickets within the session and validate
+            const existingCount = await Ticket.countDocuments({ registration: regInSession._id }).session(session);
+            if (existingCount >= (regInSession.quantity || 0)) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(409).json({ code: 'ALREADY_REGISTERED', message: 'Tickets already issued for this registration' });
+            }
+
+            if (existingCount + qty > (regInSession.quantity || 0)) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(409).json({ code: 'QUANTITY_EXCEEDS', message: 'Requested quantity exceeds registration allocation' });
+            }
+            // create tickets in the session (no QR generation here to keep transaction short)
             for (let i = 0; i < qty; i++){
                 const t = await Ticket.create([{ 
                     user: registration.user,
@@ -146,12 +153,8 @@ exports.createTicket = async(req, res) =>{
                 }], { session }); // create initial ticket
                 const ticketDoc = t[0];
                 createdTicketIds.push(ticketDoc._id);
-                // generate QR from a stable payload (ticket.code preferred)
-                const payload = ticketDoc.code || ticketDoc.ticketId || String(ticketDoc._id);
-                const dataUrl = await qrcode.toDataURL(payload);
-                ticketDoc.qrDataUrl = dataUrl;
-                await ticketDoc.save({ session });
-                qrTickets.push({ id: ticketDoc._id, ticketId: ticketDoc.ticketId, code: ticketDoc.code, qrDataUrl: dataUrl });
+                // collect a minimal ticket info placeholder; QR will be generated after commit
+                qrTickets.push({ id: ticketDoc._id, ticketId: ticketDoc.ticketId, code: ticketDoc.code, qrDataUrl: null });
             }
 
             // Update registration to record that ticket IDs were created 
@@ -166,6 +169,22 @@ exports.createTicket = async(req, res) =>{
 
             await session.commitTransaction();
             session.endSession();
+            // After commit, generate QR codes and persist them outside the transaction to avoid long transactions
+            for (let i = 0; i < qrTickets.length; i++) {
+                try {
+                    const tId = qrTickets[i].id;
+                    const ticketDoc = await Ticket.findById(tId);
+                    if (!ticketDoc) continue;
+                    const payload = ticketDoc.code || ticketDoc.ticketId || String(ticketDoc._id);
+                    const dataUrl = await qrcode.toDataURL(payload);
+                    ticketDoc.qrDataUrl = dataUrl;
+                    await ticketDoc.save();
+                    qrTickets[i].qrDataUrl = dataUrl;
+                } catch (e) {
+                    // non-fatal: log and continue; tickets were created successfully
+                    console.error('QR generation failed for ticket', qrTickets[i].id, e.message);
+                }
+            }
 
             return res.status(201).json({ created: qrTickets.length, tickets: qrTickets });
         } catch (e) {
@@ -307,7 +326,7 @@ exports.getAllTickets = async (req,res)=>{
 exports.updateTicket = async (req,res)=>{
     try{
         const {ticket_id} = req.params; // Acts on ticket_id
-        const {status} =  req.body; // Updating existing status
+        const {status} = req.body; // Updating existing status
         const valid_status = ['valid', 'used', 'cancelled'];
 
         // Ticket_id validity
@@ -320,19 +339,21 @@ exports.updateTicket = async (req,res)=>{
         if (!status)
             return res.status(400).json({error: "status required"});
         if (!valid_status.includes(status))
-            return res.status(400).json({error: "Invald status value"});
+            return res.status(400).json({error: "Invalid status value"});
 
         // Only admins may change ticket status
         if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const admin = await Administrator.findOne({ email: req.user.email }).lean();
         if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-        const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: status}, {new: true});
+        const ticket = await Ticket.findById(ticket_id);
         if (!ticket) return res.status(404).json({error: "Ticket not found"});
+        
+        const updatedTicket = await Ticket.findByIdAndUpdate(ticket_id, {status: status}, {new: true});
 
         return res.status(200).json({
             message: "Ticket updated successfully",
-            ticket,
+            ticket: updatedTicket,
         });
 
     } catch(e){
@@ -346,51 +367,84 @@ exports.deleteTicket = async (req,res) =>{
     try {
         const { ticket_id } = req.params;
 
+        if (!ticket_id)
+            return res.status(400).json({ error: "ticket_id required" });
+
         // Find ticket
-        const ticket = await Ticket.findById(ticket_id);
+        const ticket = await Ticket.findById(ticket_id)
+        .populate("event")
+        .populate("registration");
         if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
 
-    // Only admins may delete tickets
-    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-    const adm = await Administrator.findOne({ email: req.user.email }).lean();
-    if (!adm) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        // Only admins may delete tickets
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const adm = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!adm) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-    // Perform deletion and related updates in a session
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-        await Ticket.findByIdAndDelete(ticket_id).session(session);
+        // Perform deletion and related updates in a session
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            await Ticket.findByIdAndDelete(ticket_id).session(session);
 
-        // Find the event
-        const event = await Event.findById(ticket.event._id).session(session);
-        if (!event) {
+            // Find the event (ticket.event may be ObjectId or populated doc)
+            const event_id = ticket.event && (ticket.event._id ? ticket.event._id : ticket.event);
+            const event = await Event.findById(event_id).session(session);
+            if (!event) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({error: "Event could not be found with ticket"});
+            }
+
+            // Find the registration (ticket.registration may be ObjectId or populated doc)
+            const regId = ticket.registration && (ticket.registration._id ? ticket.registration._id : ticket.registration);
+            const reg = await Registration.findById(regId).session(session);
+            if (!reg) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({error: "Registration info could not be found with ticket"});
+            }
+
+            // Remove ticket from registration and update counters
+            await Registration.updateOne(
+                { _id: reg._id },
+                { 
+                    $pull: { ticketIds: ticket_id },
+                    $inc: { ticketsIssued: -1 }
+                },
+                { session }
+            );
+
+            // Ensure ticketsIssued does not become negative (defensive): clamp to 0 if below
+            await Registration.updateOne(
+                { _id: reg._id, ticketsIssued: { $lt: 0 } },
+                { $set: { ticketsIssued: 0 } },
+                { session }
+            );
+
+            // Change event capacity (increment by 1 per ticket)
+            await Event.updateOne({ _id: event._id }, { $inc: { capacity: 1 } }, { session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            // Try to promote waitlisted users after capacity increase
+            try {
+                const { promoteWaitlistForEvent } = require('./eventController');
+                await promoteWaitlistForEvent(event._id);
+            } catch (promoteError) {
+                console.log('Waitlist promotion failed (non-critical):', promoteError.message);
+            }
+
+            return res.status(200).json({ message: "Ticket deleted successfully" });
+        } catch (e) {
             await session.abortTransaction();
             session.endSession();
-            return res.status(400).json({error: "Event could not be found with ticket"});
+            console.error(e);
+            return res.status(500).json({ error: "Failed to delete ticket" });
         }
 
-        // Find the registration
-        const reg = await Registration.findById(ticket.registration._id).session(session);
-        if (!reg) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({error: "Registration info could not be found with ticket"});
-        }
-
-        // Change event capacity (increment by the registration quantity)
-        await Event.updateOne({ _id: event._id }, { $inc: { capacity: (reg.quantity || 1) } }, { session });
-
-        await session.commitTransaction();
-        session.endSession();
-
-        return res.status(200).json({ message: "Ticket deleted successfully" });
-    } catch (e) {
-        await session.abortTransaction();
-        session.endSession();
-        console.error(e);
-        return res.status(500).json({ error: "Failed to delete ticket" });
-    }
     } catch (e) {
         console.error(e);
         return res.status(500).json({ error: "Failed to delete ticket" });
@@ -407,8 +461,8 @@ exports.cancelTicket = async (req,res)=>{
 
         // Find ticket
         const ticket = await Ticket.findById(ticket_id)
-            .populate("event")
-            .populate("registration");
+        .populate("event")
+        .populate("registration");
 
         if (!ticket)
             return res.status(404).json({ error: "Ticket not found" });
@@ -419,7 +473,7 @@ exports.cancelTicket = async (req,res)=>{
         if (ticket.status === "used")
             return res.status(400).json({ error: "Used tickets cannot be cancelled" });
 
-        // Cancel the ticket
+        
         // Owner or admin may cancel
         if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
@@ -433,27 +487,54 @@ exports.cancelTicket = async (req,res)=>{
             ticket.status = "cancelled";
             await ticket.save({ session });
 
-            // Find the event
-            const event = await Event.findById(ticket.event._id).session(session);
+            // Find the event (defensive id extraction)
+            const event_id = ticket.event && (ticket.event._id ? ticket.event._id : ticket.event);
+            const event = await Event.findById(event_id).session(session);
             if (!event) {
                 await session.abortTransaction();
                 session.endSession();
                 return res.status(400).json({error: "Event could not be found with ticket"});
             }
 
-            // Find the registration
-            const reg = await Registration.findById(ticket.registration._id).session(session);
+            // Find the registration (defensive id extraction)
+            const reg_id = ticket.registration && (ticket.registration._id ? ticket.registration._id : ticket.registration);
+            const reg = await Registration.findById(reg_id).session(session);
             if (!reg) {
                 await session.abortTransaction();
                 session.endSession();
                 return res.status(400).json({error: "Registration info could not be found with ticket"});
             }
 
-            // Change event capacity (increase by registration quantity)
-            await Event.updateOne({ _id: event._id }, { $inc: { capacity: (reg.quantity || 1) } }, { session });
+            // Remove ticket from registration and decrement ticketsIssued safely
+            await Registration.updateOne(
+                { _id: reg._id },
+                { 
+                    $pull: { ticketIds: ticket._id },
+                    $inc: { ticketsIssued: -1 }
+                },
+                { session }
+            );
+
+            // Defensive clamp to avoid negative ticketsIssued
+            await Registration.updateOne(
+                { _id: reg._id, ticketsIssued: { $lt: 0 } },
+                { $set: { ticketsIssued: 0 } },
+                { session }
+            );
+
+            // Change event capacity (increase by 1 per ticket)
+            await Event.updateOne({ _id: event._id }, { $inc: { capacity: 1 } }, { session });
 
             await session.commitTransaction();
             session.endSession();
+
+            // Try to promote waitlisted users after capacity increase
+            try {
+                const { promoteWaitlistForEvent } = require('./eventController');
+                await promoteWaitlistForEvent(event._id);
+            } catch (promoteError) {
+                console.log('Waitlist promotion failed (non-critical):', promoteError.message);
+            }
 
             return res.status(200).json({ message: "Ticket cancelled successfully", ticket });
         } catch (e) {
@@ -549,6 +630,7 @@ exports.regenerateQrCode = async (req,res)=>{
         if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const ticket = await Ticket.findById(ticket_id);
         if (!ticket) return res.status(404).json({error: "Ticket not found"})
+
         const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
         const adminReg = await Administrator.findOne({ email: req.user.email }).lean();
         if (!isOwner && !adminReg) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
@@ -578,6 +660,9 @@ exports.regenerateQrCode = async (req,res)=>{
 // API endpoint to get all tickets by events
 exports.getTicketsByEvent = async (req,res)=>{
     try{
+        // Require authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        
         const {event_id} = req.params;
         if (!event_id)
             return res.status(400).json({error: "event_id required"});
@@ -619,6 +704,9 @@ exports.getTicketsByEvent = async (req,res)=>{
 // API endpoint to Get all tickets to events user registered to by _id of user
 exports.getTicketsByUser = async (req,res)=>{
     try{
+        // Require authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        
         const {user_id} = req.params;
         if (!user_id)
             return res.status(400).json({error: "user_id required"});
@@ -660,6 +748,9 @@ exports.getTicketsByUser = async (req,res)=>{
 
 exports.countTickets = async (req, res) => {
     try {
+        // Require authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        
         const { event_id } = req.query;
         const filter = event_id ? { event: event_id } : {};
         const count = await Ticket.countDocuments(filter);

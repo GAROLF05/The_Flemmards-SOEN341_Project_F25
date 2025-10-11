@@ -119,7 +119,6 @@ exports.getEventById = async (req,res) => {
                     select: 'name email'
                 }
             })
-            .sort({ start_at: 1 }) // optional: sort by start date
             .lean()
             .exec();
 
@@ -373,7 +372,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         .lean()
         .exec();
         
-        if (!regs)
+        if (regs.length === 0)
             return res.status(404).json({error: "No registration found for this user"});
 
         const events = regs.map(r => ({
@@ -655,7 +654,13 @@ async function promoteWaitlistForEvent(eventId) {
         // Process FIFO
         while (event.capacity > 0 && event.waitlist.length > 0) {
             const nextRef = event.waitlist[0];
-            const reg = await Registration.findById(nextRef).session(session);
+            // nextRef can be an ObjectId or a populated registration doc; handle both
+            let reg = null;
+            if (nextRef && typeof nextRef === 'object' && nextRef._id) {
+                reg = nextRef;
+            } else {
+                reg = await Registration.findById(nextRef).session(session);
+            }
             if (!reg) {
                 // remove broken ref
                 event.waitlist.shift();
