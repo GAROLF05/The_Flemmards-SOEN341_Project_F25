@@ -5,6 +5,25 @@
 - Responses sent back to the frontend with res.json({....})
 */
 
+/* For MongoDB session transactions, use it when doing multiple CRUD operations in
+multiple collections/DB, it ensures to abort at anytime if any operation fails for 
+any reason. Lil cheat sheet to help:
+===============================================
+const session = await mongoose.startSession();
+session.startTransaction();
+try {
+    await Model1.updateOne(..., { session });
+    await Model2.create(..., { session });
+    // other atomic ops
+    await session.commitTransaction();
+} catch (e) {
+    await session.abortTransaction();
+} finally {
+    session.endSession();
+}
+=============================================
+
+*/
 // Models of DB
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
@@ -397,7 +416,68 @@ exports.cancelEvent = async (req,res) => {
 
 // API Endpoint to delete an event
 exports.deleteEvent = async (req,res) => {
+    try{
+        const {event_id} = req.params;
+        if(!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event_id format"})
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const event = await Event.findById(event_id).lean();
+        if (!event)
+            return res.status(404).json({error: "Event not found"});
+
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        let deletedRegistrationsCount = 0;
+        let deletedTicketsCount = 0;
+        try{
+            // Find registrations for this event inside the session
+            const regs = await Registration.find({event: event_id}).session(session);
+            const regIds = regs.map(r => r._id);
+            deletedRegistrationsCount = regIds.length;
+
+            // Delete tickets linked to those registrations
+            if (regIds.length > 0) {
+                const ticketDelRes = await Ticket.deleteMany({registration: {$in: regIds}}).session(session);
+                deletedTicketsCount += ticketDelRes.deletedCount || 0;
+            }
+
+            // Also delete any tickets that reference the event directly (defensive)
+            const ticketEventDelRes = await Ticket.deleteMany({event: event_id}).session(session);
+            deletedTicketsCount += ticketEventDelRes.deletedCount || 0;
+
+            // Delete all registrations
+            await Registration.deleteMany({event: event_id}).session(session);
+
+            // Delete event itself
+            await Event.findByIdAndDelete(event_id).session(session);
+
+            await session.commitTransaction();
+
+            return res.status(200).json({
+                message: `Event '${event.title}' and all related data deleted successfully`,
+                deletedEventId: event._id,
+                deletedRegistrations: deletedRegistrationsCount,
+                deletedTickets: deletedTicketsCount,
+            });
+
+        } catch(e){
+            console.error(e);
+            await session.abortTransaction();
+            return res.status(500).json({ error: "Failed to delete event and related data" });
+        } finally{
+            session.endSession();
+        }
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Could not delete events"})
+    }
 }
 
 // API Endpoint to get attendees for an event
@@ -517,7 +597,6 @@ exports.getWaitlistedUsers = async (req,res) =>{
                 }
                 : null
         }));
-
         return res.status(200).json({
             message: `Confirmed waitlisted users for event '${event.title}' fetched successfully`,
             event: {

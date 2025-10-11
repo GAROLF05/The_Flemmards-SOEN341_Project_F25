@@ -5,6 +5,25 @@
 - Responses sent back to the frontend with res.json({....})
 */
 
+/* For MongoDB session transactions, use it when doing multiple CRUD operations in
+multiple collections/DB, it ensures to abort at anytime if any operation fails for 
+any reason. Lil cheat sheet to help:
+===============================================
+const session = await mongoose.startSession();
+session.startTransaction();
+try {
+    await Model1.updateOne(..., { session });
+    await Model2.create(..., { session });
+    // other atomic ops
+    await session.commitTransaction();
+} catch (e) {
+    await session.abortTransaction();
+} finally {
+    session.endSession();
+}
+=============================================
+
+*/
 // Models of DB
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
@@ -510,6 +529,8 @@ exports.deleteRegistration = async (req,res)=>{
         // Check registration id validity
         if (!reg_id)
             return res.status(400).json({error: "reg_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(reg_id))
+            return res.status(400).json({error: "Invalid reg_id format"})
 
         // Find the registration
         const reg = await Registration.findById(reg_id);
