@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { AdjustmentsHorizontalIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { AdjustmentsHorizontalIcon, BuildingOfficeIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, TicketIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import Modal from '../../components/modal/Modal';
 import Carousel from '../../components/carousel/Carousel';
@@ -13,8 +13,10 @@ const eventsData = [
         category: 'Featured',
         date: '2026-06-25T19:00:00',
         location: 'Place des Arts, Montreal',
+        organization: 'Evenko',
         description: 'Experience the world\'s largest jazz festival, featuring legendary artists and rising stars in the heart of downtown Montreal.',
         imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
+        price: 55,
     },
     {
         id: 2,
@@ -22,8 +24,10 @@ const eventsData = [
         category: 'Music',
         date: '2025-11-12T18:00:00',
         location: 'Parc Jean-Drapeau, Montreal',
+        organization: 'Osheaga',
         description: 'A two-day festival showcasing the best up-and-coming indie bands from across the country.',
         imageUrl: 'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?q=80&w=2070&auto=format&fit=crop',
+        price: 75,
     },
     {
         id: 3,
@@ -31,8 +35,10 @@ const eventsData = [
         category: 'Business',
         date: '2025-11-05T19:00:00',
         location: 'Innovation Hub, Montreal',
+        organization: 'Startup Montreal',
         description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
         imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
+        price: 15,
     },
     {
         id: 4,
@@ -40,8 +46,10 @@ const eventsData = [
         category: 'Technology',
         date: '2025-11-18T10:00:00',
         location: 'Online',
+        organization: 'Concordia Continuing Education',
         description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
         imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
+        price: 250,
     },
     {
         id: 5,
@@ -49,8 +57,10 @@ const eventsData = [
         category: 'Sports',
         date: '2025-10-19T07:00:00',
         location: 'Mount Royal Park, Montreal',
+        organization: 'Run Montreal',
         description: 'Join thousands of runners in the annual city marathon. All skill levels welcome.',
         imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop',
+        price: 40,
     },
     {
         id: 6,
@@ -58,8 +68,10 @@ const eventsData = [
         category: 'Community',
         date: '2025-10-26T11:00:00',
         location: 'Old Port, Montreal',
+        organization: 'City of Montreal',
         description: 'Discover unique handmade crafts, local food, and live music at our weekend market.',
         imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop',
+        price: 'Free',
     },
     {
         id: 7,
@@ -67,8 +79,10 @@ const eventsData = [
         category: 'Featured',
         date: '2025-10-25T09:00:00',
         location: 'Convention Center, Montreal',
+        organization: 'Tech Summit Inc.',
         description: 'Join industry leaders to discuss the future of technology, from AI to quantum computing.',
         imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop',
+        price: 499,
     },
     {
         id: 8,
@@ -76,8 +90,10 @@ const eventsData = [
         category: 'Arts & Culture',
         date: '2025-11-20T19:00:00',
         location: 'Cinéma du Parc, Montreal',
+        organization: 'Cinéma du Parc',
         description: 'A month-long retrospective celebrating the dark and stylish world of classic film noir.',
         imageUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963e?q=80&w=2070&auto=format&fit=crop',
+        price: 12,
     },
     {
         id: 9,
@@ -85,8 +101,10 @@ const eventsData = [
         category: 'Food & Drink',
         date: '2025-10-11T14:00:00',
         location: 'Lachine Canal, Montreal',
+        organization: 'Les Amis du Canal',
         description: 'Enjoy a taste of Bavaria with craft beer, traditional food, and live oompah bands.',
         imageUrl: 'https://images.unsplash.com/photo-1598801269323-315159d84f83?q=80&w=2070&auto=format&fit=crop',
+        price: 20,
     },
     {
         id: 10,
@@ -94,8 +112,10 @@ const eventsData = [
         category: 'Education',
         date: '2025-11-22T09:00:00',
         location: 'Palais des congrès, Montreal',
+        organization: 'Marketing Pro',
         description: 'Learn the latest trends in SEO, social media, and content marketing from industry experts.',
         imageUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070&auto=format&fit=crop',
+        price: 150,
     },
     {
         id: 11,
@@ -103,8 +123,10 @@ const eventsData = [
         category: 'Health & Wellness',
         date: '2025-12-06T10:00:00',
         location: 'Eastern Townships, QC',
+        organization: 'ZenSpace Retreats',
         description: 'A full-day retreat to de-stress before exams. Includes guided meditation and yoga sessions.',
         imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop',
+        price: 120,
     },
     {
         id: 12,
@@ -112,8 +134,10 @@ const eventsData = [
         category: 'Food & Drink',
         date: '2025-12-13T13:00:00',
         location: 'Ateliers & Saveurs, Montreal',
+        organization: 'Ateliers & Saveurs',
         description: 'Learn how to create delicious holiday treats from a professional pastry chef.',
         imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1964&auto=format&fit=crop',
+        price: 85,
     },
     {
         id: 13,
@@ -121,8 +145,10 @@ const eventsData = [
         category: 'Community',
         date: '2025-11-30T10:00:00',
         location: 'Multiple Locations, Montreal',
+        organization: 'Je Vois Mtl',
         description: 'Join us in giving back to the community. Choose from various projects across the city.',
         imageUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop',
+        price: 'Free',
     },
     {
         id: 14,
@@ -130,8 +156,10 @@ const eventsData = [
         category: 'Sports',
         date: '2025-11-15T09:00:00',
         location: 'Concordia Stadium, Montreal',
+        organization: 'Concordia Athletics',
         description: 'Form a team and compete for a good cause. All proceeds go to local youth sports programs.',
         imageUrl: 'https://images.unsplash.com/photo-1552667466-07770ae110d0?q=80&w=2070&auto=format&fit=crop',
+        price: 10,
     },
     {
         id: 15,
@@ -139,8 +167,10 @@ const eventsData = [
         category: 'Business',
         date: '2025-11-28T18:30:00',
         location: 'Downtown Rooftop Bar, Montreal',
+        organization: 'Young Professionals MTL',
         description: 'Expand your professional network in a relaxed and friendly atmosphere. Light appetizers provided.',
         imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
+        price: 25,
     },
     {
         id: 16,
@@ -148,8 +178,10 @@ const eventsData = [
         category: 'Featured',
         date: '2025-12-05T19:00:00',
         location: 'Galerie d\'Art Contemporain, Montreal',
+        organization: 'Art Contemporain Mtl',
         description: 'Be the first to see the new collection from groundbreaking international and local artists.',
         imageUrl: 'https://images.unsplash.com/photo-1506806732259-39c2d0268443?q=80&w=2070&auto=format&fit=crop',
+        price: 'Free',
     },
     {
         id: 17,
@@ -157,8 +189,10 @@ const eventsData = [
         category: 'Technology',
         date: '2025-11-26T18:00:00',
         location: 'McGill University, Leacock 132',
+        organization: 'McGill University',
         description: 'Leading experts debate the moral and ethical implications of artificial intelligence in our society.',
         imageUrl: 'https://images.unsplash.com/photo-1677756119517-756a188d2d94?q=80&w=2070&auto=format&fit=crop',
+        price: 'Free',
     },
     {
         id: 18,
@@ -166,13 +200,16 @@ const eventsData = [
         category: 'Education',
         date: '2025-12-02T13:00:00',
         location: 'Concordia University, Webster Library',
+        organization: 'Concordia University',
         description: 'Conquer your fear of public speaking and learn to deliver presentations with confidence.',
         imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop',
+        price: 50,
     }
 ];
 
 const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
 const uniqueLocations = [...new Set(eventsData.map(event => event.location))].sort();
+const uniqueOrganizations = [...new Set(eventsData.map(event => event.organization))].sort();
 
 // --- HOOKS ---
 const useCountdown = (targetDate) => {
@@ -246,12 +283,27 @@ const EventCard = ({ event, onViewDetails }) => {
             </div>
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 transition-colors duration-300">{event.category}</span>
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{event.category}</span>
+                        <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
+                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
+                        </span>
+                    </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300">{event.description}</p>
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
-                        <p><strong>Date:</strong> {formattedDate} at {formattedTime}</p>
-                        <p><strong>Location:</strong> {event.location}</p>
+                        <div className="flex items-center gap-2">
+                            <CalendarDaysIcon className="w-4 h-4"/>
+                            <span>{formattedDate} at {formattedTime}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <MapPinIcon className="w-4 h-4"/>
+                            <span>{event.location}</span>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <BuildingOfficeIcon className="w-4 h-4"/>
+                            <span>{event.organization}</span>
+                        </div>
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 transition-colors duration-300">
@@ -357,7 +409,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
-const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clearFilters }) => {
+const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clearFilters, maxPrice }) => {
     const { translate } = useLanguage();
 
     if (!isOpen)
@@ -384,11 +436,11 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="relative">
                                     <CalendarDaysIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none"/>
-                                    <input type="date" name="fromDate" value={filters.fromDate} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 bg-transparent dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"/>
+                                    <input type="date" name="fromDate" value={filters.fromDate} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 bg-transparent dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 dark:[&::-webkit-calendar-picker-indicator]:invert"/>
                                 </div>
                                 <div className="relative">
                                     <CalendarDaysIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none"/>
-                                    <input type="date" name="toDate" value={filters.toDate} onChange={handleInputChange} className="w-full pl-10 pr-3 py-2 bg-transparent dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300"/>
+                                    <input type="date" name="toDate" value={filters.toDate} onChange={handleInputChange} className="test-blue-500 w-full pl-10 pr-3 py-2 bg-transparent dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 dark:[&::-webkit-calendar-picker-indicator]:invert"/>
                                 </div>
                             </div>
                         </div>
@@ -413,6 +465,41 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90"/>
+                        </div>
+
+                        {/* Organization */}
+                        <div className="relative">
+                            <label htmlFor="organization" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Organization</label>
+                                <BuildingOfficeIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none"/>
+                            <select name="organization" id="organization" value={filters.organization} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
+                                <option value="">All Organizations</option>
+                                {uniqueOrganizations.map(org => <option key={org} value={org}>{org}</option>)}
+                            </select>
+                            <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90"/>
+                        </div>
+
+                        {/* Price */}
+                        <div>
+                            <div className="flex justify-between items-center mb-2">
+                                <label htmlFor="price" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">Price Range</label>
+                                <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 rounded-full">
+                                    Up to ${filters.price}
+                                </span>
+                            </div>
+                            <input
+                                type="range"
+                                id="price"
+                                name="price"
+                                min="0"
+                                max={maxPrice}
+                                value={filters.price}
+                                onChange={handleInputChange}
+                                className="w-full price-slider accent-indigo-700"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <span>Free</span>
+                                <span>${maxPrice}</span>
+                            </div>
                         </div>
                     </div>
 
@@ -439,6 +526,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 
     const eventDate = new Date(event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
@@ -447,19 +535,27 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                 <div className="p-8">
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 dark:text-gray-400 mb-6">
-                        <div className="flex items-center gap-2">
-                            <CalendarDaysIcon className="w-5 h-5"/>
-                            <span>{formattedDate}</span>
+                    <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
+                        <div className="flex items-center gap-3">
+                            <CalendarDaysIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{formattedDate} at {formattedTime}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <MapPinIcon className="w-5 h-5"/>
+                        <div className="flex items-center gap-3">
+                            <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
                             <span>{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{event.organization}</span>
+                        </div>
+                            <div className="flex items-center gap-3">
+                                <TicketIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
                         </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
                     <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                        {translate("participate")}
+                        {translate("reserve")}
                     </button>
                 </div>
             </>
@@ -483,6 +579,10 @@ const Student = () => {
 
     const eventsPerPage = 9;
 
+    const maxPrice = useMemo(() =>
+        Math.ceil(Math.max(...eventsData.map(e => typeof e.price === 'number' ? e.price : 0))),
+    []);
+
     const featuredEvents = useMemo(() =>
         eventsData.filter(e => e.category === 'Featured'),
     []);
@@ -496,28 +596,37 @@ const Student = () => {
         }
 
         // Advanced Filters (from modal)
-        if (activeFilters.fromDate) {
+        if (activeFilters.fromDate)
             events = events.filter(event => new Date(event.date) >= new Date(activeFilters.fromDate));
-        }
-        if (activeFilters.toDate) {
+
+        if (activeFilters.toDate)
             events = events.filter(event => new Date(event.date) <= new Date(activeFilters.toDate).setHours(23, 59, 59, 999));
-        }
-        if (activeFilters.eventType) {
+
+        if (activeFilters.eventType)
             events = events.filter(event => event.category === activeFilters.eventType);
-        }
-        if (activeFilters.location) {
+
+        if (activeFilters.location)
             events = events.filter(event => event.location === activeFilters.location);
-        }
+
+        if (activeFilters.organization)
+            events = events.filter(event => event.organization === activeFilters.organization);
+
+        if (activeFilters.price < maxPrice)
+            events = events.filter(event => {
+                const price = typeof event.price === 'number' ? event.price : 0;
+                return price <= activeFilters.price;
+            });
 
         // Search Term Filter
         if (searchTerm) {
-        events = events.filter(event =>
-            event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            event.description.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+            events = events.filter(event =>
+                event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                event.description.toLowerCase().includes(searchTerm.toLowerCase())
+            );
         }
+
         return events;
-    }, [searchTerm, activeCategories, activeFilters]);
+    }, [searchTerm, activeCategories, activeFilters, maxPrice]);
 
     let carouselData = featuredEvents.map(event => ({
         id: event.id,
@@ -604,6 +713,7 @@ const Student = () => {
                 setFilters={setModalFilters}
                 applyFilters={handleApplyFilters}
                 clearFilters={handleClearFilters}
+                maxPrice={maxPrice}
             />
 
             <EventDetailModal
