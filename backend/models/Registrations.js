@@ -56,7 +56,8 @@ const registrationSchema = new mongoose.Schema({
 
     ticketsIssued: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0,
     },
 
 	

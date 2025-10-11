@@ -401,15 +401,156 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
 // API Endpoint to create an event
 exports.createEvent = async (req,res)=>{
 
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { organization, title, description, start_at, end_at, capacity = 0, category, location } = req.body || {};
+
+        if (!organization || !title || !start_at || !end_at) {
+            return res.status(400).json({ error: 'organization, title, start_at and end_at are required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(organization)) {
+            return res.status(400).json({ error: 'Invalid organization id format' });
+        }
+
+        const org = await Organization.findById(organization).lean();
+        if (!org) return res.status(404).json({ error: 'Organization not found' });
+
+        const eventDoc = await Event.create({
+            organization,
+            title,
+            description,
+            start_at: new Date(start_at),
+            end_at: new Date(end_at),
+            capacity: Number(capacity) || 0,
+            category,
+            location,
+            status: EVENT_STATUS.UPCOMING,
+        });
+
+        return res.status(201).json({ message: 'Event created successfully', event: eventDoc });
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to create event' });
+    }
+
 }
 
 // API Endpoint to update an event
 exports.updateEvent = async (req,res) => {
 
+    try {
+        const { event_id } = req.params;
+        if (!event_id) return res.status(400).json({ error: 'event_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(event_id)) return res.status(400).json({ error: 'Invalid event_id format' });
+
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const updates = {};
+        const allowed = ['title','description','start_at','end_at','capacity','status','location','category'];
+        for (const k of allowed) if (req.body[k] !== undefined) updates[k] = req.body[k];
+
+        // Use a session when capacity change might affect waitlist/promotions
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            const before = await Event.findById(event_id).session(session);
+            if (!before) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(404).json({ error: 'Event not found' });
+            }
+
+            // apply updates
+            const updated = await Event.findByIdAndUpdate(event_id, updates, { new: true, session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            // If capacity increased, try to promote waitlist (run after commit so other readers see new capacity)
+            try {
+                const beforeCap = Number(before.capacity || 0);
+                const afterCap = Number(updated.capacity || 0);
+                if (afterCap > beforeCap) {
+                    const { promoteWaitlistForEvent } = require('./eventController');
+                    await promoteWaitlistForEvent(updated._id);
+                }
+            } catch (promErr) {
+                console.log('Promotion after update failed (non-critical):', promErr.message);
+            }
+
+            return res.status(200).json({ message: 'Event updated', event: updated });
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
+        }
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to update event' });
+    }
+
 }
 
 // API Endpoint to cancel an event
 exports.cancelEvent = async (req,res) => {
+
+    try {
+        const { event_id } = req.params;
+        if (!event_id) return res.status(400).json({ error: 'event_id is required' });
+        if (!mongoose.Types.ObjectId.isValid(event_id)) return res.status(400).json({ error: 'Invalid event_id format' });
+
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        // Transactionally mark event cancelled, cancel registrations and delete tickets
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            const event = await Event.findById(event_id).session(session);
+            if (!event) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(404).json({ error: 'Event not found' });
+            }
+
+            // Mark event cancelled
+            event.status = EVENT_STATUS.CANCELLED;
+            await event.save({ session });
+
+            // Cancel all registrations for this event
+            const regs = await Registration.find({ event: event_id }).session(session);
+            const regIds = regs.map(r => r._id);
+
+            if (regIds.length > 0) {
+                await Registration.updateMany({ _id: { $in: regIds } }, { $set: { status: REGISTRATION_STATUS.CANCELLED, ticketIds: [], ticketsIssued: 0 } }).session(session);
+
+                // Delete tickets linked to those registrations
+                await Ticket.deleteMany({ registration: { $in: regIds } }).session(session);
+            }
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.status(200).json({ message: 'Event cancelled and related registrations/tickets cleaned up', eventId: event._id, cancelledRegistrations: regIds.length });
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            throw e;
+        }
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: 'Failed to cancel event' });
+    }
 
 }
 
@@ -643,6 +784,7 @@ async function promoteWaitlistForEvent(eventId) {
     const session = await mongoose.startSession();
     session.startTransaction();
     const promoted = [];
+    const newlyCreatedTickets = [];
     try {
         // Reload event inside the session and populate waitlist
         const event = await Event.findById(eventId).session(session).populate({ path: 'waitlist' });
@@ -668,7 +810,11 @@ async function promoteWaitlistForEvent(eventId) {
             }
 
             // If this registration requires more seats than available, stop
-            if (reg.quantity > event.capacity) break;
+            if (reg.quantity > event.capacity) {
+            // skip this registration but continue for next
+                event.waitlist.push(event.waitlist.shift()); // optional: move to end
+                continue;
+            }
 
             // Promote
             reg.status = REGISTRATION_STATUS.CONFIRMED;
@@ -686,13 +832,39 @@ async function promoteWaitlistForEvent(eventId) {
                 event.registered_users.push(reg.user);
             }
 
-            // OPTIONAL: ticket creation could happen here
+            // Create tickets for the promoted registration inside the same transaction
+            const ticketsToCreate = [];
+            for (let i = 0; i < reg.quantity; i++) {
+                ticketsToCreate.push({ user: reg.user, event: event._id, registration: reg._id });
+            }
+            if (ticketsToCreate.length > 0) {
+                const created = await Ticket.create(ticketsToCreate, { session });
+                const newIds = created.map(t => t._id);
+                // update registration document in-session
+                reg.ticketIds = Array.isArray(reg.ticketIds) ? reg.ticketIds.concat(newIds) : newIds;
+                reg.ticketsIssued = (reg.ticketsIssued || 0) + newIds.length;
+                await reg.save({ session });
+                newlyCreatedTickets.push(...created);
+            }
             promoted.push({ registration: reg._id, user: reg.user, quantity: reg.quantity });
         }
 
         await event.save({ session });
         await session.commitTransaction();
         session.endSession();
+
+        // Generate QR codes for any tickets created during promotion (outside the transaction)
+        if (newlyCreatedTickets.length > 0) {
+            try {
+                for (const t of newlyCreatedTickets) {
+                    const payload = JSON.stringify({ ticketId: t.ticketId || t._id, registration: t.registration });
+                    const qr = await qrcode.toDataURL(payload);
+                    await Ticket.findByIdAndUpdate(t._id, { qrDataUrl: qr, qr_expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24) });
+                }
+            } catch (qrErr) {
+                console.error('QR generation failed for promoted tickets:', qrErr);
+            }
+        }
 
         return { promoted, remainingCapacity: event.capacity };
     } catch (e) {

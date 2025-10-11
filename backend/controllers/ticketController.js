@@ -107,14 +107,13 @@ exports.createTicket = async(req, res) =>{
         /* Light event validation (reservation should be done earlier via registerToEvent) */
         const ev = await Event.findById(registration.event).select('status').lean();
         if (!ev) 
-            return res.status(400).json({ 
-                code: 'EVENT_NOT_FOUND', 
-                message: 'Event not found' 
-            });
-        if (ev.status !== EVENT_STATUS.UPCOMING) return res.status(403).json({ 
-            code: 'CLOSED', 
-            message: 'Event is not open for ticketing' 
-        });
+            return res.status(400).json({code: 'EVENT_NOT_FOUND', message: 'Event not found'});
+
+        if (ev.status !== EVENT_STATUS.UPCOMING) 
+            return res.status(403).json({code: 'CLOSED', message: 'Event is not open for ticketing'});
+        
+        if (new Date(ev.end_at) < Date.now())
+            return res.status(403).json({ code: 'CLOSED', message: 'Event has already ended' });
 
         // Create tickets based on registration quantity (create, generate QR, save)
         const createdTicketIds = [];
