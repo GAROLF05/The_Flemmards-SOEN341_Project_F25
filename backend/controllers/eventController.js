@@ -402,12 +402,18 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
 exports.createEvent = async (req,res)=>{
 
     try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        
+        // Handle both JSON and text/plain content types
+        let requestBody = req.body;
+        if (typeof req.body === 'string' && req.get('Content-Type') === 'text/plain') {
+            try {
+                requestBody = JSON.parse(req.body);
+            } catch (e) {
+                return res.status(400).json({error: 'Invalid JSON in request body'});
+            }
+        }        
 
-        const { organization, title, description, start_at, end_at, capacity = 0, category, location } = req.body || {};
+        const { organization, title, description, start_at, end_at, capacity = 0, category, location } = requestBody || {};
 
         if (!organization || !title || !start_at || !end_at) {
             return res.status(400).json({ error: 'organization, title, start_at and end_at are required' });
