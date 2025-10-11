@@ -71,6 +71,11 @@ exports.getAllEvents = async (req,res) => {
 
 exports.getEventById = async (req,res) => {
     try{
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
         const {event_id} =  req.params;
         if (!event_id)
             return res.status(400).json({error: "event_id is required"});
@@ -115,11 +120,96 @@ exports.getEventById = async (req,res) => {
 }
 
 exports.getEventByOrganization = async (req,res) =>{
+    try{
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const {org_id} = req.params;
+        if (!org_id)
+            return res.status(400).json({error: "org_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(org_id)){
+            return res.status(400).json({error: "Invalid org_ig format"});
+        }
+
+        const events = await Event.find({organization: org_id})
+        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+                path: 'user',
+                select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 }) // optional: sort by start date
+        .lean()
+        .exec();
+
+        if (!events) 
+            return res.status(404).json({error: "Events not found"});
+    
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            events
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch events by organization"});
+    }
 }
 
 exports.getEventsByStatus = async (req,res) =>{
+    try{
+        const {status} = req.params;
+        if (!status)
+            return res.status(400).json({error: "status is required"});
 
+        const events = await Event.find({status: status})
+        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+                path: 'user',
+                select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 }) // optional: sort by start date
+        .lean()
+        .exec();
+
+        if (!events) 
+            return res.status(404).json({error: "Events not found"});
+    
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            events
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch events by organization"});
+    }
 }
 
 exports.getEventsByCategory = async (req,res)=>{
