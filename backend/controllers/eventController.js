@@ -25,8 +25,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const { error } = require('console');
 
-
-
+// API Endpoint to get all Events
 exports.getAllEvents = async (req,res) => {
     try{
         // Only administrators can fetch all registrations
@@ -69,6 +68,7 @@ exports.getAllEvents = async (req,res) => {
     }
 }
 
+// API Endpoint to get an event by it's _id
 exports.getEventById = async (req,res) => {
     try{
         // Admin only
@@ -119,12 +119,10 @@ exports.getEventById = async (req,res) => {
     }
 }
 
+// API Endpoint to get events by organizations
 exports.getEventByOrganization = async (req,res) =>{
     try{
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
+        
         const {org_id} = req.params;
         if (!org_id)
             return res.status(400).json({error: "org_id is required"});
@@ -169,12 +167,10 @@ exports.getEventByOrganization = async (req,res) =>{
     }
 }
 
+// API Endpoint to get events by status
 exports.getEventsByStatus = async (req,res) =>{
     try{
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-        
+
         const {status} = req.params;
         if (!status)
             return res.status(400).json({error: "status is required"});
@@ -216,6 +212,7 @@ exports.getEventsByStatus = async (req,res) =>{
     }
 }
 
+// API Endpoint to get events by category
 exports.getEventsByCategory = async (req,res)=>{
     try{
         const {category} = req.params;
@@ -265,6 +262,7 @@ exports.getEventsByCategory = async (req,res)=>{
 
 }
 
+// API Endpoint to get events by a certain date range in the queries
 exports.getEventsByDateRange = async (req, res) => {
   try {
         const { start, end } = req.query;
@@ -327,6 +325,7 @@ exports.getEventsByDateRange = async (req, res) => {
 };
 
 
+// API Endpoint to get events by user id --> queries through registrations
 exports.getEventsByUserRegistrations = async (req,res)=>{
     try{
         const {user_id} = req.params;
@@ -381,22 +380,27 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
     }
 }
 
+// API Endpoint to create an event
 exports.createEvent = async (req,res)=>{
 
 }
 
+// API Endpoint to update an event
 exports.updateEvent = async (req,res) => {
 
 }
 
+// API Endpoint to cancel an event
 exports.cancelEvent = async (req,res) => {
 
 }
 
+// API Endpoint to delete an event
 exports.deleteEvent = async (req,res) => {
 
 }
 
+// API Endpoint to get attendees for an event
 exports.getAttendees = async (req,res) => {
     try{
         const {event_id} = req.params;
@@ -461,8 +465,77 @@ exports.getAttendees = async (req,res) => {
     }
 }
 
+// API Endpoint to get waitlisted users for an event
 exports.getWaitlistedUsers = async (req,res) =>{
+    try{
+        const {event_id} = req.params;
+        if (!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event_id format"});
+
+        const event = await Event.findById(event_id)
+        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .populate({
+            path: 'organization',
+            select: 'name description website contact.email contact.phone contact.socials'
+        })
+        .populate({
+            path: 'registered_users',
+            select: 'name email student_id'
+        })
+        .populate({
+            path: 'waitlist',
+            select: 'registrationId user quantity status',
+            populate: {
+                path: 'user',
+                select: 'name email'
+            }
+        })
+        .sort({ start_at: 1 }) // optional: sort by start date
+        .lean()
+        .exec();
+
+        if (!event) 
+            return res.status(404).json({error: "Events not found"});
+
+        if (!event.waitlist || event.waitlist.length === 0)
+            return res.status(404).json({ error: "No waitlisted users/registration found for this event" });
     
+        const waitlisted = event.waitlist.map(reg => ({
+            registrationId: reg.registrationId,
+            status: reg.status,
+            quantity: reg.quantity,
+            registeredAt: reg.createdAt,
+            user: reg.user
+                ? {
+                    _id: reg.user._id,
+                    first_name: reg.user.first_name,
+                    last_name: reg.user.last_name,
+                    email: reg.user.email,
+                    student_id: reg.user.student_id
+                }
+                : null
+        }));
+
+        return res.status(200).json({
+            message: `Confirmed waitlisted users for event '${event.title}' fetched successfully`,
+            event: {
+                _id: event._id,
+                title: event.title,
+                start_at: event.start_at,
+                end_at: event.end_at,
+                capacity: event.capacity,
+                organization: event.organization
+            },
+            total_waitlisted: waitlisted.length,
+            waitlisted
+        });
+
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch attendees"});
+    }
 }
 
 // API endpoint to promote waitlisted user
