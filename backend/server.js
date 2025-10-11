@@ -7,68 +7,80 @@
 - Server startup (app.listen(PORT, ...))
 */
 
-const path = require('path');
+const path = require("path");
 // Express setup
-const express = require('express');
+const express = require("express");
+
+// Cookies
+const cookieParser = require("cookie-parser");
 
 // Dotenv setup
-const dotenv = require('dotenv');
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
+const dotenv = require("dotenv");
+dotenv.config({ path: path.resolve(__dirname, "..", ".env") });
 
 // MongoDB setup
-const mongoose = require('mongoose');
-const connectToDB = require('./config/database')
+const mongoose = require("mongoose");
+const connectToDB = require("./config/database");
+
+const { checkAuth } = require("./middlewares/auth");
 
 // App setup
 const app = express();
 const PORT = 3000;
 
 // Middlewares
-app.use(express.json())
-app.use(express.text({ type: 'text/plain' }))
+app.use(express.json());
+app.use(express.text({ type: "text/plain" }));
+app.use(cookieParser());
 
 // CORS middleware to handle cross-origin requests
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-        res.sendStatus(200);
-    } else {
-        next();
-    }
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
 });
 
+// Check authentication
+app.use(checkAuth);
+
 // Import routes
-const ticketRoutes = require('./routes/tickets');
-const registrationRoutes = require('./routes/registrations')
+const ticketRoutes = require("./routes/tickets");
+const registrationRoutes = require("./routes/registrations");
+const userRoutes = require("./routes/users");
 
 // Mount routes
-app.use('/api/tickets', ticketRoutes);
-app.use('api/registrations', registrationRoutes);
+app.use("/api/tickets", ticketRoutes);
+app.use("api/registrations", registrationRoutes);
+app.use("/api/users", userRoutes);
 
 // connect to MongoDB before starting the server
 (async () => {
-    try {
-        await connectToDB({ retries: 3, backoffMs: 500 });
-        console.log('✅ MongoDB connected');
+  try {
+    await connectToDB({ retries: 3, backoffMs: 500 });
+    console.log("✅ MongoDB connected");
 
-        // only start server *after* DB is ready
-        app.listen(PORT, () => {
-        console.log(`🚀 Server running at http://localhost:${PORT}`);
-        });
-    } catch (err) {
-        console.error('❌ Failed to connect to MongoDB:', err.message);
-        process.exit(1); // stop the server if DB connection fails
-    }
-
-    // graceful shutdown
-    process.on('SIGINT', async () => {
-        await mongoose.connection.close();
-        console.log('🛑 MongoDB connection closed');
-        process.exit(0);
+    // only start server *after* DB is ready
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
     });
+  } catch (err) {
+    console.error("❌ Failed to connect to MongoDB:", err.message);
+    process.exit(1); // stop the server if DB connection fails
+  }
+
+  // graceful shutdown
+  process.on("SIGINT", async () => {
+    await mongoose.connection.close();
+    console.log("🛑 MongoDB connection closed");
+    process.exit(0);
+  });
 })();
-
-
