@@ -70,7 +70,48 @@ exports.getAllEvents = async (req,res) => {
 }
 
 exports.getEventById = async (req,res) => {
+    try{
+        const {event_id} =  req.params;
+        if (!event_id)
+            return res.status(400).json({error: "event_id is required"});
+        if (!mongoose.Types.ObjectId.isValid(event_id))
+            return res.status(400).json({error: "Invalid event id format"});
 
+        const event = await Event.findById(event_id)
+            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .populate({
+                path: 'organization',
+                select: 'name description website contact.email contact.phone contact.socials'
+            })
+            .populate({
+                path: 'registered_users',
+                select: 'name email student_id'
+            })
+            .populate({
+                path: 'waitlist',
+                select: 'registrationId user quantity status',
+                populate: {
+                    path: 'user',
+                    select: 'name email'
+                }
+            })
+            .sort({ start_at: 1 }) // optional: sort by start date
+            .lean()
+            .exec();
+
+        if (!event) return res.status(404).json({error: "Event not found"});
+    
+
+        return res.status(200).json({
+            message: 'Event fetched successfully',
+            event
+        });
+
+        
+    } catch(e){
+        console.error(e);
+        return res.status(500).json({error: "Failed to fetch all events"})
+    }
 }
 
 exports.getEventByOrganization = async (req,res) =>{
