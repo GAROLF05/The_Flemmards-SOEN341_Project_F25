@@ -1,8 +1,8 @@
-import { CalendarDateRangeIcon, Cog8ToothIcon, HomeIcon, StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CalendarDateRangeIcon, HomeIcon, Squares2X2Icon, StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 
-const MobileMenu = ({ isOpen, onClose }) => {
+const MobileMenu = ({ isOpen, onClose, accountType }) => {
     const { translate } = useLanguage();
     const navigate = useNavigate();
 
@@ -10,6 +10,45 @@ const MobileMenu = ({ isOpen, onClose }) => {
         navigate(link);
         onClose();
     };
+
+    const menuOptions = [];
+
+    if (accountType === "student")
+        menuOptions.push(...[
+            {
+                title: translate("home"),
+                Icon: HomeIcon,
+                link: "/student",
+            },
+            {
+                title: translate("calendar"),
+                Icon: CalendarDateRangeIcon,
+                link: "/student/calendar",
+            },
+            {
+                title: translate("myEvents"),
+                Icon: StarIcon,
+                link: "/student/events",
+            }
+        ]);
+
+    if (accountType === "organizer")
+        menuOptions.push(...[
+            {
+                title: translate("dashboard"),
+                Icon: Squares2X2Icon,
+                link: "/organizer",
+            },
+        ]);
+
+    if (accountType === "admin")
+        menuOptions.push(...[
+            {
+                title: translate("dashboard"),
+                Icon: Squares2X2Icon,
+                link: "/admin",
+            },
+        ]);
 
     return (
         <div className={`fixed inset-0 z-[150] ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
@@ -34,21 +73,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
                 </div>
 
                 <nav className="p-4 flex flex-col gap-2">
-                    <li onClick={() => handleMenuClick("/student")} className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
-                        <HomeIcon className="w-6 h-6"/>{translate("home")}
-                    </li>
-
-                    <li onClick={() => handleMenuClick("/student/calendar")} className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
-                        <CalendarDateRangeIcon className="w-6 h-6"/>{translate("calendar")}
-                    </li>
-
-                    <li onClick={() => handleMenuClick("/student/events")} className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
-                        <StarIcon className="w-6 h-6"/>{translate("myEvents")}
-                    </li>
-
-                    <li onClick={() => handleMenuClick("/student/settings")} className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
-                        <Cog8ToothIcon className="w-6 h-6"/>{translate("settings")}
-                    </li>
+                    {menuOptions.map(option => (
+                        <li key={option.title} onClick={() => handleMenuClick(option.link)} className="flex items-center gap-3 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-700 dark:hover:text-indigo-400 transition-colors duration-300 cursor-pointer">
+                            <option.Icon className="w-6 h-6"/>{option.title}
+                        </li>
+                    ))}
                 </nav>
             </div>
         </div>

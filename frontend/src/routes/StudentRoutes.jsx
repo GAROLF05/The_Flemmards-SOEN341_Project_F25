@@ -23,10 +23,6 @@ const StudentRoutes = [
             {
                 path: 'events',
                 element: <div>Events</div>
-            },
-            {
-                path: 'settings',
-                element: <div>Settings</div>
             }
         ]
     }
