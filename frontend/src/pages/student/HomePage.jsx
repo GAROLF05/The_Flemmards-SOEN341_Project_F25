@@ -372,6 +372,8 @@ const HomePage = () => {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
+    const { translate } = useLanguage();
+
 
     const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
     const [activeFilters, setActiveFilters] = useState(initialFilters);
@@ -480,7 +482,7 @@ const HomePage = () => {
 
                     <input
                         type="text"
-                        placeholder="Search for events, categories..."
+                        placeholder={translate("searchEvents")}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-12 pr-10 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:border-indigo-600 transition-colors duration-300"
@@ -512,8 +514,8 @@ const HomePage = () => {
                 </div>
             ) : (
                 <div className="text-center py-16">
-                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">No Events Found</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">Try adjusting your search or filter.</p>
+                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">{translate("noEventsFound")}</h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400 transition-colors duration-300">{translate("noEventsFoundDescription")}</p>
                 </div>
             )}
 
