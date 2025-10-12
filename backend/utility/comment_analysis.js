@@ -15,6 +15,7 @@ const testText = `
     amazing good!!! blablba HORRIBLE??_ amazing but bad, bad, bad.
     new sentence new words new words new words new words new words
     hello hello why tho
+`;
 
 //1. Structure and filter comments    
 function cleanText(text) {
