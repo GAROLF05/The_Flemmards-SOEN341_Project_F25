@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRightStartOnRectangleIcon, Bars3Icon, GlobeAltIcon, MoonIcon, SunIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "../../hooks/useTheme";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useNavigate } from "react-router-dom";
 
-const Header = ({ onMenuClick }) => {
+const Header = ({ accountType, onMenuClick }) => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
     const userDropdownRef = useRef(null);
     const langDropdownRef = useRef(null);
     const {theme, toggleTheme} = useTheme();
     const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
+    const navigate = useNavigate();
 
     const useOutsideAlerter = (ref, setOpenState) => {
         useEffect(() => {
@@ -42,7 +44,8 @@ const Header = ({ onMenuClick }) => {
                         <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
                             <Bars3Icon className="h-6 w-6"/>
                         </button>
-                        <a href="javascript:void(0)" className="text-2xl font-bold text-indigo-600">{translate("appTitle")}</a>
+                        <span className="text-2xl font-bold text-indigo-600 cursor-pointer" onClick={() => navigate(`/${accountType}`)}>{translate("appTitle")}</span>
+                        <span className="text-gray-500 dark:text-gray-400 font-medium">{translate(accountType)}</span>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -58,7 +61,7 @@ const Header = ({ onMenuClick }) => {
                             </button>
 
                             {isLangMenuOpen && (
-                                <div className="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transition-colors duration-300">
+                                <ul className="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transition-colors duration-300">
                                     {availableLanguages.map(lang => (
                                         <li
                                             key={lang}
@@ -68,7 +71,7 @@ const Header = ({ onMenuClick }) => {
                                             {lang.toUpperCase()}
                                         </li>
                                     ))}
-                                </div>
+                                </ul>
                             )}
                         </div>
 
@@ -79,17 +82,17 @@ const Header = ({ onMenuClick }) => {
                             </button>
 
                             {isUserMenuOpen && (
-                                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
-                                    <a href="javascript:void(0)" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
+                                <ul className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
+                                    <li onClick={() =>navigate("profile")} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
                                         <UserCircleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
-                                        Profile
-                                    </a>
+                                        {translate("profile")}
+                                    </li>
 
-                                    <a href="javascript:void(0)" className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
+                                    <li onClick={() =>navigate("/login")} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
                                         <ArrowRightStartOnRectangleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
-                                        Logout
-                                    </a>
-                                </div>
+                                        {translate("logout")}
+                                    </li>
+                                </ul>
                             )}
                         </div>
                     </div>

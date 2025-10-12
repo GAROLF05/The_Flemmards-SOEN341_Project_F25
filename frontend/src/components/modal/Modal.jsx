@@ -12,7 +12,7 @@ import PropTypes from "prop-types";
  * @returns {JSX.Element} - The rendered modal component.
  */
 
-const Modal = ({ isOpen, onClose, children, width, className }) => {
+const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
     return (
         <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
             {/* Overlay */}
@@ -65,7 +65,7 @@ Modal.defaultProps = {
     isOpen: false,
     onClose: undefined,
     children: undefined,
-    width: undefined,
+    width: "medium",
     className: ""
 };
 

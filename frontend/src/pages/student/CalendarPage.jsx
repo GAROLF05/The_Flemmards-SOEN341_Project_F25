@@ -1,7 +1,8 @@
-import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, TicketIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, TicketIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
 import { eventsMockData } from '../../utils/mockData';
 import { useLanguage } from '../../hooks/useLanguage';
+import Modal from '../../components/modal/Modal';
 
 const eventsData = eventsMockData; // --- MOCK DATA ---
 
@@ -16,51 +17,37 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
-        <div className={`fixed inset-0 z-[70] transition-all duration-300 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-            <div
-                className="fixed inset-0 bg-black/70 transition-opacity duration-300"
-                onClick={onClose}
-                style={{ opacity: isOpen ? 1 : 0 }}
-            ></div>
-            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4 transition-all duration-300 ease-in-out ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl"
-                >
-                    <div className="relative">
-                        <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
-                        <button onClick={onClose} className="absolute top-4 right-4 bg-black/30 text-white rounded-full p-2 hover:bg-black/50 transition-colors">
-                            <XMarkIcon className="h-6 w-6"/>
-                        </button>
-                    </div>
-                    <div className="p-8">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
-                        <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
-                        <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
-                            <div className="flex items-center gap-3">
-                                <CalendarDateRangeIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>{formattedDate} at {formattedTime}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>{event.location}</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>{event.organization}</span>
-                            </div>
-                             <div className="flex items-center gap-3">
-                                <TicketIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
-                            </div>
+        <Modal isOpen={isOpen} onClose={onClose} width="medium">
+            <>
+                <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
+                <div className="p-8">
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
+                    <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
+                    <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
+                        <div className="flex items-center gap-3">
+                            <CalendarDateRangeIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{formattedDate} at {formattedTime}</span>
                         </div>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                            {translate("register")}
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{event.organization}</span>
+                        </div>
+                            <div className="flex items-center gap-3">
+                            <TicketIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
+                        </div>
                     </div>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
+                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                        {translate("reserveNow")}
+                    </button>
                 </div>
-            </div>
-        </div>
+            </>
+        </Modal>
     );
 };
 
