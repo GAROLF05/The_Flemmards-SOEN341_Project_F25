@@ -4,7 +4,7 @@ import Organizer from "../pages/organizer/Organizer";
 const OrganizerRoutes = [
     {
         path: '/organizer',
-        element: <MainLayout />,
+        element: <MainLayout accountType="organizer" />,
         children: [
             {
                 path: '',

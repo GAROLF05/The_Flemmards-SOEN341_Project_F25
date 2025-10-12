@@ -6,7 +6,7 @@ import CalendarPage from "../pages/student/CalendarPage";
 const StudentRoutes = [
     {
         path: '/student',
-        element: <MainLayout />,
+        element: <MainLayout accountType="student" />,
         children: [
             {
                 path: '',
