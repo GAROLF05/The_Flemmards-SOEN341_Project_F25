@@ -356,7 +356,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
                     <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                        {translate("reserve")}
+                        {translate("reserveNow")}
                     </button>
                 </div>
             </>
@@ -370,6 +370,8 @@ const HomePage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [isInitialMount,setIsInitialMount] = useState(true);
+    const eventsListRef = useRef(null);
 
     const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
     const [activeFilters, setActiveFilters] = useState(initialFilters);
@@ -379,6 +381,16 @@ const HomePage = () => {
     const closeEventModal = () => setSelectedEvent(null);
 
     const eventsPerPage = 9;
+
+    useEffect(() => {
+        if (isInitialMount) {
+            setIsInitialMount(false);
+        } else {
+            const top = eventsListRef.current.getBoundingClientRect().top + window.scrollY - 90;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
 
     const maxPrice = useMemo(() =>
         Math.ceil(Math.max(...eventsData.map(e => typeof e.price === 'number' ? e.price : 0))),
@@ -462,7 +474,7 @@ const HomePage = () => {
         <>
             <Carousel items={carouselData} />
 
-            <div className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
+            <div ref={eventsListRef} className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-grow group w-full">
                     <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 transition-colors duration-300" />
 
