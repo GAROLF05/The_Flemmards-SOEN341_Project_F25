@@ -1,4 +1,4 @@
-import Authentication from "../pages/Authentication";
+import Authentication from "../pages/authentication/Authentication";
 
 const AuthenticationRoutes = [
     {

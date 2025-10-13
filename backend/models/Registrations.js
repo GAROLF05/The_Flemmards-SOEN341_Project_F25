@@ -56,7 +56,8 @@ const registrationSchema = new mongoose.Schema({
 
     ticketsIssued: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0,
     },
 
 	
@@ -87,5 +88,5 @@ registrationSchema.virtual('ticketsCount', {
 });
 
 
-module.exports = mongoose.model('Registration', registrationSchema);
-module.exports.REGISTRATION_STATUS = REGISTRATION_STATUS;
+const Registration = mongoose.model('Registration', registrationSchema);
+module.exports = {Registration,REGISTRATION_STATUS};

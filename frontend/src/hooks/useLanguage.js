@@ -14,8 +14,8 @@ export function useLanguage() {
 
     const currentLanguage = i18n.language.split('-')[0];
 
-    const translate = (text) => {
-        return t(text);
+    const translate = (text, options = {}) => {
+        return t(text, options);
     };
 
     const changeLanguage = (lang) => {

@@ -55,11 +55,13 @@ app.use(checkAuth);
 // Import routes
 const ticketRoutes = require("./routes/tickets");
 const registrationRoutes = require("./routes/registrations");
+const eventRoutes = require('./routes/events');
 const userRoutes = require("./routes/users");
 
 // Mount routes
-app.use("/api/tickets", ticketRoutes);
-app.use("api/registrations", registrationRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/registrations', registrationRoutes);
+app.use('/api/events', eventRoutes);
 app.use("/api/users", userRoutes);
 
 // connect to MongoDB before starting the server

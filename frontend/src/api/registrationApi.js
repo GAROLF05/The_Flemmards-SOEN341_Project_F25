@@ -1,7 +1,7 @@
 import api from "./axiosClient";
-import endpoints from "./endpoints";
+import ENDPOINTS from "./endpoints";
 
 export const bookTicket = (eventId) =>
-  api.post(endpoints.registrations, { event_id: eventId });
+  api.post(ENDPOINTS.REGISTRATION, { event_id: eventId });
 
-export const getMyRegistrations = () => api.get(endpoints.myRegistrations);
+export const getMyRegistrations = () => api.get(ENDPOINTS.MYREGISTRATIONS);

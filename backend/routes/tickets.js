@@ -14,7 +14,6 @@ const ticketController = require("../controllers/ticketController");
 
 // ToDO: Add a verifyUser jwt token
 
-
 // Filter tickets by all, _id, or ticketId
 router.get('/ticket/all', ticketController.getAllTickets);
 router.get('/ticket/by-id/:ticket_id', ticketController.getTicketsById);
