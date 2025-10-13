@@ -56,3 +56,51 @@ This document highlights the individual work done by each member of **The Flemma
 - Created and documented the contributions page.
 - Proofread GitHub repo
 - time spent: 2 h
+
+---
+
+## Sprint 2
+
+### Nameer Hanif
+- Did most of the backend implementation of US.02, US.03 and US.04 (except email sending)
+  - Worked on the QR code implementation, database updates, and all of its edge cases
+  - Worked on the Tickets implementation, database updates, and all of its edge cases
+  - Worked on the Events implementation, database updates, and all of its edge cases
+  - Worked on the `.ics` generation implementation using the `Events` database
+  - Worked on the Registration implementation (including capacity and waitlist handling, database updates, and all of its edge cases
+- Set up the initial backend workflow of this project with the following folders : `config/`, `controllers/`, `middlewares/`, `models/`, `routes/`, `tests/`, `utils/`.
+- Set up the MongoDB database on MongoDB Compass, and MongoDB Atlas. Invited the others to the database so they can use it for their own testing and implementation. Set up the `URI` and `PASSWORD` in a `.env` file.
+- Fully implemented and coded the following `controller/` files : `calendarController.js`, `eventController.js`, `registrationController.js`, `ticketController.js`
+- Fully implemented and coded the following DB `models/` files : `Administrators.js`, `Event.js`, `Organization.js`, `Registrations.js`, `Ticket.js`, `User.js`
+- Fully implemented and coded the following `routes/` files : `calendar.js`, `events.js`, `registrations.js`, `tickets.js`
+- Fully implemented and coded the following `utils/` files : `authHelpers.js`
+- Fully implemented and coded the following `config/` files : `database.js`
+
+Time spent working : 48h
+
+### Bijoy Sengupta
+
+
+### Omar Dbaa
+
+
+### Hesham Rabie
+
+  
+### Elliot Boismartel
+
+
+### Mostafa Maraie
+
+
+### Curtis Moxebo
+
+
+### Nihit Patel
+- Documented and formatted the **Meeting Minutes 1**, **Meeting Minutes 2**, **Meeting Minutes 3**, **Meeting Minutes 4** for Sprint 2.
+- Implemented functionalities for user registration, sign up and loging. (userController.js & users.js) in the backend.
+- Implemented the middleware for authenticating users (auth.js) in the backend.
+- Setup TheFlemmardsTeam@gmail.com email and app password for nodemailer.
+- Implemented email confirmation with ticket details for when a user registers for an event (inside registrationController.js) in the backend.
+- Assigned Risks and Priorities to user stories 11-17.
+Time Spent: 13h
