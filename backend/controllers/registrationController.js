@@ -35,6 +35,9 @@ const Ticket = require('../models/Ticket');
 // QR Code setup (npm install qrcode)
 const qrcode = require('qrcode');
 
+// Nodemailer setup (For emails)
+const nodemailer = require("nodemailer");
+
 // Dotenv setup
 const path = require('path')
 const dotenv = require('dotenv');
