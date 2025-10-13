@@ -6,7 +6,7 @@ import CalendarPage from "../pages/student/CalendarPage";
 const StudentRoutes = [
     {
         path: '/student',
-        element: <MainLayout />,
+        element: <MainLayout accountType="student" />,
         children: [
             {
                 path: '',
@@ -23,10 +23,6 @@ const StudentRoutes = [
             {
                 path: 'events',
                 element: <div>Events</div>
-            },
-            {
-                path: 'settings',
-                element: <div>Settings</div>
             }
         ]
     }

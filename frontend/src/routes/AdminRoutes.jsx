@@ -4,7 +4,7 @@ import Admin from "../pages/admin/Admin";
 const AdminRoutes = [
     {
         path: '/admin',
-        element: <MainLayout />,
+        element: <MainLayout accountType="admin" />,
         children: [
             {
                 path: '',

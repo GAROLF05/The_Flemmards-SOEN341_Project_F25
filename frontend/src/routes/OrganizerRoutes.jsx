@@ -1,15 +1,20 @@
+import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Organizer from "../pages/organizer/Organizer";
+import DashboardPage from "../pages/organizer/DashboardPage";
 
 const OrganizerRoutes = [
     {
         path: '/organizer',
-        element: <MainLayout />,
+        element: <MainLayout accountType="organizer" />,
         children: [
             {
                 path: '',
-                element: <Organizer />
-            }
+                element: <DashboardPage />
+            },
+            {
+                path: 'home',
+                element: <Navigate to="/organizer" />
+            },
         ]
     }
 ];
