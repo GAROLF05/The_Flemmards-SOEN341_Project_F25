@@ -403,6 +403,11 @@ exports.createEvent = async (req,res)=>{
 
     try {
         
+        // // Admin only
+        // if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        // const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        // if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
         // Handle both JSON and text/plain content types
         let requestBody = req.body;
         if (typeof req.body === 'string' && req.get('Content-Type') === 'text/plain') {
@@ -454,10 +459,10 @@ exports.updateEvent = async (req,res) => {
         if (!event_id) return res.status(400).json({ error: 'event_id is required' });
         if (!mongoose.Types.ObjectId.isValid(event_id)) return res.status(400).json({ error: 'Invalid event_id format' });
 
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        // // Admin only
+        // if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        // const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        // if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
         const updates = {};
         const allowed = ['title','description','start_at','end_at','capacity','status','location','category'];
