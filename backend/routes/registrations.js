@@ -13,21 +13,24 @@ const router = express.Router();
 const registrationController = require("../controllers/registrationController");
 
 
+// Middlewares
+const { requireAuth, requireAdmin } = require('../middlewares/auth');
+
 // Create
-router.post('/register', registrationController.registerToEvent);
+router.post('/register', requireAuth, registrationController.registerToEvent);
 
 
 // Read
-router.get('/get/all', registrationController.getAllRegistrations);
-router.get('/get/:reg_id', registrationController.getRegistrationById);
-router.get('/get/by-regid/:registrationId', registrationController.getRegistrationByRegId);
-router.get('/get/by-user/:user_id', registrationController.getRegistrationByUser);
-router.get('/get/by-event/:event_id', registrationController.getRegistrationByEvent);
+router.get('/get/all', requireAdmin, registrationController.getAllRegistrations);
+router.get('/get/:reg_id', requireAuth, registrationController.getRegistrationById);
+router.get('/get/by-regid/:registrationId', requireAuth, registrationController.getRegistrationByRegId);
+router.get('/get/by-user/:user_id', requireAuth, registrationController.getRegistrationByUser);
+router.get('/get/by-event/:event_id', requireAdmin, registrationController.getRegistrationByEvent);
 
 // Update / Cancel / Delete
-router.put('/update/:reg_id', registrationController.updateRegistration);
-router.put('/cancel/:reg_id', registrationController.cancelRegistration);
-router.delete('/delete/:reg_id', registrationController.deleteRegistration);
+router.put('/update/:reg_id', requireAuth, registrationController.updateRegistration);
+router.put('/cancel/:reg_id', requireAuth, registrationController.cancelRegistration);
+router.delete('/delete/:reg_id', requireAuth, registrationController.deleteRegistration);
 
 
 // Export

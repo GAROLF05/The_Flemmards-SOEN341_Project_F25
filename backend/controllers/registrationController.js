@@ -44,16 +44,14 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const { error } = require('console');
 
+const { assertAuthenticated, ensureAdmin, ensureAdminOrOwner } = require('../utils/authHelpers');
+
 // API Endpoint to register to an event
 exports.registerToEvent = async (req, res) => {
     try {
         
-        // Check if user allowed
-        if (!req.user)
-            return res.status(401).json({
-                code: 'UNAUTHORIZED',
-                message: 'Authentication required'
-            });
+        // Ensure user is authenticated
+        try { assertAuthenticated(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { eventId, quantity = 1 } = req.body || {};
         const qty = Number(quantity);
@@ -156,9 +154,7 @@ exports.registerToEvent = async (req, res) => {
 exports.getAllRegistrations = async (req,res)=>{
     try{
         // Only administrators can fetch all registrations
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
         const reg = await Registration.find()
         .populate({
             path: 'user', 
@@ -216,11 +212,8 @@ exports.getRegistrationById = async (req,res)=>{
 
         if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
-        // Owner or admin can access
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const isOwner = reg.user && (reg.user._id ? reg.user._id.toString() : reg.user.toString()) === req.user._id.toString();
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+    // Owner or admin can access
+    try { await ensureAdminOrOwner(req, reg.user); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         return res.status(200).json({ registration: reg });
 
@@ -257,10 +250,7 @@ exports.getRegistrationByRegId = async (req,res)=>{
 
         if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
 
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const isOwner = reg.user && (reg.user._id ? reg.user._id.toString() : reg.user.toString()) === req.user._id.toString();
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!isOwner && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+    try { await ensureAdminOrOwner(req, reg.user); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         return res.status(200).json({ registration: reg });
 
@@ -281,9 +271,7 @@ exports.getRegistrationByUser = async (req,res)=>{
             return res.status(400).json({error: "Invalid user_id format"});
         
     // Only owner (same user) or admin can fetch registrations for a user
-    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-    const admin = await Administrator.findOne({ email: req.user.email }).lean();
-    if (req.user._id.toString() !== user_id && !admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+    try { await ensureAdminOrOwner(req, { _id: user_id }); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
     const reg = await Registration.find({user: user_id})
         .populate({
@@ -323,9 +311,7 @@ exports.getRegistrationByEvent = async (req,res)=>{
             return res.status(400).json({error: "Invalid event_id format"});
         
     // Only administrators can fetch registrations by event
-    if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-    const admin = await Administrator.findOne({ email: req.user.email }).lean();
-    if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+    try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
     const reg = await Registration.find({event: event_id})
         .populate({
@@ -360,8 +346,7 @@ exports.updateRegistration = async (req,res)=>{
         const { quantity } = req.body || {};
 
         // Basic validation
-        if (!req.user) 
-            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        try { assertAuthenticated(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
         if (!reg_id) 
             return res.status(400).json({ error: 'reg_id is required' });
         if (!mongoose.Types.ObjectId.isValid(reg_id)) 
@@ -375,9 +360,8 @@ exports.updateRegistration = async (req,res)=>{
         if (!reg) 
             return res.status(404).json({ error: 'Registration not found' });
 
-        // Only the owner (or admins in future) can update
-        if ((reg.user._id ? reg.user._id.toString() : reg.user.toString()) !== req.user._id.toString())
-            return res.status(403).json({ code: 'FORBIDDEN', message: 'Registration does not belong to current user' });
+        // Only the owner (or admins) can update
+        try { await ensureAdminOrOwner(req, reg.user); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         // Fetch event
         const event = await Event.findById(reg.event);
