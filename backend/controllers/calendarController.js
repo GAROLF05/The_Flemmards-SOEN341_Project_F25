@@ -56,6 +56,11 @@ exports.generateICS = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(eventId)) 
             return res.status(400).json({ error: 'Invalid event id format' });
 
+        // Optionally allow public ICS generation; if you want only authenticated users or admins,
+        // uncomment the lines below or use `ensureAdmin` from authHelpers.
+        // const { assertAuthenticated, ensureAdmin } = require('../utils/authHelpers');
+        // try { assertAuthenticated(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
         // Load event and populate organization name and contact.email
         const ev = await Event.findById(eventId).populate({ path: 'organization', select: 'name contact.email' }).lean();
         if (!ev)

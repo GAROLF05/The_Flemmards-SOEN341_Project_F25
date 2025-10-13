@@ -189,9 +189,8 @@ exports.getEventByOrganization = async (req,res) =>{
 exports.getEventsByStatus = async (req,res) =>{
     try{
 
-        const {status} = req.params;
-        if (!status)
-            return res.status(400).json({error: "status is required"});
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find({status: status})
         .select('organization title description start_at end_at capacity status registered_users waitlist')
@@ -402,9 +401,8 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
 exports.createEvent = async (req,res)=>{
 
     try {
-        
-        // // Admin only
-        // if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
         // const admin = await Administrator.findOne({ email: req.user.email }).lean();
         // if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
