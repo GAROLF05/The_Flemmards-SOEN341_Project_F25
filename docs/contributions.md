@@ -103,4 +103,5 @@ Time spent working : 48h
 - Setup TheFlemmardsTeam@gmail.com email and app password for nodemailer.
 - Implemented email confirmation with ticket details for when a user registers for an event (inside registrationController.js) in the backend.
 - Assigned Risks and Priorities to user stories 11-17.
+
 Time Spent: 13h
