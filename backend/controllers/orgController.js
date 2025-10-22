@@ -43,3 +43,44 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 // MongoDB setup
 const mongoose = require('mongoose');
 const { error } = require('console');
+
+// API Endpoint to create organization
+exports.createOrganization = async (req,res)=>{
+
+}
+
+// API Endpoint to get all organization
+exports.getAllOrganizations = async (req,res)=>{
+
+}
+
+// API Endpoint to get an organization by _id
+exports.getOrganizationById = async (req,res)=>{
+
+}
+
+// API Endpoint to get organization by status
+exports.getOrganizationByStatus = async (req,res)=>{
+
+}
+
+// API Endpoint to get pending organizations
+exports.getPendingOrganizations = async (req,res)=>{
+
+}
+
+// API Endpoint to update organization info
+exports.updateOrganization = async (req,res)=>{
+
+}
+
+// API Endpoint to delete an organization
+exports.deleteOrganization = async (req,res)=>{
+
+}
+
+// API Endpoint to get organization's stats
+exports.getOrganizationStats = async (req,res)=>{
+    
+}
+
