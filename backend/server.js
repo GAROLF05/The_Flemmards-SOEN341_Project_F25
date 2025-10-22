@@ -58,6 +58,7 @@ const registrationRoutes = require("./routes/registrations");
 const eventRoutes = require('./routes/events');
 const userRoutes = require("./routes/users");
 const calendarRoutes = require('./routes/calendar');
+const orgRoutes = require('./routes/organizations');
 
 // Mount routes
 app.use('/api/tickets', ticketRoutes);
@@ -65,6 +66,18 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/events', eventRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/org', orgRoutes);
+
+// Serve frontend build in production (single-server deployment)
+const isProd = process.env.NODE_ENV === 'production';
+if (isProd) {
+  const distPath = path.join(__dirname, '..', 'frontend', 'dist');
+  app.use(express.static(distPath));
+  // fallback for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 // connect to MongoDB before starting the server
 (async () => {
