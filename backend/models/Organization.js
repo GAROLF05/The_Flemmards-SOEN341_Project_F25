@@ -71,7 +71,19 @@ const organizationSchema = new mongoose.Schema({
                 match: [/^@[A-Za-z0-9_.]{2,30}$/, 'Invalid Facebook handle (e.g. @username)']
             }
         }
-    }
+    },
+
+    verified: {
+        type: Boolean,
+        default: false
+    },
+
+    status: {
+        type: String,
+        enum: ['active', 'suspended'],
+        default: 'active'
+    },
+
 
 }, {
     collection: 'organizations',
