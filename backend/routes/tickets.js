@@ -23,6 +23,7 @@ router.get('/ticket/count/', requireAdmin, ticketController.countTickets);
 
 // Validate tickets (public endpoint used by scanners may be allowed; keep auth optional)
 router.get('/ticket/validate', ticketController.validateTicket);
+router.post('/ticket/scan', requireAuth, ticketController.scanTicket); // Task #64: QR scan with re-use detection
 
 // Ticket CRUD management
 router.post('/ticket/create', requireAuth, ticketController.createTicket);
@@ -35,5 +36,8 @@ router.delete('/ticket/delete/:ticket_id', requireAdmin, ticketController.delete
 // Filter tickets by user or event
 router.get('/user/:user_id', requireAuth, ticketController.getTicketsByUser);
 router.get('/event/:event_id', requireAuth, ticketController.getTicketsByEvent);
+
+// Task #58: Export attendee list as CSV
+router.get('/export-csv/:event_id', requireAdmin, ticketController.exportAttendeesCSV);
 
 module.exports = router;

@@ -15,7 +15,20 @@ const organizationController = require('../controllers/orgController');
 // Middlewares
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
 
+// Create organization (public - anyone can register as organizer)
+router.post('/create', organizationController.createOrganization);
 
+// Read
+router.get('/all', requireAdmin, organizationController.getAllOrganizations);
+router.get('/:org_id', organizationController.getOrganizationById);
+router.get('/status/:status', requireAdmin, organizationController.getOrganizationByStatus);
+router.get('/pending/list', requireAdmin, organizationController.getPendingOrganizations);
+router.get('/stats/:org_id', organizationController.getOrganizationStats);
 
+// Update
+router.put('/update/:org_id', requireAdmin, organizationController.updateOrganization);
+
+// Delete
+router.delete('/delete/:org_id', requireAdmin, organizationController.deleteOrganization);
 
 module.exports = router;

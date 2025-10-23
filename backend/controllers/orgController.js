@@ -28,7 +28,7 @@ try {
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
-const Organization = require('../models/Organization');
+const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
@@ -46,41 +46,288 @@ const { error } = require('console');
 
 // API Endpoint to create organization
 exports.createOrganization = async (req,res)=>{
+    try {
+        const { name, description, website, contact } = req.body;
 
+        // Validate required fields
+        if (!name || !description || !website || !contact) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Create organization with pending status
+        const organization = await Organization.create({
+            name,
+            description,
+            website,
+            contact,
+            status: ORGANIZATION_STATUS.PENDING
+        });
+
+        return res.status(201).json({
+            message: 'Organization created successfully. Awaiting admin approval.',
+            organization
+        });
+    } catch (e) {
+        console.error('Error creating organization:', e);
+        if (e.code === 11000) {
+            return res.status(409).json({ error: 'Organization with this name, email, website, or phone already exists' });
+        }
+        return res.status(500).json({ error: 'Failed to create organization' });
+    }
 }
 
 // API Endpoint to get all organization
 exports.getAllOrganizations = async (req,res)=>{
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const organizations = await Organization.find()
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Organizations fetched successfully',
+            total: organizations.length,
+            organizations
+        });
+    } catch (e) {
+        console.error('Error fetching organizations:', e);
+        return res.status(500).json({ error: 'Failed to fetch organizations' });
+    }
 }
 
 // API Endpoint to get an organization by _id
 exports.getOrganizationById = async (req,res)=>{
+    try {
+        const { org_id } = req.params;
 
+        if (!org_id) {
+            return res.status(400).json({ error: 'Organization ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID format' });
+        }
+
+        const organization = await Organization.findById(org_id).lean();
+
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        return res.status(200).json({
+            message: 'Organization fetched successfully',
+            organization
+        });
+    } catch (e) {
+        console.error('Error fetching organization:', e);
+        return res.status(500).json({ error: 'Failed to fetch organization' });
+    }
 }
 
 // API Endpoint to get organization by status
 exports.getOrganizationByStatus = async (req,res)=>{
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const { status } = req.params;
+
+        if (!status) {
+            return res.status(400).json({ error: 'Status is required' });
+        }
+
+        if (!Object.values(ORGANIZATION_STATUS).includes(status)) {
+            return res.status(400).json({ 
+                error: `Invalid status. Must be one of: ${Object.values(ORGANIZATION_STATUS).join(', ')}` 
+            });
+        }
+
+        const organizations = await Organization.find({ status })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: `Organizations with status '${status}' fetched successfully`,
+            total: organizations.length,
+            organizations
+        });
+    } catch (e) {
+        console.error('Error fetching organizations by status:', e);
+        return res.status(500).json({ error: 'Failed to fetch organizations' });
+    }
 }
 
 // API Endpoint to get pending organizations
 exports.getPendingOrganizations = async (req,res)=>{
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const organizations = await Organization.find({ status: ORGANIZATION_STATUS.PENDING })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Pending organizations fetched successfully',
+            total: organizations.length,
+            organizations
+        });
+    } catch (e) {
+        console.error('Error fetching pending organizations:', e);
+        return res.status(500).json({ error: 'Failed to fetch pending organizations' });
+    }
 }
 
 // API Endpoint to update organization info
 exports.updateOrganization = async (req,res)=>{
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const { org_id } = req.params;
+        const updates = req.body;
+
+        if (!org_id) {
+            return res.status(400).json({ error: 'Organization ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID format' });
+        }
+
+        // Prevent updating _id
+        delete updates._id;
+
+        const organization = await Organization.findByIdAndUpdate(
+            org_id,
+            updates,
+            { new: true, runValidators: true }
+        );
+
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        return res.status(200).json({
+            message: 'Organization updated successfully',
+            organization
+        });
+    } catch (e) {
+        console.error('Error updating organization:', e);
+        if (e.code === 11000) {
+            return res.status(409).json({ error: 'Duplicate value for unique field' });
+        }
+        return res.status(500).json({ error: 'Failed to update organization' });
+    }
 }
 
 // API Endpoint to delete an organization
 exports.deleteOrganization = async (req,res)=>{
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
+        const { org_id } = req.params;
+
+        if (!org_id) {
+            return res.status(400).json({ error: 'Organization ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID format' });
+        }
+
+        // Check if organization has events
+        const eventsCount = await Event.countDocuments({ organization: org_id });
+        if (eventsCount > 0) {
+            return res.status(409).json({ 
+                error: 'Cannot delete organization with existing events',
+                eventsCount 
+            });
+        }
+
+        const organization = await Organization.findByIdAndDelete(org_id);
+
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        return res.status(200).json({
+            message: 'Organization deleted successfully',
+            organization
+        });
+    } catch (e) {
+        console.error('Error deleting organization:', e);
+        return res.status(500).json({ error: 'Failed to delete organization' });
+    }
 }
 
 // API Endpoint to get organization's stats
 exports.getOrganizationStats = async (req,res)=>{
-    
+    try {
+        const { org_id } = req.params;
+
+        if (!org_id) {
+            return res.status(400).json({ error: 'Organization ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID format' });
+        }
+
+        const organization = await Organization.findById(org_id).lean();
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        // Get total events
+        const totalEvents = await Event.countDocuments({ organization: org_id });
+
+        // Get events by status
+        const upcomingEvents = await Event.countDocuments({ 
+            organization: org_id, 
+            status: EVENT_STATUS.UPCOMING 
+        });
+
+        const completedEvents = await Event.countDocuments({ 
+            organization: org_id, 
+            status: EVENT_STATUS.COMPLETED 
+        });
+
+        // Get total registrations across all events
+        const events = await Event.find({ organization: org_id }).select('_id').lean();
+        const eventIds = events.map(e => e._id);
+        
+        const totalRegistrations = await Registration.countDocuments({ 
+            event: { $in: eventIds } 
+        });
+
+        return res.status(200).json({
+            message: 'Organization stats fetched successfully',
+            organizationId: org_id,
+            organizationName: organization.name,
+            stats: {
+                totalEvents,
+                upcomingEvents,
+                completedEvents,
+                totalRegistrations
+            }
+        });
+    } catch (e) {
+        console.error('Error fetching organization stats:', e);
+        return res.status(500).json({ error: 'Failed to fetch organization stats' });
+    }
 }
 

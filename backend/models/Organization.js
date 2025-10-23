@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 const validator = require('validator'); // npm install validator
 
+const ORGANIZATION_STATUS = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    SUSPENDED: 'suspended'
+};
+
 // Database of all organizers/organizations on the website
 const organizationSchema = new mongoose.Schema({
 
@@ -80,8 +87,9 @@ const organizationSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['active', 'suspended'],
-        default: 'active'
+        enum: ['pending', 'approved', 'rejected', 'suspended'],
+        default: 'pending',
+        index: true
     },
 
 
@@ -104,4 +112,4 @@ organizationSchema.virtual('events', {
 });
 
 const Organization = mongoose.model('Organization', organizationSchema);
-module.exports = Organization;
+module.exports = { Organization, ORGANIZATION_STATUS };
