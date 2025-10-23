@@ -4,7 +4,9 @@ import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import Modal from '../../components/modal/Modal';
 import Carousel from '../../components/carousel/Carousel';
 import { useLanguage } from '../../hooks/useLanguage';
-import { eventsMockData } from '../../utils/mockData';
+import { eventsMockData, getAverageRatingForEvent, getReviewCountForEvent } from '../../utils/mockData';
+import Reviews from '../../components/review/Reviews';
+import StarRating from '../../components/starRating/StarRating';
 
 const eventsData = eventsMockData; // --- MOCK DATA ---
 
@@ -70,6 +72,10 @@ const EventCard = ({ event, onViewDetails }) => {
     const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     const [isLiked, setIsLiked] = useState(false);
+    
+    // Get rating information for this event
+    const averageRating = getAverageRatingForEvent(event.id);
+    const reviewCount = getReviewCountForEvent(event.id);
 
     const handleLikeClick = (e) => {
         e.stopPropagation(); // Prevent triggering other click events on the card
@@ -91,6 +97,21 @@ const EventCard = ({ event, onViewDetails }) => {
                         </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
+                    
+                    {/* Rating Display */}
+                    {reviewCount > 0 && (
+                        <div className="flex items-center gap-2 mb-3">
+                            <StarRating 
+                                rating={averageRating} 
+                                size="sm" 
+                                interactive={false}
+                            />
+                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {averageRating} ({reviewCount} review{reviewCount !== 1 ? 's' : ''})
+                            </span>
+                        </div>
+                    )}
+                    
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300">{event.description}</p>
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
@@ -330,8 +351,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <>
+        <Modal isOpen={isOpen} onClose={onClose} width="large">
+            <div className="max-h-[90vh] overflow-y-auto">
                 <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
                 <div className="p-8">
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
@@ -355,11 +376,16 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg mb-8">
                         {translate("reserveNow")}
                     </button>
+                    
+                    {/* Reviews Section */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+                        <Reviews eventId={event.id} />
+                    </div>
                 </div>
-            </>
+            </div>
         </Modal>
     )
 };

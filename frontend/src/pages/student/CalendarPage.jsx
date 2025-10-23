@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { eventsMockData } from '../../utils/mockData';
 import { useLanguage } from '../../hooks/useLanguage';
 import Modal from '../../components/modal/Modal';
+import Reviews from '../../components/review/Reviews';
 
 const eventsData = eventsMockData; // --- MOCK DATA ---
 
@@ -17,8 +18,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} width="medium">
-            <>
+        <Modal isOpen={isOpen} onClose={onClose} width="large">
+            <div className="max-h-[90vh] overflow-y-auto">
                 <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
                 <div className="p-8">
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
@@ -42,11 +43,16 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg mb-8">
                         {translate("reserveNow")}
                     </button>
+                    
+                    {/* Reviews Section */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+                        <Reviews eventId={event.id} />
+                    </div>
                 </div>
-            </>
+            </div>
         </Modal>
     );
 };

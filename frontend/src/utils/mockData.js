@@ -198,3 +198,136 @@ export const eventsMockData = [
         price: 50,
     }
 ];
+
+// Mock review data for testing the review feature
+export const reviewsMockData = [
+    {
+        id: 1,
+        eventId: 1, // Montreal International Jazz Festival
+        userId: 101,
+        userName: 'Alex Chen',
+        userEmail: 'alex.chen@concordia.ca',
+        rating: 5,
+        comment: 'Absolutely amazing experience! The lineup was incredible and the atmosphere was electric. Can\'t wait for next year!',
+        createdAt: '2024-06-26T10:30:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 2,
+        eventId: 1,
+        userId: 102,
+        userName: 'Sarah Johnson',
+        userEmail: 'sarah.j@concordia.ca',
+        rating: 4,
+        comment: 'Great festival overall! The music was fantastic, though it was quite crowded. Still had a wonderful time.',
+        createdAt: '2024-06-27T14:20:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 3,
+        eventId: 1,
+        userId: 103,
+        userName: 'Anonymous',
+        userEmail: 'anonymous@concordia.ca',
+        rating: 3,
+        comment: 'The event was okay, but the sound quality could have been better. Some performances were hard to hear.',
+        createdAt: '2024-06-28T09:15:00Z',
+        isAnonymous: true
+    },
+    {
+        id: 4,
+        eventId: 2, // Indie Music Festival
+        userId: 104,
+        userName: 'Mike Rodriguez',
+        userEmail: 'mike.r@concordia.ca',
+        rating: 5,
+        comment: 'Perfect for discovering new artists! The venue was great and the organization was top-notch.',
+        createdAt: '2024-11-13T16:45:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 5,
+        eventId: 2,
+        userId: 105,
+        userName: 'Emma Wilson',
+        userEmail: 'emma.w@concordia.ca',
+        rating: 4,
+        comment: 'Really enjoyed the indie vibes and the variety of artists. Food options could have been better though.',
+        createdAt: '2024-11-14T11:30:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 6,
+        eventId: 3, // Startup Pitch Night
+        userId: 106,
+        userName: 'David Kim',
+        userEmail: 'david.k@concordia.ca',
+        rating: 5,
+        comment: 'Inspiring pitches and great networking opportunities. The judges provided valuable feedback to all participants.',
+        createdAt: '2024-11-06T20:15:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 7,
+        eventId: 3,
+        userId: 107,
+        userName: 'Anonymous',
+        userEmail: 'anonymous@concordia.ca',
+        rating: 4,
+        comment: 'Well-organized event with interesting startup ideas. The venue was professional and the atmosphere was engaging.',
+        createdAt: '2024-11-07T13:20:00Z',
+        isAnonymous: true
+    },
+    {
+        id: 8,
+        eventId: 4, // Advanced React Workshop
+        userId: 108,
+        userName: 'Lisa Zhang',
+        userEmail: 'lisa.z@concordia.ca',
+        rating: 5,
+        comment: 'Excellent workshop! The instructor was knowledgeable and the hands-on exercises were very helpful. Worth every penny!',
+        createdAt: '2024-11-19T15:30:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 9,
+        eventId: 4,
+        userId: 109,
+        userName: 'Tom Anderson',
+        userEmail: 'tom.a@concordia.ca',
+        rating: 4,
+        comment: 'Great content and well-structured. The online format worked well, though I would have preferred some in-person interaction.',
+        createdAt: '2024-11-20T10:45:00Z',
+        isAnonymous: false
+    },
+    {
+        id: 10,
+        eventId: 5, // City Marathon 2025
+        userId: 110,
+        userName: 'Anonymous',
+        userEmail: 'anonymous@concordia.ca',
+        rating: 5,
+        comment: 'Amazing experience! The route was beautiful and the support from volunteers was incredible. Already planning for next year!',
+        createdAt: '2024-10-20T12:00:00Z',
+        isAnonymous: true
+    }
+];
+
+// Helper function to get reviews for a specific event
+export const getReviewsForEvent = (eventId) => {
+    return reviewsMockData.filter(review => review.eventId === eventId);
+};
+
+// Helper function to get average rating for an event
+export const getAverageRatingForEvent = (eventId) => {
+    const reviews = getReviewsForEvent(eventId);
+    if (reviews.length === 0) return 0;
+    
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return Math.round((totalRating / reviews.length) * 10) / 10; // Round to 1 decimal place
+};
+
+// Helper function to get total number of reviews for an event
+export const getReviewCountForEvent = (eventId) => {
+    return getReviewsForEvent(eventId).length;
+};
