@@ -17,6 +17,9 @@ const { requireAuth, requireAdmin } = require('../middlewares/auth');
 
 // ToDO: Add a verifyUser jwt token
 
+// Public routes for students to browse events
+router.get('/browse', eventController.browseEvents);
+
 // Create
 router.post('/create', requireAdmin, eventController.createEvent);
 
@@ -40,5 +43,10 @@ router.delete('/delete/:event_id', requireAdmin, eventController.deleteEvent);
 router.get('/get/attendees/:event_id', requireAdmin, eventController.getAttendees);
 router.get('/get/waitlist/:event_id', requireAdmin, eventController.getWaitlistedUsers);
 router.patch('/promote/:event_id', requireAdmin, eventController.promoteWaitlistedUser);
+
+// Admin moderation (Task #114)
+router.patch('/approve/:event_id', requireAdmin, eventController.approveEvent);
+router.patch('/reject/:event_id', requireAdmin, eventController.rejectEvent);
+router.patch('/flag/:event_id', requireAdmin, eventController.flagEvent);
 
 module.exports = router;

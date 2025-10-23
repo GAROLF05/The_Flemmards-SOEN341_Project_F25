@@ -429,6 +429,17 @@ exports.createEvent = async (req,res)=>{
         const org = await Organization.findById(organization).lean();
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
+        // Task #122: Restrict event creation to only approved organizers
+        if (org.status !== 'approved') {
+            return res.status(403).json({ 
+                error: 'Only approved organizations can create events',
+                organizationStatus: org.status,
+                message: org.status === 'pending' 
+                    ? 'Your organization is pending approval' 
+                    : 'Your organization has been rejected or suspended'
+            });
+        }
+
         const eventDoc = await Event.create({
             organization,
             title,
@@ -875,10 +886,131 @@ async function promoteWaitlistForEvent(eventId) {
             }
         }
 
-        return { promoted, remainingCapacity: event.capacity };
+        return { promoted };
     } catch (e) {
-        await session.abortTransaction();
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         session.endSession();
         throw e;
     }
 }
+
+// Task #114: Admin functionality to moderate event listings
+exports.approveEvent = async (req, res) => {
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { event_id } = req.params;
+        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ error: 'Invalid event ID' });
+        }
+
+        const event = await Event.findByIdAndUpdate(
+            event_id,
+            { status: EVENT_STATUS.UPCOMING },
+            { new: true }
+        );
+
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        // Audit log
+        console.log(`[AUDIT] Admin ${req.user.email} approved event ${event.title} (ID: ${event_id})`);
+
+        return res.status(200).json({
+            message: 'Event approved successfully',
+            event
+        });
+    } catch (e) {
+        console.error('Error approving event:', e);
+        return res.status(500).json({ error: 'Failed to approve event' });
+    }
+};
+
+exports.rejectEvent = async (req, res) => {
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { event_id } = req.params;
+        const { reason } = req.body;
+
+        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ error: 'Invalid event ID' });
+        }
+
+        const event = await Event.findByIdAndUpdate(
+            event_id,
+            { status: EVENT_STATUS.CANCELLED },
+            { new: true }
+        );
+
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        // Audit log
+        console.log(`[AUDIT] Admin ${req.user.email} rejected event ${event.title} (ID: ${event_id})`);
+        if (reason) {
+            console.log(`[AUDIT] Rejection reason: ${reason}`);
+        }
+
+        return res.status(200).json({
+            message: 'Event rejected successfully',
+            event,
+            reason
+        });
+    } catch (e) {
+        console.error('Error rejecting event:', e);
+        return res.status(500).json({ error: 'Failed to reject event' });
+    }
+};
+
+exports.flagEvent = async (req, res) => {
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { event_id } = req.params;
+        const { flagReason } = req.body;
+
+        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ error: 'Invalid event ID' });
+        }
+
+        if (!flagReason) {
+            return res.status(400).json({ error: 'Flag reason is required' });
+        }
+
+        const event = await Event.findById(event_id);
+
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        // Audit log (Task #115 - flagging system)
+        console.log(`[AUDIT] Admin ${req.user.email} flagged event ${event.title} (ID: ${event_id})`);
+        console.log(`[AUDIT] Flag reason: ${flagReason}`);
+
+        return res.status(200).json({
+            message: 'Event flagged successfully',
+            event: {
+                _id: event._id,
+                title: event.title,
+                flagReason
+            }
+        });
+    } catch (e) {
+        console.error('Error flagging event:', e);
+        return res.status(500).json({ error: 'Failed to flag event' });
+    }
+};

@@ -59,6 +59,7 @@ const eventRoutes = require('./routes/events');
 const userRoutes = require("./routes/users");
 const calendarRoutes = require('./routes/calendar');
 const orgRoutes = require('./routes/organizations');
+const adminRoutes = require('./routes/admin');
 
 // Mount routes
 app.use('/api/tickets', ticketRoutes);
@@ -67,6 +68,7 @@ app.use('/api/events', eventRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/org', orgRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve frontend build in production (single-server deployment)
 const isProd = process.env.NODE_ENV === 'production';

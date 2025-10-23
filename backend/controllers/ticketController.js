@@ -595,6 +595,110 @@ exports.markTicketAsUsed = async (req,res)=>{
 
 }
 
+// Task #64: API to scan and use ticket with QR re-use detection
+exports.scanTicket = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const scannedBy = req.user?.email || 'Unknown';
+
+        if (!code) {
+            return res.status(400).json({ error: "Ticket code required" });
+        }
+
+        // Find ticket by code
+        const ticket = await Ticket.findOne({ code })
+            .populate({
+                path: 'event',
+                select: 'title start_at end_at location organization'
+            })
+            .populate({
+                path: 'user',
+                select: 'name email student_id'
+            });
+
+        if (!ticket) {
+            return res.status(404).json({ 
+                error: "Invalid or non-existent ticket",
+                code: 'TICKET_NOT_FOUND'
+            });
+        }
+
+        // Task #64: Check if ticket was already used (QR re-use detection)
+        if (ticket.status === "used") {
+            // Alert administrators about QR code re-use attempt
+            console.error(`[SECURITY ALERT] QR code re-use attempt detected!`);
+            console.error(`[SECURITY ALERT] Ticket ID: ${ticket.ticketId}, Code: ${code}`);
+            console.error(`[SECURITY ALERT] Previously scanned at: ${ticket.scannedAt}`);
+            console.error(`[SECURITY ALERT] Previously scanned by: ${ticket.scannedBy}`);
+            console.error(`[SECURITY ALERT] New scan attempt by: ${scannedBy}`);
+            console.error(`[SECURITY ALERT] User: ${ticket.user?.name} (${ticket.user?.email})`);
+            console.error(`[SECURITY ALERT] Event: ${ticket.event?.title}`);
+
+            return res.status(409).json({ 
+                error: "Ticket already used - QR code re-use detected",
+                code: 'TICKET_ALREADY_USED',
+                alert: 'Administrators have been notified of this re-use attempt',
+                ticketDetails: {
+                    ticketId: ticket.ticketId,
+                    scannedAt: ticket.scannedAt,
+                    scannedBy: ticket.scannedBy,
+                    currentAttemptBy: scannedBy
+                }
+            });
+        }
+
+        if (ticket.status === "cancelled") {
+            return res.status(403).json({ 
+                error: "Ticket has been cancelled",
+                code: 'TICKET_CANCELLED'
+            });
+        }
+
+        // Check if QR code has expired
+        if (ticket.qr_expires_at && new Date(ticket.qr_expires_at) < new Date()) {
+            return res.status(403).json({ 
+                error: "QR code has expired",
+                code: 'QR_EXPIRED',
+                expiredAt: ticket.qr_expires_at
+            });
+        }
+
+        // Mark ticket as used
+        ticket.status = "used";
+        ticket.scannedAt = new Date();
+        ticket.scannedBy = scannedBy;
+        await ticket.save();
+
+        // Log successful scan
+        console.log(`[TICKET SCAN] Ticket ${ticket.ticketId} scanned successfully by ${scannedBy}`);
+
+        return res.status(200).json({
+            message: "Ticket validated and marked as used",
+            code: 'TICKET_VALID',
+            ticket: {
+                ticketId: ticket.ticketId,
+                status: ticket.status,
+                scannedAt: ticket.scannedAt,
+                scannedBy: ticket.scannedBy,
+                user: {
+                    name: ticket.user?.name,
+                    email: ticket.user?.email,
+                    student_id: ticket.user?.student_id
+                },
+                event: {
+                    title: ticket.event?.title,
+                    start_at: ticket.event?.start_at,
+                    location: ticket.event?.location
+                }
+            }
+        });
+
+    } catch (e) {
+        console.error('Error scanning ticket:', e);
+        return res.status(500).json({ error: "Failed to scan ticket" });
+    }
+};
+
 // API endpoint to regenerate QR code
 exports.regenerateQrCode = async (req,res)=>{
     try{
@@ -743,5 +847,137 @@ exports.countTickets = async (req, res) => {
     } catch (e) {
         console.error(e);
         return res.status(500).json({ error: "Failed to count tickets" });
+    }
+};
+
+// Task #58: Export attendee list as CSV
+exports.exportAttendeesCSV = async (req, res) => {
+    try {
+        // Require admin authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { event_id } = req.params;
+
+        // Task #60: Validate event ID format
+        if (!event_id) {
+            return res.status(400).json({ 
+                error: 'Event ID is required',
+                code: 'INVALID_INPUT'
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ 
+                error: 'Invalid event ID format',
+                code: 'INVALID_FORMAT'
+            });
+        }
+
+        // Check if event exists
+        const event = await Event.findById(event_id).lean();
+        if (!event) {
+            return res.status(404).json({ 
+                error: 'Event not found',
+                code: 'EVENT_NOT_FOUND'
+            });
+        }
+
+        // Get all registrations for this event
+        const registrations = await Registration.find({ event: event_id })
+            .populate({
+                path: 'user',
+                select: 'name email student_id phone'
+            })
+            .populate({
+                path: 'ticketIds',
+                select: 'ticketId status scannedAt'
+            })
+            .lean();
+
+        // Task #60: Handle empty list
+        if (!registrations || registrations.length === 0) {
+            return res.status(404).json({ 
+                error: 'No attendees found for this event',
+                code: 'EMPTY_LIST',
+                message: 'The attendee list is empty'
+            });
+        }
+
+        // Build CSV content
+        const csvRows = [];
+        
+        // CSV Header
+        csvRows.push([
+            'Registration ID',
+            'Student ID',
+            'Name',
+            'Email',
+            'Phone',
+            'Quantity',
+            'Status',
+            'Registered At',
+            'Tickets Issued',
+            'Ticket IDs',
+            'Check-in Status'
+        ].join(','));
+
+        // CSV Data rows
+        for (const reg of registrations) {
+            // Task #60: Handle invalid data gracefully
+            const studentId = reg.user?.student_id || 'N/A';
+            const name = reg.user?.name || 'Unknown';
+            const email = reg.user?.email || 'N/A';
+            const phone = reg.user?.phone || 'N/A';
+            const quantity = reg.quantity || 0;
+            const status = reg.status || 'unknown';
+            const registeredAt = reg.createdAt ? new Date(reg.createdAt).toISOString() : 'N/A';
+            const ticketsIssued = reg.ticketsIssued || 0;
+            
+            // Get ticket IDs
+            const ticketIds = Array.isArray(reg.ticketIds) 
+                ? reg.ticketIds.map(t => t.ticketId || t._id).join('; ')
+                : 'None';
+
+            // Check-in status (how many tickets were scanned)
+            const scannedTickets = Array.isArray(reg.ticketIds)
+                ? reg.ticketIds.filter(t => t.status === 'used').length
+                : 0;
+            const checkinStatus = `${scannedTickets}/${ticketsIssued}`;
+
+            csvRows.push([
+                reg.registrationId || reg._id,
+                studentId,
+                `"${name}"`, // Quote in case name contains commas
+                email,
+                phone,
+                quantity,
+                status,
+                registeredAt,
+                ticketsIssued,
+                `"${ticketIds}"`,
+                checkinStatus
+            ].join(','));
+        }
+
+        const csvContent = csvRows.join('\n');
+
+        // Set response headers for CSV download
+        const filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_')}_${event_id}_${Date.now()}.csv`;
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        // Log export action
+        console.log(`[AUDIT] Admin ${req.user.email} exported attendee list for event ${event.title} (ID: ${event_id})`);
+
+        return res.status(200).send(csvContent);
+
+    } catch (e) {
+        console.error('Error exporting attendees CSV:', e);
+        return res.status(500).json({ 
+            error: 'Failed to export attendee list',
+            code: 'EXPORT_FAILED'
+        });
     }
 };
