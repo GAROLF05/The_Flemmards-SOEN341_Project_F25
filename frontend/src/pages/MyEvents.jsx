@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { getMyRegistrations } from "../api/registrationApi"; 
 import { Link } from "react-router-dom";
+import { getIcsDownloadUrl } from "../api/eventApi";
+import QRCode from "react-qr-code";
+export function getIcsDownloadUrl(eventId) {
+  return `http://localhost:3000/api/events/${eventId}/ics`;
+}
 
 export default function MyEvents() {
   const [items, setItems] = useState([]);
@@ -13,6 +18,12 @@ export default function MyEvents() {
       }
     ]);
   }, []);
+<a
+  href={getIcsDownloadUrl(r.event.event_id)}
+  className="inline-block mt-2 px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+>
+  Save to Calendar
+</a>
 
   return (
     <div className="p-6">
@@ -27,4 +38,16 @@ export default function MyEvents() {
       ))}
     </div>
   );
+  
+  <div className="text-xs">Status: {r.status}</div>
+
+{/* Save to Calendar (.ics) */}
+<a
+  href={getIcsDownloadUrl(r.event.event_id)}
+  className="inline-block mt-2 px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+>
+  Save to Calendar
+</a>
+
+
 }
