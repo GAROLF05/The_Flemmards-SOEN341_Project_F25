@@ -9,13 +9,26 @@ const stopWords = ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", 
     "may", "might", "must", "shall", "let", "make", "made", "get", "got", "getting", "seem", "seems", "seemed", "feel", "feels", "felt", 
     "look", "looks", "looked", "going", "go", "went", "gone","say", "says", "said", "tell", "told"];
 
-const testText = `
-    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but bad, bad, bad.
-    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but bad, bad, bad.
-    amazing good!!! blablba HORRIBLE??_ amazing but bad, bad, bad.
-    new sentence new words new words new words new words new words
-    hello hello why tho
-`;
+const connectToDB = require('../config/database.js');
+const { Event } = require('../models/Event');
+
+//function to add comment to mongodb (for eventController-comments)
+async function addComment(eventId, commentText) {
+  await connectToDB();
+  await Event.findByIdAndUpdate(
+    eventId,
+    { $push: { comments: commentText } }, 
+  );
+}
+module.exports = { addComment }; //for eventController
+
+//Fetch all comments for an event
+async function getdbComments(eventId) {
+  await connectToDB();
+  const event = await Event.findById(eventId).lean();
+  const text = event.comments;
+  return text;
+}
 
 //1. Structure and filter comments    
 function cleanText(text) {
@@ -31,6 +44,10 @@ function cleanText(text) {
     // Split into words
     const words = lowerCaseText.split(/\s+/).filter(word => word !== '');
 
+    return words;
+}
+
+function filterStopWords(words) {
     // Filter out stop words
     const filteredWords = [];
 
@@ -39,6 +56,7 @@ function cleanText(text) {
             filteredWords.push(word);
         }
     }
+
     return filteredWords;
 }
 
@@ -74,11 +92,89 @@ function top10Words(rankedWords) {
     return rankedWords.slice(0, 10);
 }
 
+//5. OPTIONAL task.05 - commonly associated words with the top 10 words
+function getAssociatedWords(words, topWords) {
+    const associations = {};
+
+    for (const [word] of topWords) {
+        associations[word] = {}; //count
+    }
+
+    for (let i = 0; i < words.length; i++) {
+        const current = words[i];
+
+        // Check if this word is one of the top 10
+        for (const [topWord] of topWords) {
+            if (current === topWord) {
+                // look at the word before and after
+                const before = words[i - 1];
+                const after = words[i + 1];
+
+                if (before && before !== topWord) {
+                    associations[topWord][before] = (associations[topWord][before] || 0) + 1;
+                }
+                if (after && after !== topWord) {
+                    associations[topWord][after] = (associations[topWord][after] || 0) + 1;
+                }
+            }
+        }
+    }
+
+    // Rank and limit to top 3
+    const rankedAssociations = [];
+    for (const topWord in associations) {
+        const ranked = Object.entries(associations[topWord])
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+        rankedAssociations.push({
+            topWord,
+            associated: ranked.length
+                ? ranked.map(([word, freq]) => `${word} (${freq})`).join(', ')
+                : '[]',
+        });
+    }
+
+    return rankedAssociations;
+}
+
 //TEST
+const testText = `
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so bad, so bad, very bad also.
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so kinda bad, so bad, very bad maybe.
+    amazing good!!! blablba HORRIBLE??_ amazing but so kinda bad, so bad, very bad.
+    new sentence new words new words new words new words new words
+    hello hello why tho
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so bad, so bad, very bad also.
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so kinda bad, so bad, very bad maybe.
+    amazing good!!! blablba HORRIBLE??_ amazing but so kinda bad, so bad, very bad.
+    new sentence new words new words new words new words new words
+    hello hello why tho
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so bad, so bad, very bad also.
+    amazing EVEnt!!! it was SO HORRIBLE??_ amazing but so kinda bad, so bad, very bad maybe.
+    amazing good!!! blablba HORRIBLE??_ amazing but so kinda bad, so bad, very bad.
+    new sentence new words new words new words new words new words
+    hello hello why tho
+    horrible weather though, ruined the AMAZING setup :( bad, bad rain everywhere.
+    amazing show, horrible sound system, but the food was SO GOOD!!
+    wow, such a weird mix of good and bad, amazing people but horrible seats.
+    overall, amazing but also bad?? confused, but happy
+    horrible weather though, ruined the AMAZING setup :( bad, bad rain everywhere.
+    amazing show, horrible sound system, but the food was SO GOOD!!
+    wow, such a weird mix of good and bad, amazing people but horrible seats.
+    overall, amazing but also bad?? confused, but happy
+    horrible weather though, ruined the AMAZING setup :( bad, bad rain everywhere.
+    amazing show, horrible sound system, but the food was SO GOOD!!
+    wow, such a weird mix of good and bad, amazing people but horrible seats.
+    overall, amazing but also bad?? confused, but happy
+
+`;
 const cleanedWords = cleanText(testText);
-const wordFrequency = countWordFrequency(cleanedWords);
+const filteredWords = filterStopWords(cleanedWords);
+const wordFrequency = countWordFrequency(filteredWords);
 const rankedWords = rankWords(wordFrequency);
 const top10 = top10Words(rankedWords);
+const associatedWords = getAssociatedWords(cleanedWords, top10);
 
 console.log('Cleaned Words:', cleanedWords);
 console.log('Word Frequency:', wordFrequency);
@@ -86,3 +182,5 @@ console.log('Ranked Words:');
 console.table(rankedWords)
 console.log('Top 10 Words:');
 console.table(top10);
+console.log('Ranked Associated Words:');
+console.table(associatedWords);
