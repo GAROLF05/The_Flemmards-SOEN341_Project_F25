@@ -33,7 +33,7 @@
     "express-session": "^1.18.2",
     "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
+    "mongoose": "^8.19.2",
     "nodemailer": "^7.0.9",
     "qrcode": "^1.5.4",
     "recharts": "^3.3.0",

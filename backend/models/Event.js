@@ -107,7 +107,12 @@ const eventSchema = new mongoose.Schema({
         ref: 'Registration',
         index: true,
     }],
-    
+
+    comments: [{ 
+        type: String,
+        trim: true,
+    }]
+
 }, {
     collection: 'events',
     timestamps: true,
