@@ -7,6 +7,13 @@ const EVENT_STATUS = {
     CANCELLED: 'cancelled'
 };
 
+const MODERATION_STATUS = {
+    PENDING_APPROVAL: 'pending_approval',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    FLAGGED: 'flagged'
+};
+
 const CATEGORY = {
     MUSIC: 'music',
     SPORTS: 'sports',
@@ -82,6 +89,28 @@ const eventSchema = new mongoose.Schema({
         index: true,
     },
 
+    moderationStatus: {
+        type: String,
+        enum: Object.values(MODERATION_STATUS),
+        default: MODERATION_STATUS.PENDING_APPROVAL,
+        required: [true, 'Moderation status is required'],
+        index: true,
+    },
+
+    moderationNotes: {
+        type: String,
+        trim: true,
+    },
+
+    moderatedBy: {
+        type: String,
+        trim: true,
+    },
+
+    moderatedAt: {
+        type: Date,
+    },
+
     location:{
         name:{
             type: String,
@@ -126,4 +155,4 @@ eventSchema.index({ organization: 1, title: 1, start_at: 1 }, { unique: true });
 
 // Export everything
 const Event = mongoose.model('Event', eventSchema);
-module.exports = {Event, EVENT_STATUS, CATEGORY};
+module.exports = {Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY};

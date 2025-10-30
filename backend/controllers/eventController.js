@@ -27,8 +27,8 @@ try {
 // Models of DB
 const Administrator = require('../models/Administrators');
 const User = require('../models/User');
-const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
-const Organization = require('../models/Organization');
+const { Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY } = require('../models/Event');
+const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
@@ -43,6 +43,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 // MongoDB setup
 const mongoose = require('mongoose');
 const { error } = require('console');
+const { notifyEventModeration } = require('./notificationController');
 
 // API Endpoint to get all Events
 exports.getAllEvents = async (req,res) => {
@@ -450,6 +451,7 @@ exports.createEvent = async (req,res)=>{
             category,
             location,
             status: EVENT_STATUS.UPCOMING,
+            moderationStatus: MODERATION_STATUS.PENDING_APPROVAL,
         });
 
         return res.status(201).json({ message: 'Event created successfully', event: eventDoc });
@@ -911,7 +913,11 @@ exports.approveEvent = async (req, res) => {
 
         const event = await Event.findByIdAndUpdate(
             event_id,
-            { status: EVENT_STATUS.UPCOMING },
+            { 
+                moderationStatus: MODERATION_STATUS.APPROVED,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
             { new: true }
         );
 
@@ -919,12 +925,16 @@ exports.approveEvent = async (req, res) => {
             return res.status(404).json({ error: 'Event not found' });
         }
 
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.APPROVED);
+
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} approved event ${event.title} (ID: ${event_id})`);
 
         return res.status(200).json({
             message: 'Event approved successfully',
-            event
+            event,
+            notificationSent: true
         });
     } catch (e) {
         console.error('Error approving event:', e);
@@ -948,13 +958,21 @@ exports.rejectEvent = async (req, res) => {
 
         const event = await Event.findByIdAndUpdate(
             event_id,
-            { status: EVENT_STATUS.CANCELLED },
+            { 
+                moderationStatus: MODERATION_STATUS.REJECTED,
+                moderationNotes: reason,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
             { new: true }
         );
 
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });
         }
+
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.REJECTED, reason);
 
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} rejected event ${event.title} (ID: ${event_id})`);
@@ -965,7 +983,8 @@ exports.rejectEvent = async (req, res) => {
         return res.status(200).json({
             message: 'Event rejected successfully',
             event,
-            reason
+            reason,
+            notificationSent: true
         });
     } catch (e) {
         console.error('Error rejecting event:', e);
@@ -991,11 +1010,23 @@ exports.flagEvent = async (req, res) => {
             return res.status(400).json({ error: 'Flag reason is required' });
         }
 
-        const event = await Event.findById(event_id);
+        const event = await Event.findByIdAndUpdate(
+            event_id,
+            {
+                moderationStatus: MODERATION_STATUS.FLAGGED,
+                moderationNotes: flagReason,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
+            { new: true }
+        );
 
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });
         }
+
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.FLAGGED, flagReason);
 
         // Audit log (Task #115 - flagging system)
         console.log(`[AUDIT] Admin ${req.user.email} flagged event ${event.title} (ID: ${event_id})`);
@@ -1006,11 +1037,74 @@ exports.flagEvent = async (req, res) => {
             event: {
                 _id: event._id,
                 title: event.title,
+                moderationStatus: event.moderationStatus,
+                moderationNotes: event.moderationNotes,
                 flagReason
-            }
+            },
+            notificationSent: true
         });
     } catch (e) {
         console.error('Error flagging event:', e);
         return res.status(500).json({ error: 'Failed to flag event' });
+    }
+};
+
+// Get events by moderation status (for admin dashboard)
+exports.getEventsByModerationStatus = async (req, res) => {
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const { status } = req.params;
+
+        if (!status || !Object.values(MODERATION_STATUS).includes(status)) {
+            return res.status(400).json({ 
+                error: `Invalid moderation status. Must be one of: ${Object.values(MODERATION_STATUS).join(', ')}` 
+            });
+        }
+
+        const events = await Event.find({ moderationStatus: status })
+            .populate('organization', 'name email status')
+            .select('title description start_at category moderationStatus moderationNotes moderatedBy moderatedAt')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: `Events with moderation status '${status}' fetched successfully`,
+            total: events.length,
+            events
+        });
+
+    } catch (e) {
+        console.error('Error fetching events by moderation status:', e);
+        return res.status(500).json({ error: 'Failed to fetch events' });
+    }
+};
+
+// Get pending moderation events
+exports.getPendingModerationEvents = async (req, res) => {
+    try {
+        // Admin only
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        const admin = await Administrator.findOne({ email: req.user.email }).lean();
+        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+
+        const events = await Event.find({ moderationStatus: MODERATION_STATUS.PENDING_APPROVAL })
+            .populate('organization', 'name email status')
+            .select('title description start_at category')
+            .sort({ createdAt: 1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Pending moderation events fetched successfully',
+            total: events.length,
+            events
+        });
+
+    } catch (e) {
+        console.error('Error fetching pending moderation events:', e);
+        return res.status(500).json({ error: 'Failed to fetch pending events' });
     }
 };

@@ -49,4 +49,8 @@ router.patch('/approve/:event_id', requireAdmin, eventController.approveEvent);
 router.patch('/reject/:event_id', requireAdmin, eventController.rejectEvent);
 router.patch('/flag/:event_id', requireAdmin, eventController.flagEvent);
 
+// Get events by moderation status (Task #116)
+router.get('/moderation/status/:status', requireAdmin, eventController.getEventsByModerationStatus);
+router.get('/moderation/pending', requireAdmin, eventController.getPendingModerationEvents);
+
 module.exports = router;

@@ -3,6 +3,7 @@ const router = express.Router();
 const Administrator = require('../models/Administrators');
 const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const { requireAdmin } = require('../middlewares/auth');
+const { notifyOrganizationStatus, getAllNotifications, getNotificationById } = require('../controllers/notificationController');
 
 // API Endpoint to approve or reject organizer (Task #121)
 router.patch('/approve-organizer/:org_id', requireAdmin, async (req, res) => {
@@ -44,6 +45,9 @@ router.patch('/approve-organizer/:org_id', requireAdmin, async (req, res) => {
 
         await organization.save();
 
+        // Task #123: Send notification to organizer
+        await notifyOrganizationStatus(org_id, status, rejectionReason);
+
         // Log admin action (Task #124 - audit logs)
         console.log(`[AUDIT] Admin ${req.user.email} ${status} organization ${organization.name} (ID: ${org_id})`);
         if (rejectionReason) {
@@ -58,7 +62,8 @@ router.patch('/approve-organizer/:org_id', requireAdmin, async (req, res) => {
                 status: organization.status,
                 verified: organization.verified
             },
-            rejectionReason: status === 'rejected' ? rejectionReason : undefined
+            rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+            notificationSent: true
         });
 
     } catch (error) {
@@ -66,6 +71,10 @@ router.patch('/approve-organizer/:org_id', requireAdmin, async (req, res) => {
         return res.status(500).json({ error: 'Failed to update organization status' });
     }
 });
+
+// Task #123 & #117: Notification management routes
+router.get('/notifications', requireAdmin, getAllNotifications);
+router.get('/notifications/:notification_id', requireAdmin, getNotificationById);
 
 // Basic routes
 router.get('/', async (req, res) => {
