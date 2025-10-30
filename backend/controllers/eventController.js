@@ -1014,3 +1014,18 @@ exports.flagEvent = async (req, res) => {
         return res.status(500).json({ error: 'Failed to flag event' });
     }
 };
+
+const { addComment } = require('../utility/commentanalysis');
+
+exports.postComment = async (req, res) => {
+    const { eventId } = req.params; 
+    const { commentText } = req.body;
+
+    try {
+        await addComment(eventId, commentText);
+        res.status(200).json({ message: "Comment added successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to add comment" });
+    }
+};
