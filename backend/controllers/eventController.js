@@ -47,7 +47,8 @@ const { error } = require('console');
 // Helper function to ensure events have a default image if none is provided
 const DEFAULT_EVENT_IMAGE = '/uploads/events/default-event-image.svg';
 const normalizeEventImage = (event) => {
-    if (!event.image || !event.image.trim()) {
+    // Handle null, undefined, empty string, or whitespace-only strings
+    if (!event.image || (typeof event.image === 'string' && !event.image.trim())) {
         event.image = DEFAULT_EVENT_IMAGE;
     }
     return event;
@@ -61,7 +62,117 @@ const normalizeEventsImages = (events) => {
     return events;
 };
 
-// API Endpoint to get all Events
+// Public API Endpoint for students to browse events (no authentication required)
+exports.browseEvents = async (req, res) => {
+    try {
+        // Get query parameters for filtering
+        const { 
+            q, // search query
+            category, 
+            startDate, 
+            endDate,
+            minCapacity,
+            maxCapacity,
+            minDuration,
+            maxDuration,
+            page = 1,
+            limit = 50,
+            sortBy = 'start_at',
+            sortOrder = 'asc'
+        } = req.query;
+
+        // Build query
+        let query = {};
+
+        // Filter by status - only show upcoming and active events to students
+        query.status = { $in: ['upcoming', 'active'] };
+
+        // Search in title and description
+        if (q) {
+            query.$or = [
+                { title: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } }
+            ];
+        }
+
+        // Filter by category
+        if (category) {
+            query.category = category;
+        }
+
+        // Filter by date range
+        if (startDate || endDate) {
+            query.start_at = {};
+            if (startDate) {
+                query.start_at.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                const endDateObj = new Date(endDate);
+                endDateObj.setHours(23, 59, 59, 999);
+                query.start_at.$lte = endDateObj;
+            }
+        }
+
+        // Filter by capacity
+        if (minCapacity || maxCapacity) {
+            query.capacity = {};
+            if (minCapacity) query.capacity.$gte = parseInt(minCapacity);
+            if (maxCapacity) query.capacity.$lte = parseInt(maxCapacity);
+        }
+
+        // Build sort
+        const sort = {};
+        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        // Calculate pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Fetch events
+        const events = await Event.find(query)
+            .select('organization title description category start_at end_at capacity status location image')
+            .populate({
+                path: 'organization',
+                select: 'name description website'
+            })
+            .sort(sort)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean()
+            .exec();
+
+        // Get total count for pagination
+        const total = await Event.countDocuments(query);
+
+        // Filter by duration if specified (post-query filtering since it's calculated)
+        let filteredEvents = events;
+        if (minDuration || maxDuration) {
+            filteredEvents = events.filter(event => {
+                if (!event.start_at || !event.end_at) return false;
+                const durationHours = (new Date(event.end_at) - new Date(event.start_at)) / (1000 * 60 * 60);
+                if (minDuration && durationHours < parseFloat(minDuration)) return false;
+                if (maxDuration && durationHours > parseFloat(maxDuration)) return false;
+                return true;
+            });
+        }
+
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(filteredEvents);
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            total: normalizedEvents.length,
+            totalPages: Math.ceil(total / parseInt(limit)),
+            currentPage: parseInt(page),
+            events: normalizedEvents
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to fetch events" });
+    }
+};
+
+// API Endpoint to get all Events (Admin only)
 exports.getAllEvents = async (req,res) => {
     try{
         // Only administrators can fetch all registrations

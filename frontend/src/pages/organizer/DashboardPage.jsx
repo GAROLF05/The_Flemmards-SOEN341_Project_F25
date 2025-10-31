@@ -2,8 +2,10 @@ import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/react
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
+import { getAllEvents } from '../../api/eventApi';
+import { transformEventsForFrontend } from '../../utils/eventTransform';
 
-// --- MOCK DATA ---
+// --- MOCK DATA (fallback) ---
 const initialEventsData = [
     {
         id: 1,
@@ -264,13 +266,36 @@ const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sport
 const EventCard = ({ event, onViewAnalytics }) => {
     const { translate } = useLanguage();
 
+    // Calculate analytics from backend data
+    const ticketsIssued = event.registeredUsers || 0;
+    const attendees = ticketsIssued; // For now, assume all registered attended
+    const capacity = event.capacity || 0;
+
+    // Add calculated fields for analytics
+    const eventWithAnalytics = {
+        ...event,
+        ticketsIssued,
+        attendees,
+        capacity,
+    };
+
+    const eventDate = new Date(event.start_at || event.date);
+    const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
             <div className="relative">
-                <img className="h-48 w-full object-cover" src={event.imageUrl} alt={event.title} />
+                <img 
+                    className="h-48 w-full object-cover" 
+                    src={event.imageUrl} 
+                    alt={event.title}
+                    onError={(e) => {
+                        e.target.src = '/uploads/events/default-event-image.svg';
+                    }}
+                />
                 <div className="absolute inset-0 bg-opacity-20 group-hover:bg-opacity-40 transition-opacity duration-300"></div>
                 <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm font-semibold px-3 py-1 rounded-full">
-                    {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
+                    {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
                 </div>
             </div>
             <div className="p-6 flex flex-col flex-grow">
@@ -278,12 +303,12 @@ const EventCard = ({ event, onViewAnalytics }) => {
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 self-start">{event.category}</span>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">{event.title}</h3>
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                        <p>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p>{formattedDate}</p>
                         <p>{event.location}</p>
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <button onClick={() => onViewAnalytics(event)} className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
+                    <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
                         {translate("eventAnalytics")}
                     </button>
                 </div>
@@ -614,7 +639,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 };
 
 const DashboardPage = () => {
-    const [events, setEvents] = useState(initialEventsData);
+    const [events, setEvents] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -622,6 +648,46 @@ const DashboardPage = () => {
     const { translate } = useLanguage();
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
+
+    // Fetch events from API
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                setLoading(true);
+                const response = await getAllEvents();
+                console.log('API Response:', response); // Debug log
+                
+                // Handle different response formats
+                const eventsArray = response.events || response || [];
+                console.log('Events extracted:', eventsArray.length, eventsArray); // Debug log
+                
+                if (!Array.isArray(eventsArray)) {
+                    console.error('Events is not an array:', eventsArray);
+                    setEvents([]);
+                    return;
+                }
+                
+                const transformedEvents = transformEventsForFrontend(eventsArray);
+                console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
+                setEvents(transformedEvents);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+                console.error('Error details:', {
+                    message: err.message,
+                    response: err.response?.data,
+                    status: err.response?.status,
+                    statusText: err.response?.statusText
+                });
+                
+                // Fallback to empty array on error
+                setEvents([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEvents();
+    }, []);
 
     const uniqueOrganizations = useMemo(() => [...new Set(events.map(event => event.organization))].sort(), [events]);
 
@@ -656,6 +722,17 @@ const DashboardPage = () => {
     const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
     const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
     const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto p-6">
+                <div className="text-center py-16">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading events...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>

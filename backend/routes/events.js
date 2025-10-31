@@ -20,7 +20,7 @@ const handleUploadError = require('../middlewares/uploadErrorHandler');
 // ToDO: Add a verifyUser jwt token
 
 // Public routes for students to browse events
-//router.get('/browse', eventController.browseEvents);
+router.get('/browse', eventController.browseEvents);
 
 // Create (with optional image upload - accepts multipart/form-data or JSON)
 router.post('/create', requireAdmin, upload.single('image'), handleUploadError, eventController.createEvent);

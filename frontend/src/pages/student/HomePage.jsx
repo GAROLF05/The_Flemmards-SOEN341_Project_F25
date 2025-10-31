@@ -4,13 +4,8 @@ import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import Modal from '../../components/modal/Modal';
 import Carousel from '../../components/carousel/Carousel';
 import { useLanguage } from '../../hooks/useLanguage';
-import { eventsMockData } from '../../utils/mockData';
-
-const eventsData = eventsMockData; // --- MOCK DATA ---
-
-const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
-const uniqueLocations = [...new Set(eventsData.map(event => event.location))].sort();
-const uniqueOrganizations = [...new Set(eventsData.map(event => event.organization))].sort();
+import { browseEvents } from '../../api/eventApi';
+import { transformEventsForFrontend, getUniqueCategories, getUniqueLocations, getUniqueOrganizations } from '../../utils/eventTransform';
 
 // --- HOOKS ---
 const useCountdown = (targetDate) => {
@@ -39,11 +34,29 @@ const getReturnValues = (countDown) => {
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const { translate } = useLanguage();
 
-    const [days, hours, minutes, seconds] = useCountdown(event.date);
+    if (!event) {
+        console.error('FeaturedEventSlide: event is missing');
+        return null;
+    }
+
+    const eventDate = event.start_at || event.date;
+    if (!eventDate) {
+        console.error('FeaturedEventSlide: event date is missing', event);
+        return null;
+    }
+
+    const [days, hours, minutes, seconds] = useCountdown(eventDate);
 
     return (
         <div className="relative w-full h-96 flex-shrink-0">
-            <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover"/>
+            <img 
+                src={event.imageUrl || '/uploads/events/default-event-image.svg'} 
+                alt={event.title || 'Event'} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                    e.target.src = '/uploads/events/default-event-image.svg';
+                }}
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 text-white">
                 <span className="inline-block bg-red-600 text-white text-sm font-semibold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">{translate("featuredEvents")}</span>
@@ -66,7 +79,7 @@ const FeaturedEventSlide = ({ event, onViewDetails }) => {
 };
 
 const EventCard = ({ event, onViewDetails }) => {
-    const eventDate = new Date(event.date);
+    const eventDate = new Date(event.start_at || event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     const [isLiked, setIsLiked] = useState(false);
@@ -79,7 +92,9 @@ const EventCard = ({ event, onViewDetails }) => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
             <div className="relative">
-                <img className="h-48 w-full object-cover" src={event.imageUrl} alt={event.title} />
+                <img className="h-48 w-full object-cover" src={event.imageUrl} alt={event.title} onError={(e) => {
+                    e.target.src = '/uploads/events/default-event-image.svg';
+                }} />
                 <div className="absolute inset-0 bg-opacity-20 group-hover:bg-opacity-40 transition-opacity duration-300"></div>
             </div>
             <div className="p-6 flex flex-col flex-grow">
@@ -87,11 +102,11 @@ const EventCard = ({ event, onViewDetails }) => {
                     <div className="flex items-center justify-between mb-2">
                         <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{event.category}</span>
                         <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
-                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
+                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
                         </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300">{event.description}</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300 line-clamp-2">{event.description}</p>
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
                             <CalendarDaysIcon className="w-4 h-4"/>
@@ -325,14 +340,21 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     if (!event)
         return null;
 
-    const eventDate = new Date(event.date);
+    const eventDate = new Date(event.start_at || event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
             <>
-                <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
+                <img 
+                    src={event.imageUrl} 
+                    alt={event.title} 
+                    className="w-full h-64 object-cover rounded-t-xl"
+                    onError={(e) => {
+                        e.target.src = '/uploads/events/default-event-image.svg';
+                    }}
+                />
                 <div className="p-8">
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
@@ -341,18 +363,33 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                             <CalendarDaysIcon className="w-5 h-5 flex-shrink-0"/>
                             <span>{formattedDate} at {formattedTime}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{event.location}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{event.organization}</span>
-                        </div>
+                        {event.address && (
                             <div className="flex items-center gap-3">
-                                <TicketIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
+                                <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>{event.location} - {event.address}</span>
+                            </div>
+                        )}
+                        {!event.address && event.location && (
+                            <div className="flex items-center gap-3">
+                                <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>{event.location}</span>
+                            </div>
+                        )}
+                        {event.organization && (
+                            <div className="flex items-center gap-3">
+                                <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>{event.organization}</span>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-3">
+                            <TicketIcon className="w-5 h-5 flex-shrink-0"/>
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price || 'Free'}</span>
                         </div>
+                        {event.capacity && (
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm">Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
+                            </div>
+                        )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
                     <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
@@ -373,9 +410,13 @@ const HomePage = () => {
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
     const { translate } = useLanguage();
+    
+    // State for events from API
+    const [eventsData, setEventsData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-
-    const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '' };
+    const initialFilters = { fromDate: '', toDate: '', eventType: '', location: '', organization: '', price: 0 };
     const [activeFilters, setActiveFilters] = useState(initialFilters);
     const [modalFilters, setModalFilters] = useState(initialFilters);
 
@@ -383,6 +424,65 @@ const HomePage = () => {
     const closeEventModal = () => setSelectedEvent(null);
 
     const eventsPerPage = 9;
+
+    // Fetch events from API (public endpoint for students)
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await browseEvents({ limit: 100 }); // Get up to 100 events
+                console.log('API Response:', response); // Debug log
+                
+                // Handle different response formats
+                const events = response.events || response || [];
+                console.log('Events extracted:', events.length, events); // Debug log
+                
+                if (!Array.isArray(events)) {
+                    console.error('Events is not an array:', events);
+                    setError('Invalid response format from server');
+                    setEventsData([]);
+                    return;
+                }
+                
+                const transformedEvents = transformEventsForFrontend(events);
+                console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
+                setEventsData(transformedEvents);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+                console.error('Error details:', {
+                    message: err.message,
+                    data: err.data,
+                    status: err.status,
+                    statusText: err.statusText,
+                    response: err.response
+                });
+                
+                // Check if it's an authentication error
+                if (err.status === 401 || err.response?.status === 401) {
+                    setError('Authentication required. Please log in as an admin to view events.');
+                } else if (err.data?.message) {
+                    setError(err.data.message);
+                } else if (err.data?.error) {
+                    setError(err.data.error);
+                } else {
+                    setError(err.message || 'Failed to load events. Check console for details.');
+                }
+                
+                // Keep empty array on error - UI will show "no events found"
+                setEventsData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEvents();
+    }, []);
+
+    // Extract dynamic categories, locations, and organizations from fetched events
+    const categories = useMemo(() => getUniqueCategories(eventsData), [eventsData]);
+    const uniqueLocations = useMemo(() => getUniqueLocations(eventsData), [eventsData]);
+    const uniqueOrganizations = useMemo(() => getUniqueOrganizations(eventsData), [eventsData]);
 
     useEffect(() => {
         if (isInitialMount) {
@@ -394,16 +494,171 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage]);
 
-    const maxPrice = useMemo(() =>
-        Math.ceil(Math.max(...eventsData.map(e => typeof e.price === 'number' ? e.price : 0))),
-    []);
+    const maxPrice = useMemo(() => {
+        const prices = eventsData.map(e => typeof e.price === 'number' ? e.price : 0);
+        return Math.max(100, ...prices); // Default to 100 if no prices
+    }, [eventsData]);
 
-    const featuredEvents = useMemo(() =>
-        eventsData.filter(e => e.category === 'Featured'),
-    []);
+    // Featured events - Smart algorithm to select the best events to feature
+    const featuredEvents = useMemo(() => {
+        console.log('Calculating featured events from:', eventsData.length, 'events');
+        const now = new Date();
+        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        
+        // Filter upcoming events
+        const upcoming = eventsData.filter(e => {
+            if (!e.start_at) {
+                console.warn('Event missing start_at:', e);
+                return false;
+            }
+            const eventDate = new Date(e.start_at);
+            const isUpcoming = e.status === 'upcoming' && eventDate > now;
+            if (!isUpcoming) {
+                console.log('Event filtered out:', {
+                    title: e.title,
+                    status: e.status,
+                    start_at: e.start_at,
+                    isPast: eventDate <= now
+                });
+            }
+            return isUpcoming;
+        });
+        
+        console.log('Upcoming events found:', upcoming.length, upcoming);
+        
+        if (upcoming.length === 0) {
+            console.warn('No upcoming events found! Checking all events...');
+            // Fallback: show events even if status is not 'upcoming' or date is in past (for testing)
+            const allFuture = eventsData.filter(e => {
+                if (!e.start_at) return false;
+                const eventDate = new Date(e.start_at);
+                return eventDate > now;
+            });
+            console.log('Future events (any status):', allFuture.length, allFuture);
+            if (allFuture.length > 0) {
+                return allFuture.slice(0, 5).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
+            }
+            return [];
+        }
+        
+        // Score each event for featuring
+        const scoredEvents = upcoming.map(event => {
+            let score = 0;
+            const eventDate = new Date(event.start_at);
+            const daysUntilEvent = Math.floor((eventDate - now) / (1000 * 60 * 60 * 24));
+            
+            console.log('Scoring event:', event.title, {
+                capacity: event.capacity,
+                registeredUsers: event.registeredUsers,
+                daysUntilEvent
+            });
+            
+            // 1. Registration rate (popularity) - Higher registration = more popular
+            const registrationRate = event.capacity > 0 
+                ? (event.registeredUsers || 0) / event.capacity 
+                : 0;
+            score += registrationRate * 30; // Max 30 points
+            
+            // 2. Urgency (almost full events) - Creates FOMO
+            if (registrationRate >= 0.8 && registrationRate < 1.0) {
+                score += 25; // Bonus for nearly full events
+            }
+            
+            // 3. Recency (happening soon) - Events in next 7 days get priority
+            if (daysUntilEvent <= 7) {
+                score += 20; // Happening soon bonus
+            } else if (daysUntilEvent <= 14) {
+                score += 10; // Happening in 2 weeks
+            } else if (daysUntilEvent > 30) {
+                score -= 5; // Too far in future, slightly reduce
+            }
+            
+            // 4. Size (large capacity events) - Big events are more significant
+            if (event.capacity >= 500) {
+                score += 15; // Large events bonus
+            } else if (event.capacity >= 100) {
+                score += 8; // Medium events
+            }
+            
+            // 5. Category diversity - Prefer popular categories
+            const popularCategories = ['music', 'technology', 'sports', 'entertainment'];
+            if (popularCategories.includes(event.category?.toLowerCase())) {
+                score += 5;
+            }
+            
+            // 6. Has custom image (not default) - Shows effort/quality
+            if (event.imageUrl && !event.imageUrl.includes('default-event-image')) {
+                score += 5;
+            }
+            
+            return { ...event, _featureScore: score, daysUntilEvent };
+        });
+        
+        // Sort by score (highest first), then by date (soonest first)
+        scoredEvents.sort((a, b) => {
+            if (Math.abs(a._featureScore - b._featureScore) > 5) {
+                return b._featureScore - a._featureScore; // Higher score first
+            }
+            return new Date(a.start_at) - new Date(b.start_at); // Sooner first if scores are close
+        });
+        
+        // Take top 5, ensuring some diversity (try to avoid all same category)
+        const selected = [];
+        const usedCategories = new Set();
+        
+        for (const event of scoredEvents) {
+            if (selected.length >= 5) break;
+            
+            const eventCategory = event.category?.toLowerCase();
+            // Allow 2 events from same category max, or if we have less than 3 total
+            if (selected.length < 3 || !usedCategories.has(eventCategory) || 
+                Array.from(usedCategories.values()).filter(c => c === eventCategory).length < 2) {
+                selected.push(event);
+                if (eventCategory) usedCategories.add(eventCategory);
+            }
+        }
+        
+        // Fill remaining slots if we don't have 5 yet
+        if (selected.length < 5) {
+            for (const event of scoredEvents) {
+                if (selected.length >= 5) break;
+                if (!selected.includes(event)) {
+                    selected.push(event);
+                }
+            }
+        }
+        
+        let result = selected.slice(0, 5);
+        
+        console.log('Events after scoring and selection:', result.length, result);
+        
+        // Fallback 1: If no events selected by scoring, take first 5 upcoming events
+        if (result.length === 0 && upcoming.length > 0) {
+            console.warn('No events selected by scoring algorithm, using first 5 upcoming events as fallback');
+            result = upcoming
+                .sort((a, b) => new Date(a.start_at) - new Date(b.start_at))
+                .slice(0, 5);
+        }
+        
+        // Fallback 2: If still no events, use any events from the data (for testing/debugging)
+        if (result.length === 0 && eventsData.length > 0) {
+            console.warn('No upcoming events found, using first 5 events from data as fallback (for testing)');
+            result = eventsData
+                .slice(0, 5)
+                .map(e => ({ ...e, _featureScore: 0 })); // Add dummy score
+        }
+        
+        console.log('Final featured events selected:', result.length, result);
+        return result;
+    }, [eventsData]);
 
     const filteredEvents = useMemo(() => {
-        let events = eventsData.filter(event => event.category !== 'Featured');
+        // Filter out featured events from main list (or just use all events)
+        let events = eventsData.filter(event => {
+            // Don't show featured events in main list, or show all if less than 10 events
+            return !featuredEvents.some(f => f.id === event.id) || eventsData.length < 10;
+        });
 
         // Category Filter (from main page)
         if (!activeCategories.includes('All')) {
@@ -412,10 +667,13 @@ const HomePage = () => {
 
         // Advanced Filters (from modal)
         if (activeFilters.fromDate)
-            events = events.filter(event => new Date(event.date) >= new Date(activeFilters.fromDate));
+            events = events.filter(event => new Date(event.start_at || event.date) >= new Date(activeFilters.fromDate));
 
-        if (activeFilters.toDate)
-            events = events.filter(event => new Date(event.date) <= new Date(activeFilters.toDate).setHours(23, 59, 59, 999));
+        if (activeFilters.toDate) {
+            const endDate = new Date(activeFilters.toDate);
+            endDate.setHours(23, 59, 59, 999);
+            events = events.filter(event => new Date(event.start_at || event.date) <= endDate);
+        }
 
         if (activeFilters.eventType)
             events = events.filter(event => event.category === activeFilters.eventType);
@@ -426,31 +684,38 @@ const HomePage = () => {
         if (activeFilters.organization)
             events = events.filter(event => event.organization === activeFilters.organization);
 
-        if (activeFilters.price < maxPrice)
+        if (activeFilters.price > 0) {
             events = events.filter(event => {
                 const price = typeof event.price === 'number' ? event.price : 0;
                 return price <= activeFilters.price;
             });
+        }
 
         // Search Term Filter
         if (searchTerm) {
             events = events.filter(event =>
                 event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                event.description.toLowerCase().includes(searchTerm.toLowerCase())
+                (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase()))
             );
         }
 
         return events;
-    }, [searchTerm, activeCategories, activeFilters, maxPrice]);
+    }, [searchTerm, activeCategories, activeFilters, maxPrice, eventsData, featuredEvents]);
 
-    let carouselData = featuredEvents.map(event => ({
-        id: event.id,
-        props: {
-            event: event,
-            onViewDetails: openEventModal
-        },
-        Component: FeaturedEventSlide
-    }));
+    // Prepare carousel data from featured events
+    const carouselData = useMemo(() => {
+        console.log('Building carousel data from featured events:', featuredEvents.length, featuredEvents);
+        const data = featuredEvents.map(event => ({
+            id: event.id,
+            props: {
+                event: event,
+                onViewDetails: openEventModal
+            },
+            Component: FeaturedEventSlide
+        }));
+        console.log('Carousel data created:', data.length, data);
+        return data;
+    }, [featuredEvents, openEventModal]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -472,9 +737,44 @@ const HomePage = () => {
     const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
     const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
 
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="max-w-4xl mx-auto p-6">
+                <div className="text-center py-16">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading events...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state with message
+    if (error && eventsData.length === 0) {
+        return (
+            <div className="max-w-4xl mx-auto p-6">
+                <div className="text-center py-16">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                        <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">Error Loading Events</h3>
+                        <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+                        <p className="text-sm text-red-500 dark:text-red-400">
+                            {error.includes('Authentication') 
+                                ? 'Note: This endpoint requires admin authentication. Please check the browser console for more details.'
+                                : 'Please check your connection and try again. Check the browser console for more details.'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    console.log('Rendering HomePage - Featured events:', featuredEvents.length, 'Carousel data:', carouselData.length);
+
     return (
         <>
-            <Carousel items={carouselData} />
+            {featuredEvents.length > 0 && carouselData.length > 0 && (
+                <Carousel items={carouselData} />
+            )}
 
             <div ref={eventsListRef} className="mb-8 max-w-4xl mx-auto flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-grow group w-full">
