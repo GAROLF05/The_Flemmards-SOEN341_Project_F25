@@ -1,4 +1,4 @@
-import { CalendarDateRangeIcon, HomeIcon, Squares2X2Icon, StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CalendarDateRangeIcon, CogIcon, HomeIcon, Squares2X2Icon, StarIcon, UsersIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 
@@ -50,12 +50,12 @@ const MobileMenu = ({ isOpen, onClose, accountType }) => {
             },
             {
                 title: translate("approveOrganizers"),
-                Icon: Squares2X2Icon,
+                Icon: UsersIcon,
                 link: "/admin/approveOrganizers",
             },
             {
                 title: translate("eventModeration"),
-                Icon: Squares2X2Icon,
+                Icon: CogIcon,
                 link: "/admin/eventModeration",
             },
         ]);

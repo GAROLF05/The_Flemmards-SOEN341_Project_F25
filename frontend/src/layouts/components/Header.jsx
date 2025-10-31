@@ -41,7 +41,7 @@ const Header = ({ accountType, onMenuClick }) => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-16">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-4">
-                        <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
+                        <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-300">
                             <Bars3Icon className="h-6 w-6"/>
                         </button>
                         <span className="text-2xl font-bold text-indigo-600 cursor-pointer" onClick={() => navigate(`/${accountType}`)}>{translate("appTitle")}</span>
