@@ -44,6 +44,23 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const { error } = require('console');
 
+// Helper function to ensure events have a default image if none is provided
+const DEFAULT_EVENT_IMAGE = '/uploads/events/default-event-image.svg';
+const normalizeEventImage = (event) => {
+    if (!event.image || !event.image.trim()) {
+        event.image = DEFAULT_EVENT_IMAGE;
+    }
+    return event;
+};
+
+// Helper function to normalize image field for an array of events
+const normalizeEventsImages = (events) => {
+    if (Array.isArray(events)) {
+        return events.map(normalizeEventImage);
+    }
+    return events;
+};
+
 // API Endpoint to get all Events
 exports.getAllEvents = async (req,res) => {
     try{
@@ -73,10 +90,13 @@ exports.getAllEvents = async (req,res) => {
             .lean()
             .exec();
 
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
+
         return res.status(200).json({
             message: 'All events fetched successfully',
-            total: events.length,
-            events,
+            total: normalizedEvents.length,
+            events: normalizedEvents,
         });
 
         
@@ -122,10 +142,12 @@ exports.getEventById = async (req,res) => {
 
         if (!event) return res.status(404).json({error: "Event not found"});
     
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
 
         return res.status(200).json({
             message: 'Event fetched successfully',
-            event
+            event: normalizedEvent
         });
 
         
@@ -171,10 +193,12 @@ exports.getEventByOrganization = async (req,res) =>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -215,10 +239,12 @@ exports.getEventsByStatus = async (req,res) =>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -264,10 +290,12 @@ exports.getEventsByCategory = async (req,res)=>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -327,10 +355,13 @@ exports.getEventsByDateRange = async (req, res) => {
         if (!events)
             return res.status(404).json({ error: "No events found within the specified date range." });
 
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
+
         return res.status(200).json({
             message: `Events between ${start} and ${end} fetched successfully.`,
-            total: events.length,
-            events
+            total: normalizedEvents.length,
+            events: normalizedEvents
         });
 
     } catch (e) {
@@ -355,7 +386,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
             select: 'name email'})
         .populate({
             path: 'event', 
-            select: 'organization title start_at end_at',
+            select: 'organization title start_at end_at image',
             populate:{
             path: 'organization',
             select: 'name website',
@@ -372,13 +403,16 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         if (regs.length === 0)
             return res.status(404).json({error: "No registration found for this user"});
 
-        const events = regs.map(r => ({
-            event: r.event,
-            status: r.status,
-            quantity: r.quantity,
-            ticketsIssued: r.ticketsIssued,
-            registeredAt: r.createdAt,
-        }));
+        const events = regs.map(r => {
+            const eventObj = r.event ? normalizeEventImage({ ...r.event }) : null;
+            return {
+                event: eventObj,
+                status: r.status,
+                quantity: r.quantity,
+                ticketsIssued: r.ticketsIssued,
+                registeredAt: r.createdAt,
+            };
+        });
 
         if (!events) 
             return res.status(404).json({error: "Events not found"});
@@ -485,9 +519,13 @@ exports.createEvent = async (req,res)=>{
             image: imageUrl,
         });
 
+        // Convert to plain object and apply default image if needed
+        const eventObj = eventDoc.toObject();
+        const normalizedEvent = normalizeEventImage(eventObj);
+
         return res.status(201).json({ 
             message: 'Event created successfully', 
-            event: eventDoc 
+            event: normalizedEvent 
         });
     } catch (e) {
         console.error('Error creating event:', e);
@@ -608,7 +646,11 @@ exports.updateEvent = async (req,res) => {
                 console.log('Promotion after update failed (non-critical):', promErr.message);
             }
 
-            return res.status(200).json({ message: 'Event updated', event: updated });
+            // Convert to plain object and apply default image if needed
+            const updatedObj = updated.toObject();
+            const normalizedEvent = normalizeEventImage(updatedObj);
+
+            return res.status(200).json({ message: 'Event updated', event: normalizedEvent });
         } catch (e) {
             await session.abortTransaction();
             session.endSession();
@@ -774,10 +816,13 @@ exports.getAttendees = async (req,res) => {
         if (!event) 
             return res.status(404).json({error: "Events not found"});
 
-        if (!event.registered_users || event.registered_users.length === 0)
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
+
+        if (!normalizedEvent.registered_users || normalizedEvent.registered_users.length === 0)
             return res.status(404).json({ error: "No confirmed attendees found for this event" });
     
-        const attendees = event.registered_users.map(user => ({
+        const attendees = normalizedEvent.registered_users.map(user => ({
             _id: user._id,
             name: user.name,
             username: user.username,
@@ -785,14 +830,15 @@ exports.getAttendees = async (req,res) => {
         }));
 
         return res.status(200).json({
-            message: `Confirmed attendees for event '${event.title}' fetched successfully`,
+            message: `Confirmed attendees for event '${normalizedEvent.title}' fetched successfully`,
             event: {
-                _id: event._id,
-                title: event.title,
-                start_at: event.start_at,
-                end_at: event.end_at,
-                capacity: event.capacity,
-                organization: event.organization
+                _id: normalizedEvent._id,
+                title: normalizedEvent.title,
+                start_at: normalizedEvent.start_at,
+                end_at: normalizedEvent.end_at,
+                capacity: normalizedEvent.capacity,
+                organization: normalizedEvent.organization,
+                image: normalizedEvent.image
             },
             total_attendees: attendees.length,
             attendees
@@ -838,10 +884,13 @@ exports.getWaitlistedUsers = async (req,res) =>{
         if (!event) 
             return res.status(404).json({error: "Events not found"});
 
-        if (!event.waitlist || event.waitlist.length === 0)
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
+
+        if (!normalizedEvent.waitlist || normalizedEvent.waitlist.length === 0)
             return res.status(404).json({ error: "No waitlisted users/registration found for this event" });
     
-        const waitlisted = event.waitlist.map(reg => ({
+        const waitlisted = normalizedEvent.waitlist.map(reg => ({
             registrationId: reg.registrationId,
             status: reg.status,
             quantity: reg.quantity,
@@ -855,14 +904,15 @@ exports.getWaitlistedUsers = async (req,res) =>{
                 : null
         }));
         return res.status(200).json({
-            message: `Confirmed waitlisted users for event '${event.title}' fetched successfully`,
+            message: `Confirmed waitlisted users for event '${normalizedEvent.title}' fetched successfully`,
             event: {
-                _id: event._id,
-                title: event.title,
-                start_at: event.start_at,
-                end_at: event.end_at,
-                capacity: event.capacity,
-                organization: event.organization
+                _id: normalizedEvent._id,
+                title: normalizedEvent.title,
+                start_at: normalizedEvent.start_at,
+                end_at: normalizedEvent.end_at,
+                capacity: normalizedEvent.capacity,
+                organization: normalizedEvent.organization,
+                image: normalizedEvent.image
             },
             total_waitlisted: waitlisted.length,
             waitlisted

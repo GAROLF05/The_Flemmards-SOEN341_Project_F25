@@ -1,0 +1,9 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="600" fill="#f0f0f0"/>
+  <rect x="100" y="150" width="600" height="300" rx="10" fill="#4a90e2" opacity="0.8"/>
+  <circle cx="400" cy="250" r="60" fill="white" opacity="0.9"/>
+  <path d="M 370 250 L 400 280 L 430 250" stroke="#4a90e2" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="150" y="380" width="500" height="30" rx="5" fill="white" opacity="0.9"/>
+  <rect x="200" y="420" width="400" height="20" rx="5" fill="white" opacity="0.7"/>
+  <text x="400" y="520" font-family="Arial, sans-serif" font-size="24" fill="#666" text-anchor="middle">Default Event Image</text>
+</svg>
