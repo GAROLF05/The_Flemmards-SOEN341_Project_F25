@@ -357,9 +357,163 @@ const AnalyticsModal = ({ event, isOpen, onClose }) => {
 };
 
 const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: organizations, categories }) => {
-    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', date: '', location: '', organization: organizations[0] || '', description: '', imageUrl: '', price: 0, capacity: 0 });
-    const handleChange = (e) => { const { name, value, type } = e.target; setNewEvent(prev => ({ ...prev, [name]: type === 'number' ? parseInt(value) : value })); };
-    const handleSubmit = (e) => { e.preventDefault(); onAddEvent({ ...newEvent, id: Date.now(), ticketsIssued: 0, attendees: 0 }); onClose(); };
+    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', date: '', location: '', organization: organizations[0] || '', description: '', price: 0, capacity: 0 });
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const fileInputRef = useRef(null);
+
+    const handleChange = (e) => { 
+        const { name, value, type } = e.target; 
+        setNewEvent(prev => ({ ...prev, [name]: type === 'number' ? parseInt(value) : value })); 
+    };
+
+    const handleFileSelect = (file) => {
+        if (file && file.type.startsWith('image/')) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert('Please select a valid image file (jpeg, jpg, png, gif, webp)');
+        }
+    };
+
+    const handleFileInputChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleFileSelect(e.target.files[0]);
+        }
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileSelect(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleRemoveImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleSubmit = async (e) => { 
+        e.preventDefault();
+        
+        // Validate required fields
+        if (!newEvent.title || !newEvent.date || !newEvent.location || !newEvent.organization) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // Parse date and time
+            const dateTime = new Date(newEvent.date);
+            if (isNaN(dateTime.getTime())) {
+                alert('Please enter a valid date and time');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Create FormData for multipart/form-data
+            const formData = new FormData();
+            formData.append('title', newEvent.title);
+            formData.append('category', newEvent.category);
+            formData.append('start_at', dateTime.toISOString());
+            formData.append('end_at', new Date(dateTime.getTime() + 2 * 60 * 60 * 1000).toISOString()); // Default 2 hours duration
+            formData.append('capacity', newEvent.capacity.toString());
+            formData.append('description', newEvent.description || '');
+            
+            // Handle location - split if it's a string, or use as is
+            const locationObj = typeof newEvent.location === 'string' 
+                ? { name: newEvent.location, address: newEvent.location }
+                : newEvent.location;
+            formData.append('location[name]', locationObj.name || newEvent.location);
+            formData.append('location[address]', locationObj.address || newEvent.location);
+
+            // Add organization ID (assuming organizations array contains IDs)
+            // If it contains names, you'll need to fetch the ID first
+            formData.append('organization', newEvent.organization);
+
+            // Add image file if selected
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            // Get auth token
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please log in to create an event');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Make API call
+            const response = await fetch('/api/events/create', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Don't set Content-Type - browser will set it automatically with boundary for FormData
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Failed to create event' }));
+                throw new Error(errorData.error || 'Failed to create event');
+            }
+
+            const result = await response.json();
+            
+            // Call the callback with the new event (mocked for now if API structure differs)
+            const createdEvent = {
+                id: result.event?._id || Date.now(),
+                title: result.event?.title || newEvent.title,
+                category: result.event?.category || newEvent.category,
+                date: result.event?.start_at || newEvent.date,
+                location: result.event?.location?.name || newEvent.location,
+                organization: result.event?.organization?.name || newEvent.organization,
+                description: result.event?.description || newEvent.description,
+                imageUrl: result.event?.image || imagePreview || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
+                price: newEvent.price,
+                capacity: result.event?.capacity || newEvent.capacity,
+                ticketsIssued: 0,
+                attendees: 0
+            };
+
+            onAddEvent(createdEvent);
+            
+            // Reset form
+            setNewEvent({ title: '', category: 'Music', date: '', location: '', organization: organizations[0] || '', description: '', price: 0, capacity: 0 });
+            setImageFile(null);
+            setImagePreview(null);
+            setIsSubmitting(false);
+            onClose();
+        } catch (error) {
+            console.error('Error creating event:', error);
+            alert(error.message || 'Failed to create event. Please try again.');
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
@@ -380,12 +534,63 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: or
                                     {organizations.map(org => <option key={org} value={org}>{org}</option>)}
                                 </select>
                             </div>
-                            <div className="md:col-span-2"> <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Image URL</label> <input id="imageUrl" name="imageUrl" value={newEvent.imageUrl} onChange={handleChange} placeholder="https://images.unsplash.com/..." className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" /> </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Image</label>
+                                {imagePreview ? (
+                                    <div className="relative">
+                                        <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-600" />
+                                        <button
+                                            type="button"
+                                            onClick={handleRemoveImage}
+                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+                                        >
+                                            <XMarkIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                                            isDragging 
+                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                                : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+                                        }`}
+                                    >
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleFileInputChange}
+                                            className="hidden"
+                                            id="image-upload"
+                                        />
+                                        <label htmlFor="image-upload" className="cursor-pointer">
+                                            <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-4h4m-4-4v4m0-4h-4m-4 0h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">Click to upload</span> or drag and drop
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">PNG, JPG, GIF or WEBP (Max 5MB)</p>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
                             <div> <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label> <input id="price" name="price" type="number" value={newEvent.price} onChange={handleChange} placeholder="0 for free" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div> <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Capacity</label> <input id="capacity" name="capacity" type="number" value={newEvent.capacity} onChange={handleChange} placeholder="e.g., 500" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div className="md:col-span-2"> <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label> <textarea id="description" name="description" value={newEvent.description} onChange={handleChange} placeholder="Tell us more about the event..." className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" rows="3" required></textarea> </div>
                         </div>
-                        <div className="mt-8 flex justify-end"> <button type="submit" className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors"> Create Event </button> </div>
+                        <div className="mt-8 flex justify-end"> 
+                            <button 
+                                type="submit" 
+                                disabled={isSubmitting}
+                                className={`bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            > 
+                                {isSubmitting ? 'Creating...' : 'Create Event'} 
+                            </button> 
+                        </div>
                     </form>
                  </div>
             </div>

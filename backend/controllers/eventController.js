@@ -52,7 +52,7 @@ exports.getAllEvents = async (req,res) => {
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find()
-            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .select('organization title description start_at end_at capacity status registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
@@ -100,7 +100,7 @@ exports.getEventById = async (req,res) => {
             return res.status(400).json({error: "Invalid event id format"});
 
         const event = await Event.findById(event_id)
-            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .select('organization title description start_at end_at capacity status registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
@@ -147,7 +147,7 @@ exports.getEventByOrganization = async (req,res) =>{
         }
 
         const events = await Event.find({organization: org_id})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
@@ -191,7 +191,7 @@ exports.getEventsByStatus = async (req,res) =>{
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find({status: status})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
@@ -240,7 +240,7 @@ exports.getEventsByCategory = async (req,res)=>{
         }
 
         const events = await Event.find({category: category})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
@@ -304,7 +304,7 @@ exports.getEventsByDateRange = async (req, res) => {
             { end_at: { $gte: startDate, $lte: endDate } }
         ]
         })
-        .select('organization title description category start_at end_at capacity status location registered_users waitlist')
+        .select('organization title description category start_at end_at capacity status location registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
@@ -401,23 +401,46 @@ exports.createEvent = async (req,res)=>{
     try {
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
-        // const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        // if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-        // Handle both JSON and text/plain content types
+        // Handle both JSON and multipart/form-data (file upload)
         let requestBody = req.body;
+        
+        // If Content-Type is text/plain, try to parse as JSON
         if (typeof req.body === 'string' && req.get('Content-Type') === 'text/plain') {
             try {
                 requestBody = JSON.parse(req.body);
             } catch (e) {
                 return res.status(400).json({error: 'Invalid JSON in request body'});
             }
-        }        
+        }
 
-        const { organization, title, description, start_at, end_at, capacity = 0, category, location } = requestBody || {};
+        // Handle location if it's sent as nested form fields (location[name], location[address])
+        // or as a JSON string
+        let location = requestBody.location;
+        if (typeof location === 'string') {
+            try {
+                location = JSON.parse(location);
+            } catch (e) {
+                // If not JSON, might be in form field format - handle separately
+            }
+        }
+        // If location is sent as separate fields (location[name], location[address])
+        if (!location || !location.name) {
+            const locationName = requestBody['location[name]'] || requestBody.locationName;
+            const locationAddress = requestBody['location[address]'] || requestBody.locationAddress;
+            if (locationName && locationAddress) {
+                location = { name: locationName, address: locationAddress };
+            }
+        }
+
+        const { organization, title, description, start_at, end_at, capacity = 0, category } = requestBody;
 
         if (!organization || !title || !start_at || !end_at) {
             return res.status(400).json({ error: 'organization, title, start_at and end_at are required' });
+        }
+
+        if (!location || !location.name || !location.address) {
+            return res.status(400).json({ error: 'location.name and location.address are required' });
         }
 
         if (!mongoose.Types.ObjectId.isValid(organization)) {
@@ -438,6 +461,17 @@ exports.createEvent = async (req,res)=>{
             });
         }
 
+        // Handle image: prioritize file upload (req.file) over URL input
+        let imageUrl = null;
+        if (req.file) {
+            // File uploaded via multer - construct URL
+            imageUrl = `/uploads/events/${req.file.filename}`;
+            console.log(`[AUDIT] Image uploaded: ${req.file.filename} for event: ${title}`);
+        } else if (requestBody.image && requestBody.image.trim()) {
+            // Image URL or base64 provided in request body (fallback option)
+            imageUrl = requestBody.image.trim();
+        }
+
         const eventDoc = await Event.create({
             organization,
             title,
@@ -448,11 +482,28 @@ exports.createEvent = async (req,res)=>{
             category,
             location,
             status: EVENT_STATUS.UPCOMING,
+            image: imageUrl,
         });
 
-        return res.status(201).json({ message: 'Event created successfully', event: eventDoc });
+        return res.status(201).json({ 
+            message: 'Event created successfully', 
+            event: eventDoc 
+        });
     } catch (e) {
-        console.error(e);
+        console.error('Error creating event:', e);
+        // If file was uploaded but event creation failed, clean up the file
+        if (req.file) {
+            const fs = require('fs');
+            const path = require('path');
+            const filePath = path.join(__dirname, '..', 'uploads', 'events', req.file.filename);
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch (cleanupError) {
+                console.error('Error cleaning up uploaded file:', cleanupError);
+            }
+        }
         return res.status(500).json({ error: 'Failed to create event' });
     }
 
@@ -474,6 +525,59 @@ exports.updateEvent = async (req,res) => {
         const updates = {};
         const allowed = ['title','description','start_at','end_at','capacity','status','location','category'];
         for (const k of allowed) if (req.body[k] !== undefined) updates[k] = req.body[k];
+
+        // Handle location if it's sent as nested form fields or JSON string
+        if (req.body.location) {
+            let location = req.body.location;
+            if (typeof location === 'string') {
+                try {
+                    location = JSON.parse(location);
+                } catch (e) {
+                    // If not JSON, might be in form field format
+                }
+            }
+            // If location is sent as separate fields
+            if (!location.name || !location.address) {
+                const locationName = req.body['location[name]'] || req.body.locationName;
+                const locationAddress = req.body['location[address]'] || req.body.locationAddress;
+                if (locationName && locationAddress) {
+                    location = { name: locationName, address: locationAddress };
+                }
+            }
+            if (location && location.name && location.address) {
+                updates.location = location;
+            }
+        }
+
+        // Handle image: prioritize file upload (req.file) over URL input
+        if (req.file) {
+            // File uploaded via multer - construct URL
+            updates.image = `/uploads/events/${req.file.filename}`;
+            console.log(`[AUDIT] Image updated: ${req.file.filename} for event: ${event_id}`);
+            
+            // Optionally delete old image file if it exists
+            const event = await Event.findById(event_id).select('image').lean();
+            if (event && event.image && event.image.startsWith('/uploads/events/')) {
+                const fs = require('fs');
+                const path = require('path');
+                const oldFilePath = path.join(__dirname, '..', event.image);
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                    }
+                } catch (cleanupError) {
+                    console.error('Error cleaning up old image file:', cleanupError);
+                }
+            }
+        } else if (req.body.image !== undefined) {
+            // Image URL provided in request body or image removal
+            // If image is null/empty string, allow removing the image
+            if (req.body.image && req.body.image.trim()) {
+                updates.image = req.body.image.trim();
+            } else {
+                updates.image = null;
+            }
+        }
 
         // Use a session when capacity change might affect waitlist/promotions
         const session = await mongoose.startSession();
@@ -646,7 +750,7 @@ exports.getAttendees = async (req,res) => {
             return res.status(400).json({error: "Invalid event_id format"});
 
         const event = await Event.findById(event_id)
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
@@ -710,7 +814,7 @@ exports.getWaitlistedUsers = async (req,res) =>{
             return res.status(400).json({error: "Invalid event_id format"});
 
         const event = await Event.findById(event_id)
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'

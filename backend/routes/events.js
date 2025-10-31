@@ -14,14 +14,16 @@ const eventController = require("../controllers/eventController");
 
 // Middlewares
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
+const upload = require('../middlewares/upload');
+const handleUploadError = require('../middlewares/uploadErrorHandler');
 
 // ToDO: Add a verifyUser jwt token
 
 // Public routes for students to browse events
 //router.get('/browse', eventController.browseEvents);
 
-// Create
-router.post('/create', requireAdmin, eventController.createEvent);
+// Create (with optional image upload - accepts multipart/form-data or JSON)
+router.post('/create', requireAdmin, upload.single('image'), handleUploadError, eventController.createEvent);
 
 // Read
 router.get('/get/all', requireAdmin, eventController.getAllEvents);
@@ -32,8 +34,8 @@ router.get('/get/category/:category', eventController.getEventsByCategory);
 router.get('/get/daterange', eventController.getEventsByDateRange);
 router.get('/get/by-user/:user_id', eventController.getEventsByUserRegistrations);
 
-// Update
-router.put('/update/:event_id', requireAdmin, eventController.updateEvent);
+// Update (with optional image upload - accepts multipart/form-data or JSON)
+router.put('/update/:event_id', requireAdmin, upload.single('image'), handleUploadError, eventController.updateEvent);
 router.patch('/cancel/:event_id', requireAdmin, eventController.cancelEvent);
 
 // Delete

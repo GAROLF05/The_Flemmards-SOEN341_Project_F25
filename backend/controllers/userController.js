@@ -20,7 +20,7 @@ const { jwtSecret } = require("../middlewares/auth");
 // API endpoint to Register a new user (signup)
 exports.registerUser = async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { name, username, email, password, role } = req.body;
 
     // Validate required fields
     if (!email || !email.trim())
@@ -58,6 +58,7 @@ exports.registerUser = async (req, res) => {
 
     // Create user
     const newUser = new User({
+      name: name? name.trim() : null,
       username: username ? username.trim() : null,
       email: email.toLowerCase().trim(),
       password: hashedPassword,
