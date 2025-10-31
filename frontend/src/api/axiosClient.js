@@ -1,8 +1,9 @@
 // src/api/axiosClient.js
 import axios from "axios";
 
+// Use /api since Vite proxy is configured to forward to backend
 const axiosClient = axios.create({
-    baseURL: import.meta.env.REACT_APP_API_BASE_URL,
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
     headers: {
         "Content-Type": "application/json",
     },
@@ -10,8 +11,10 @@ const axiosClient = axios.create({
 
 // Attach API key to all requests
 axiosClient.interceptors.request.use(config => {
-    const apiKey = import.meta.env.REACT_APP_API_KEY;
-    config.headers["x-api-key"] = apiKey;
+    const apiKey = import.meta.env.VITE_API_KEY;
+    if (apiKey) {
+        config.headers["x-api-key"] = apiKey;
+    }
 
     const token = localStorage.getItem("token");
 
@@ -25,8 +28,15 @@ axiosClient.interceptors.request.use(config => {
 axiosClient.interceptors.response.use(response =>
     response.data, error => {
         console.error("API Error:", error);
-
-        return Promise.reject(error);
+        // Preserve the full error object with response data
+        const errorResponse = {
+            message: error.message,
+            response: error.response,
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data
+        };
+        return Promise.reject(errorResponse);
     }
 );
 

@@ -1,0 +1,830 @@
+[
+  {
+    "organization": "69050a341c29e71476bae1ba",
+    "title": "AI & Machine Learning Workshop",
+    "description": "Learn the fundamentals of artificial intelligence and machine learning. Hands-on session with practical examples and real-world applications.",
+    "category": "technology",
+    "start_at": "2025-11-01T09:00:00.000Z",
+    "end_at": "2025-11-01T15:00:00.000Z",
+    "capacity": 50,
+    "status": "upcoming",
+    "location": {
+      "name": "Tech Building Auditorium",
+      "address": "123 University Ave, Montreal, QC H3A 2B4"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d1",
+    "title": "Web Development Bootcamp",
+    "description": "Intensive web development course covering HTML, CSS, JavaScript, and React. Build real projects during the workshop.",
+    "category": "technology",
+    "start_at": "2025-11-03T09:00:00.000Z",
+    "end_at": "2025-11-05T17:00:00.000Z",
+    "capacity": 30,
+    "status": "upcoming",
+    "location": {
+      "name": "Computer Science Lab",
+      "address": "456 Tech Street, Montreal, QC H3B 3C5"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1ba",
+    "title": "Cybersecurity Summit 2025",
+    "description": "Expert talks on cybersecurity, ethical hacking, and data protection. Network with industry professionals.",
+    "category": "technology",
+    "start_at": "2025-11-05T08:00:00.000Z",
+    "end_at": "2025-11-05T18:00:00.000Z",
+    "capacity": 100,
+    "status": "upcoming",
+    "location": {
+      "name": "Convention Center",
+      "address": "789 Business Blvd, Montreal, QC H4C 4D6"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b2",
+    "title": "Hackathon: Build Something Amazing",
+    "description": "48-hour hackathon. Form teams, build projects, and compete for prizes. Food and drinks provided.",
+    "category": "technology",
+    "start_at": "2025-11-07T18:00:00.000Z",
+    "end_at": "2025-11-09T18:00:00.000Z",
+    "capacity": 150,
+    "status": "upcoming",
+    "location": {
+      "name": "Engineering Building",
+      "address": "321 Innovation Drive, Montreal, QC H5D 5E7"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c0",
+    "title": "Blockchain & Cryptocurrency Seminar",
+    "description": "Introduction to blockchain technology and its applications. Q&A session with industry experts.",
+    "category": "technology",
+    "start_at": "2025-11-09T14:00:00.000Z",
+    "end_at": "2025-11-09T17:00:00.000Z",
+    "capacity": 75,
+    "status": "completed",
+    "location": {
+      "name": "Business School",
+      "address": "654 Finance Road, Montreal, QC H6E 6F8"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bb",
+    "title": "Jazz Night at the Campus",
+    "description": "Live jazz performance featuring local artists. Relax and enjoy smooth melodies in an intimate setting.",
+    "category": "music",
+    "start_at": "2025-11-11T19:00:00.000Z",
+    "end_at": "2025-11-11T22:00:00.000Z",
+    "capacity": 80,
+    "status": "upcoming",
+    "location": {
+      "name": "Student Center Hall",
+      "address": "147 Student Plaza, Montreal, QC H7F 7G9"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b8",
+    "title": "Electronic Music Festival",
+    "description": "All-day electronic music festival with multiple DJs and live performances. Food trucks available.",
+    "category": "music",
+    "start_at": "2025-11-13T12:00:00.000Z",
+    "end_at": "2025-11-13T23:00:00.000Z",
+    "capacity": 500,
+    "status": "upcoming",
+    "location": {
+      "name": "University Field",
+      "address": "258 Campus Way, Montreal, QC H8G 8H0"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bf",
+    "title": "Acoustic Open Mic Night",
+    "description": "Students showcase their musical talents. All genres welcome. Sign up at the door.",
+    "category": "music",
+    "start_at": "2025-11-15T18:00:00.000Z",
+    "end_at": "2025-11-15T21:00:00.000Z",
+    "capacity": 60,
+    "status": "upcoming",
+    "location": {
+      "name": "Coffee House",
+      "address": "369 Main Street, Montreal, QC H9H 9I1"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bb",
+    "title": "Classical Concert Series",
+    "description": "Performance by the university orchestra featuring classical masterpieces. Formal attire encouraged.",
+    "category": "music",
+    "start_at": "2025-11-17T19:00:00.000Z",
+    "end_at": "2025-11-17T21:00:00.000Z",
+    "capacity": 200,
+    "status": "completed",
+    "location": {
+      "name": "Concert Hall",
+      "address": "741 Arts Avenue, Montreal, QC H0I 0J2"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c4",
+    "title": "Rock Band Competition",
+    "description": "Battle of the bands! Multiple student bands compete for the title. Voting by audience.",
+    "category": "music",
+    "start_at": "2025-11-19T18:00:00.000Z",
+    "end_at": "2025-11-19T23:00:00.000Z",
+    "capacity": 300,
+    "status": "upcoming",
+    "location": {
+      "name": "Sports Complex",
+      "address": "852 Athletic Drive, Montreal, QC H1J 1K3"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d4",
+    "title": "Basketball Tournament Finals",
+    "description": "Championship game of the inter-university basketball tournament. Cheer on your team!",
+    "category": "sports",
+    "start_at": "2025-11-21T19:00:00.000Z",
+    "end_at": "2025-11-21T21:00:00.000Z",
+    "capacity": 800,
+    "status": "upcoming",
+    "location": {
+      "name": "Main Gymnasium",
+      "address": "963 Sports Lane, Montreal, QC H2K 2L4"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d5",
+    "title": "5K Fun Run",
+    "description": "Charity fun run through campus and surrounding area. All fitness levels welcome. T-shirts included.",
+    "category": "sports",
+    "start_at": "2025-11-23T08:00:00.000Z",
+    "end_at": "2025-11-23T10:00:00.000Z",
+    "capacity": 200,
+    "status": "upcoming",
+    "location": {
+      "name": "Track & Field",
+      "address": "159 Runner Road, Montreal, QC H3L 3M5"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1cf",
+    "title": "Soccer Match: Alumni vs Current Students",
+    "description": "Traditional soccer match between alumni and current students. BBQ after the game.",
+    "category": "sports",
+    "start_at": "2025-11-25T14:00:00.000Z",
+    "end_at": "2025-11-25T16:00:00.000Z",
+    "capacity": 150,
+    "status": "completed",
+    "location": {
+      "name": "Soccer Field",
+      "address": "357 Field Street, Montreal, QC H4M 4N6"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d5",
+    "title": "Yoga & Meditation Session",
+    "description": "Outdoor yoga session for stress relief and wellness. Bring your own mat. All levels welcome.",
+    "category": "sports",
+    "start_at": "2025-11-27T09:00:00.000Z",
+    "end_at": "2025-11-27T10:00:00.000Z",
+    "capacity": 40,
+    "status": "upcoming",
+    "location": {
+      "name": "Quad Lawn",
+      "address": "741 Green Space, Montreal, QC H5N 5O7"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d4",
+    "title": "Swimming Competition",
+    "description": "Inter-department swimming competition. Watch talented athletes compete in various events.",
+    "category": "sports",
+    "start_at": "2025-11-29T11:00:00.000Z",
+    "end_at": "2025-11-29T16:00:00.000Z",
+    "capacity": 100,
+    "status": "upcoming",
+    "location": {
+      "name": "Aquatic Center",
+      "address": "852 Pool Avenue, Montreal, QC H6O 6P8"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b0",
+    "title": "Creative Writing Workshop",
+    "description": "Improve your writing skills with expert guidance. Exercises and peer feedback included.",
+    "category": "workshop",
+    "start_at": "2025-12-01T13:00:00.000Z",
+    "end_at": "2025-12-01T16:00:00.000Z",
+    "capacity": 25,
+    "status": "upcoming",
+    "location": {
+      "name": "English Department",
+      "address": "147 Literature Lane, Montreal, QC H7P 7Q9"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b8",
+    "title": "Photography Masterclass",
+    "description": "Learn professional photography techniques. Bring your camera. Equipment demonstration included.",
+    "category": "workshop",
+    "start_at": "2025-12-03T14:00:00.000Z",
+    "end_at": "2025-12-03T17:00:00.000Z",
+    "capacity": 20,
+    "status": "upcoming",
+    "location": {
+      "name": "Arts Studio",
+      "address": "258 Creative Drive, Montreal, QC H8Q 8R0"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b1",
+    "title": "Cooking Workshop: Italian Cuisine",
+    "description": "Learn to cook authentic Italian dishes. Hands-on cooking experience. Recipe cards provided.",
+    "category": "workshop",
+    "start_at": "2025-12-05T17:00:00.000Z",
+    "end_at": "2025-12-05T20:00:00.000Z",
+    "capacity": 30,
+    "status": "upcoming",
+    "location": {
+      "name": "Culinary Lab",
+      "address": "369 Food Court, Montreal, QC H9R 9S1"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b8",
+    "title": "Pottery & Ceramics Workshop",
+    "description": "Create your own ceramic pieces. All materials provided. Take home your creations.",
+    "category": "workshop",
+    "start_at": "2025-12-07T15:00:00.000Z",
+    "end_at": "2025-12-07T18:00:00.000Z",
+    "capacity": 15,
+    "status": "completed",
+    "location": {
+      "name": "Art Studio",
+      "address": "741 Craft Street, Montreal, QC H0S 0T2"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1ba",
+    "title": "Public Speaking Workshop",
+    "description": "Overcome stage fright and improve your presentation skills. Practice sessions included.",
+    "category": "workshop",
+    "start_at": "2025-12-09T10:00:00.000Z",
+    "end_at": "2025-12-09T13:00:00.000Z",
+    "capacity": 35,
+    "status": "upcoming",
+    "location": {
+      "name": "Communication Center",
+      "address": "852 Speaking Blvd, Montreal, QC H1T 1U3"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1be",
+    "title": "Industry Networking Mixer",
+    "description": "Connect with professionals from various industries. Light refreshments served.",
+    "category": "networking",
+    "start_at": "2025-12-11T17:00:00.000Z",
+    "end_at": "2025-12-11T20:00:00.000Z",
+    "capacity": 100,
+    "status": "upcoming",
+    "location": {
+      "name": "Business School Atrium",
+      "address": "963 Network Drive, Montreal, QC H2U 2V4"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b1",
+    "title": "Alumni Networking Dinner",
+    "description": "Annual alumni networking dinner. Three-course meal. Business casual attire.",
+    "category": "networking",
+    "start_at": "2025-12-13T19:00:00.000Z",
+    "end_at": "2025-12-13T22:00:00.000Z",
+    "capacity": 120,
+    "status": "upcoming",
+    "location": {
+      "name": "Banquet Hall",
+      "address": "159 Dinner Avenue, Montreal, QC H3V 3W5"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c8",
+    "title": "Startup Pitch Night",
+    "description": "Watch student startups pitch their ideas. Network with entrepreneurs and investors.",
+    "category": "networking",
+    "start_at": "2025-12-15T19:00:00.000Z",
+    "end_at": "2025-12-15T22:00:00.000Z",
+    "capacity": 80,
+    "status": "upcoming",
+    "location": {
+      "name": "Innovation Hub",
+      "address": "357 Startup Lane, Montreal, QC H4W 4X6"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1be",
+    "title": "Career Fair Preparation Workshop",
+    "description": "Learn how to make the most of career fairs. Resume review and mock interviews.",
+    "category": "networking",
+    "start_at": "2025-12-17T14:00:00.000Z",
+    "end_at": "2025-12-17T17:00:00.000Z",
+    "capacity": 50,
+    "status": "completed",
+    "location": {
+      "name": "Career Center",
+      "address": "741 Career Road, Montreal, QC H5X 5Y7"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b1",
+    "title": "Mentorship Speed Dating",
+    "description": "Rotate through mentors from different industries. Find your perfect mentor match.",
+    "category": "networking",
+    "start_at": "2025-12-19T18:00:00.000Z",
+    "end_at": "2025-12-19T20:00:00.000Z",
+    "capacity": 60,
+    "status": "upcoming",
+    "location": {
+      "name": "Student Lounge",
+      "address": "852 Mentor Street, Montreal, QC H6Y 6Z8"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c1",
+    "title": "Charity Bake Sale",
+    "description": "Homemade baked goods for sale. All proceeds go to local food bank. Variety of treats available.",
+    "category": "fundraiser",
+    "start_at": "2025-12-21T10:00:00.000Z",
+    "end_at": "2025-12-21T14:00:00.000Z",
+    "capacity": 200,
+    "status": "upcoming",
+    "location": {
+      "name": "Main Entrance",
+      "address": "147 Welcome Way, Montreal, QC H7Z 7A9"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c1",
+    "title": "Charity Auction Gala",
+    "description": "Formal gala with silent and live auctions. Proceeds support scholarship fund. Black tie optional.",
+    "category": "fundraiser",
+    "start_at": "2025-12-23T20:00:00.000Z",
+    "end_at": "2025-12-24T00:00:00.000Z",
+    "capacity": 150,
+    "status": "upcoming",
+    "location": {
+      "name": "Grand Ballroom",
+      "address": "258 Gala Drive, Montreal, QC H8A 8B0"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d2",
+    "title": "Book Drive for Schools",
+    "description": "Collect and donate books to underprivileged schools. Drop-off location. Refreshments for donors.",
+    "category": "fundraiser",
+    "start_at": "2025-12-25T11:00:00.000Z",
+    "end_at": "2025-12-25T15:00:00.000Z",
+    "capacity": 300,
+    "status": "upcoming",
+    "location": {
+      "name": "Library Entrance",
+      "address": "369 Book Lane, Montreal, QC H9B 9C1"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d5",
+    "title": "Walk for Mental Health Awareness",
+    "description": "Community walk to raise awareness and funds for mental health services. T-shirts and snacks provided.",
+    "category": "fundraiser",
+    "start_at": "2025-12-27T09:00:00.000Z",
+    "end_at": "2025-12-27T12:00:00.000Z",
+    "capacity": 250,
+    "status": "completed",
+    "location": {
+      "name": "Campus Green",
+      "address": "741 Wellness Path, Montreal, QC H0C 0D2"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bf",
+    "title": "Fundraising Concert",
+    "description": "Live performances by student bands. All ticket sales support student emergency fund.",
+    "category": "fundraiser",
+    "start_at": "2025-12-29T19:00:00.000Z",
+    "end_at": "2025-12-29T22:00:00.000Z",
+    "capacity": 400,
+    "status": "upcoming",
+    "location": {
+      "name": "Outdoor Stage",
+      "address": "852 Concert Plaza, Montreal, QC H1D 1E3"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b5",
+    "title": "Study Skills Seminar",
+    "description": "Learn effective study techniques and time management strategies. Handouts and resources provided.",
+    "category": "education",
+    "start_at": "2025-12-31T15:00:00.000Z",
+    "end_at": "2025-12-31T17:00:00.000Z",
+    "capacity": 70,
+    "status": "upcoming",
+    "location": {
+      "name": "Academic Success Center",
+      "address": "963 Study Street, Montreal, QC H2E 2F4"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bd",
+    "title": "Research Symposium",
+    "description": "Students present their research findings. Multiple sessions across various disciplines.",
+    "category": "education",
+    "start_at": "2026-01-02T09:00:00.000Z",
+    "end_at": "2026-01-02T17:00:00.000Z",
+    "capacity": 150,
+    "status": "upcoming",
+    "location": {
+      "name": "Conference Center",
+      "address": "159 Research Blvd, Montreal, QC H3F 3G5"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1d3",
+    "title": "Language Exchange Meetup",
+    "description": "Practice speaking different languages with native speakers. Coffee and snacks provided.",
+    "category": "education",
+    "start_at": "2026-01-04T16:00:00.000Z",
+    "end_at": "2026-01-04T18:00:00.000Z",
+    "capacity": 45,
+    "status": "upcoming",
+    "location": {
+      "name": "Language Center",
+      "address": "357 Language Lane, Montreal, QC H4G 4H6"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1ca",
+    "title": "Guest Lecture: Climate Change",
+    "description": "Renowned environmental scientist discusses climate change solutions. Q&A session included.",
+    "category": "education",
+    "start_at": "2026-01-06T14:00:00.000Z",
+    "end_at": "2026-01-06T16:00:00.000Z",
+    "capacity": 200,
+    "status": "completed",
+    "location": {
+      "name": "Lecture Hall A",
+      "address": "741 Science Drive, Montreal, QC H5H 5I7"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c0",
+    "title": "Financial Literacy Workshop",
+    "description": "Learn about budgeting, investing, and financial planning. Real-world examples and tips.",
+    "category": "education",
+    "start_at": "2026-01-08T13:00:00.000Z",
+    "end_at": "2026-01-08T15:00:00.000Z",
+    "capacity": 60,
+    "status": "upcoming",
+    "location": {
+      "name": "Finance Building",
+      "address": "852 Money Avenue, Montreal, QC H6I 6J8"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c4",
+    "title": "Movie Night: Classic Films",
+    "description": "Outdoor screening of classic films. Bring blankets and snacks. Popcorn provided.",
+    "category": "entertainment",
+    "start_at": "2026-01-10T19:00:00.000Z",
+    "end_at": "2026-01-10T22:00:00.000Z",
+    "capacity": 200,
+    "status": "upcoming",
+    "location": {
+      "name": "Outdoor Amphitheater",
+      "address": "147 Cinema Lane, Montreal, QC H7J 7K9"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bb",
+    "title": "Comedy Night",
+    "description": "Stand-up comedy featuring student and professional comedians. Laughs guaranteed!",
+    "category": "entertainment",
+    "start_at": "2026-01-12T20:00:00.000Z",
+    "end_at": "2026-01-12T22:00:00.000Z",
+    "capacity": 120,
+    "status": "upcoming",
+    "location": {
+      "name": "Theater",
+      "address": "258 Comedy Street, Montreal, QC H8K 8L0"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b7",
+    "title": "Board Game Tournament",
+    "description": "Competitive board game tournament. Multiple games available. Prizes for winners.",
+    "category": "entertainment",
+    "start_at": "2026-01-14T13:00:00.000Z",
+    "end_at": "2026-01-14T18:00:00.000Z",
+    "capacity": 80,
+    "status": "upcoming",
+    "location": {
+      "name": "Game Room",
+      "address": "369 Play Drive, Montreal, QC H9L 9M1"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1bf",
+    "title": "Karaoke Night",
+    "description": "Sing your heart out! Song selection available. Snacks and drinks for sale.",
+    "category": "entertainment",
+    "start_at": "2026-01-16T20:00:00.000Z",
+    "end_at": "2026-01-16T23:00:00.000Z",
+    "capacity": 100,
+    "status": "completed",
+    "location": {
+      "name": "Student Pub",
+      "address": "741 Fun Street, Montreal, QC H0M 0N2"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b7",
+    "title": "Escape Room Challenge",
+    "description": "Team up to solve puzzles and escape the room. Multiple themed rooms available.",
+    "category": "entertainment",
+    "start_at": "2026-01-18T14:00:00.000Z",
+    "end_at": "2026-01-18T20:00:00.000Z",
+    "capacity": 50,
+    "status": "upcoming",
+    "location": {
+      "name": "Activity Center",
+      "address": "852 Puzzle Lane, Montreal, QC H1N 1O3"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b9",
+    "title": "Spring Festival",
+    "description": "Annual spring festival with food vendors, live music, and activities. Family-friendly event.",
+    "category": "other",
+    "start_at": "2026-01-20T12:00:00.000Z",
+    "end_at": "2026-01-20T19:00:00.000Z",
+    "capacity": 1000,
+    "status": "upcoming",
+    "location": {
+      "name": "Main Quad",
+      "address": "963 Festival Plaza, Montreal, QC H2O 2P4"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b8",
+    "title": "Art Exhibition Opening",
+    "description": "View student and faculty artwork. Wine and cheese reception. Gallery walkthrough included.",
+    "category": "other",
+    "start_at": "2026-01-22T18:00:00.000Z",
+    "end_at": "2026-01-22T21:00:00.000Z",
+    "capacity": 90,
+    "status": "upcoming",
+    "location": {
+      "name": "Art Gallery",
+      "address": "159 Gallery Street, Montreal, QC H3P 3Q5"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1be",
+    "title": "Career Fair",
+    "description": "Meet employers and explore job opportunities. Resume review available. Multiple industries represented.",
+    "category": "other",
+    "start_at": "2026-01-24T11:00:00.000Z",
+    "end_at": "2026-01-24T17:00:00.000Z",
+    "capacity": 500,
+    "status": "upcoming",
+    "location": {
+      "name": "Exhibition Hall",
+      "address": "357 Career Way, Montreal, QC H4Q 4R6"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1b7",
+    "title": "Cultural Festival",
+    "description": "Celebrate diversity with food, performances, and cultural displays from around the world.",
+    "category": "other",
+    "start_at": "2026-01-26T12:00:00.000Z",
+    "end_at": "2026-01-26T18:00:00.000Z",
+    "capacity": 600,
+    "status": "completed",
+    "location": {
+      "name": "Cultural Center",
+      "address": "741 Diversity Avenue, Montreal, QC H5R 5S7"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c5",
+    "title": "Graduation Ceremony Reception",
+    "description": "Post-graduation reception for graduates and families. Light refreshments and photo opportunities.",
+    "category": "other",
+    "start_at": "2026-01-28T15:00:00.000Z",
+    "end_at": "2026-01-28T18:00:00.000Z",
+    "capacity": 800,
+    "status": "upcoming",
+    "location": {
+      "name": "Graduation Plaza",
+      "address": "852 Celebration Drive, Montreal, QC H6S 6T8"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  },
+  {
+    "organization": "69050a341c29e71476bae1c2",
+    "title": "Volunteer Fair",
+    "description": "Discover volunteer opportunities with local organizations. Sign up on the spot.",
+    "category": "other",
+    "start_at": "2026-01-30T11:00:00.000Z",
+    "end_at": "2026-01-30T15:00:00.000Z",
+    "capacity": 150,
+    "status": "upcoming",
+    "location": {
+      "name": "Community Center",
+      "address": "963 Volunteer Lane, Montreal, QC H7T 7U9"
+    },
+    "registered_users": [],
+    "waitlist": [],
+    "comments": [],
+    "image": null
+  }
+]
