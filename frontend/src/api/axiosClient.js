@@ -16,7 +16,7 @@ axiosClient.interceptors.request.use(config => {
         config.headers["x-api-key"] = apiKey;
     }
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("auth-token");
 
     if (token)
         config.headers.Authorization = `Bearer ${token}`;
