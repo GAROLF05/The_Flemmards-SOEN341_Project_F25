@@ -27,7 +27,7 @@ try {
 
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
 const Registration = require('../models/Registrations');
@@ -273,162 +273,8 @@ exports.getTicketsByTicketId = async (req,res)=>{
     }
 }
 
-// API endpoint to Get all tickets
-exports.getAllTickets = async (req,res)=>{
-    try{
-    // Admin-only: list all tickets
-    try { const { ensureAdmin } = require('../utils/authHelpers'); await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
-        const tickets = await Ticket.find()
-        .populate({
-            path: 'user', 
-            select: 'name student_id email'})
-        .populate({
-            path: 'event', 
-            select: 'organization title start_at end_at',
-            populate:{
-                path: 'organization',
-                select: 'name website',
-            }})
-        .populate({
-            path: 'registration',
-            select: 'registrationId quantity'
-        }).lean().exec();
 
-        return res.status(200).json({
-            count: tickets.length,
-            tickets
-        });
-    } catch(e){
-        console.error(e);
-        res.status(500).json({error: "Failed to fetch tickets"})
-    }
-};
-
-// API Endpoint to Update ticket status
-exports.updateTicket = async (req,res)=>{
-    try{
-        const {ticket_id} = req.params; // Acts on ticket_id
-        const {status} = req.body; // Updating existing status
-        const valid_status = ['valid', 'used', 'cancelled'];
-
-        // Ticket_id validity
-        if (!ticket_id)
-            return res.status(400).json({error: "ticket_id required"});
-        if (!mongoose.Types.ObjectId.isValid(ticket_id))
-            return res.status(400).json({error: "Invalid ticket id format"});
-        
-        // Status validity
-        if (!status)
-            return res.status(400).json({error: "status required"});
-        if (!valid_status.includes(status))
-            return res.status(400).json({error: "Invalid status value"});
-
-    // Only admins may change ticket status
-    try { const { ensureAdmin } = require('../utils/authHelpers'); await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
-
-        const ticket = await Ticket.findById(ticket_id);
-        if (!ticket) return res.status(404).json({error: "Ticket not found"});
-        
-        const updatedTicket = await Ticket.findByIdAndUpdate(ticket_id, {status: status}, {new: true});
-
-        return res.status(200).json({
-            message: "Ticket updated successfully",
-            ticket: updatedTicket,
-        });
-
-    } catch(e){
-        console.error(e);
-        return res.status(500).json({error: "Failed to update ticket"})
-    }
-}
-
-// API Endpoint to delete tickets
-exports.deleteTicket = async (req,res) =>{
-    try {
-        const { ticket_id } = req.params;
-
-        if (!ticket_id)
-            return res.status(400).json({ error: "ticket_id required" });
-
-        // Find ticket
-        const ticket = await Ticket.findById(ticket_id)
-        .populate("event")
-        .populate("registration");
-        if (!ticket)
-            return res.status(404).json({ error: "Ticket not found" });
-
-    // Only admins may delete tickets
-    try { const { ensureAdmin } = require('../utils/authHelpers'); await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
-
-        // Perform deletion and related updates in a session
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-            await Ticket.findByIdAndDelete(ticket_id).session(session);
-
-            // Find the event (ticket.event may be ObjectId or populated doc)
-            const event_id = ticket.event && (ticket.event._id ? ticket.event._id : ticket.event);
-            const event = await Event.findById(event_id).session(session);
-            if (!event) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(400).json({error: "Event could not be found with ticket"});
-            }
-
-            // Find the registration (ticket.registration may be ObjectId or populated doc)
-            const regId = ticket.registration && (ticket.registration._id ? ticket.registration._id : ticket.registration);
-            const reg = await Registration.findById(regId).session(session);
-            if (!reg) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(400).json({error: "Registration info could not be found with ticket"});
-            }
-
-            // Remove ticket from registration and update counters
-            await Registration.updateOne(
-                { _id: reg._id },
-                { 
-                    $pull: { ticketIds: ticket_id },
-                    $inc: { ticketsIssued: -1 }
-                },
-                { session }
-            );
-
-            // Ensure ticketsIssued does not become negative (defensive): clamp to 0 if below
-            await Registration.updateOne(
-                { _id: reg._id, ticketsIssued: { $lt: 0 } },
-                { $set: { ticketsIssued: 0 } },
-                { session }
-            );
-
-            // Change event capacity (increment by 1 per ticket)
-            await Event.updateOne({ _id: event._id }, { $inc: { capacity: 1 } }, { session });
-
-            await session.commitTransaction();
-            session.endSession();
-
-            // Try to promote waitlisted users after capacity increase
-            try {
-                const { promoteWaitlistForEvent } = require('./eventController');
-                await promoteWaitlistForEvent(event._id);
-            } catch (promoteError) {
-                console.log('Waitlist promotion failed (non-critical):', promoteError.message);
-            }
-
-            return res.status(200).json({ message: "Ticket deleted successfully" });
-        } catch (e) {
-            await session.abortTransaction();
-            session.endSession();
-            console.error(e);
-            return res.status(500).json({ error: "Failed to delete ticket" });
-        }
-
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ error: "Failed to delete ticket" });
-    }
-}
 
 // API Endpoint to cancel ticket
 exports.cancelTicket = async (req,res)=>{
@@ -454,10 +300,8 @@ exports.cancelTicket = async (req,res)=>{
 
         
         // Owner or admin may cancel
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
-        const adminCancel = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!isOwner && !adminCancel) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+        const { ensureAdminOrOwner } = require('../utils/authHelpers');
+        try { await ensureAdminOrOwner(req, ticket.user); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         // Perform cancellation and related updates in a transaction
         const session = await mongoose.startSession();
@@ -575,9 +419,8 @@ exports.markTicketAsUsed = async (req,res)=>{
             return res.status(400).json({error: "Invalid ticket_id format"});
 
         // Only admins (scanner) may mark tickets as used
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const adminUsed = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!adminUsed) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const ticket = await Ticket.findByIdAndUpdate(ticket_id, {status: "used"}, {new: true});
         if (!ticket) return res.status(404).json({error: "Ticket not found"});
@@ -710,13 +553,11 @@ exports.regenerateQrCode = async (req,res)=>{
             return res.status(400).json({error: "Invalid ticket_id format"})
 
         // Owner or admin may regenerate QR
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
         const ticket = await Ticket.findById(ticket_id);
         if (!ticket) return res.status(404).json({error: "Ticket not found"})
 
-        const isOwner = ticket.user && ticket.user.toString() === req.user._id.toString();
-        const adminReg = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!isOwner && !adminReg) return res.status(403).json({ code: 'FORBIDDEN', message: 'Access denied' });
+        const { ensureAdminOrOwner } = require('../utils/authHelpers');
+        try { await ensureAdminOrOwner(req, ticket.user); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const payload = ticket.code || ticket.ticketId || String(ticket._id);
         const dataUrl = await qrcode.toDataURL(payload);
@@ -829,38 +670,12 @@ exports.getTicketsByUser = async (req,res)=>{
     }
 }
 
-exports.countTickets = async (req, res) => {
-    try {
-        // Require authentication
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        
-        const { event_id } = req.query;
-        const filter = event_id ? { event: event_id } : {};
-        const count = await Ticket.countDocuments(filter);
-
-        return res.status(200).json({
-            message: event_id
-                ? `Total number of tickets for event ${event_id}`
-                : "Total number of tickets in the system",
-            totalTickets: count
-        });
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ error: "Failed to count tickets" });
-    }
-};
-
-// Task #58: Export attendee list as CSV
+// Task #58: Export attendee list as CSV (organizer or admin)
 exports.exportAttendeesCSV = async (req, res) => {
     try {
-        // Require admin authentication
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
         const { event_id } = req.params;
 
-        // Task #60: Validate event ID format
+        // Validate event ID format
         if (!event_id) {
             return res.status(400).json({ 
                 error: 'Event ID is required',
@@ -873,6 +688,17 @@ exports.exportAttendeesCSV = async (req, res) => {
                 error: 'Invalid event ID format',
                 code: 'INVALID_FORMAT'
             });
+        }
+
+        // Check if user is admin or organizer of the event
+        const { ensureAdminOrEventOrganizer } = require('../utils/authHelpers');
+        try { 
+            await ensureAdminOrEventOrganizer(req, event_id); 
+        } catch (e) { 
+            return res.status(e.status || 401).json({ 
+                code: e.code || 'UNAUTHORIZED', 
+                message: e.message 
+            }); 
         }
 
         // Check if event exists
@@ -896,7 +722,7 @@ exports.exportAttendeesCSV = async (req, res) => {
             })
             .lean();
 
-        // Task #60: Handle empty list
+        // Handle empty list
         if (!registrations || registrations.length === 0) {
             return res.status(404).json({ 
                 error: 'No attendees found for this event',
@@ -925,7 +751,7 @@ exports.exportAttendeesCSV = async (req, res) => {
 
         // CSV Data rows
         for (const reg of registrations) {
-            // Task #60: Handle invalid data gracefully
+            // Handle invalid data gracefully
             const studentId = reg.user?.student_id || 'N/A';
             const name = reg.user?.name || 'Unknown';
             const email = reg.user?.email || 'N/A';
@@ -969,7 +795,8 @@ exports.exportAttendeesCSV = async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         
         // Log export action
-        console.log(`[AUDIT] Admin ${req.user.email} exported attendee list for event ${event.title} (ID: ${event_id})`);
+        const userType = req.isAdmin ? 'Admin' : 'Organizer';
+        console.log(`[AUDIT] ${userType} ${req.user.email} exported attendee list for event ${event.title} (ID: ${event_id})`);
 
         return res.status(200).send(csvContent);
 
@@ -981,3 +808,4 @@ exports.exportAttendeesCSV = async (req, res) => {
         });
     }
 };
+

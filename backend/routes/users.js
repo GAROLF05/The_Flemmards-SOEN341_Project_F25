@@ -30,9 +30,5 @@ router.get("/by-email/:email", requireAuth, userController.getUserByEmail);
 router.put("/update/:user_id", requireAuth, userController.updateUser);
 router.delete("/delete/:user_id", requireAuth, userController.deleteUser);
 
-// Admin routes (requires admin access)
-router.get("/all", requireAdmin, userController.getAllUsers);
-router.get("/count", requireAdmin, userController.countUsers);
-
 // Export
 module.exports = router;

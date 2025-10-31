@@ -6,7 +6,7 @@
 */
 
 // Models of DB
-const User = require("../models/User");
+const { User, USER_ROLE } = require("../models/User");
 const Administrator = require("../models/Administrators");
 const Registration = require("../models/Registrations");
 const Ticket = require("../models/Ticket");
@@ -16,8 +16,6 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../middlewares/auth");
-
-const VALID_ROLES = ["Student", "Manager", "Admin"];
 
 // API endpoint to Register a new user (signup)
 exports.registerUser = async (req, res) => {
@@ -34,9 +32,9 @@ exports.registerUser = async (req, res) => {
     if (!role) return res.status(400).json({ error: "Role is required" });
 
     // Validate role
-    if (!VALID_ROLES.includes(role))
+    if (!Object.values(USER_ROLE).includes(role))
       return res.status(400).json({
-        error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`,
+        error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(", ")}`,
       });
 
     // Check for existing email
@@ -194,21 +192,6 @@ exports.logoutUser = async (req, res) => {
   }
 };
 
-// API endpoint to Get all users (admin only)
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select("-password").lean().exec();
-
-    return res.status(200).json({
-      count: users.length,
-      users,
-    });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: "Failed to fetch users" });
-  }
-};
-
 // API endpoint to Get user by _id
 exports.getUserById = async (req, res) => {
   try {
@@ -226,7 +209,7 @@ exports.getUserById = async (req, res) => {
 
     // Owner or admin may view
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "Admin";
+    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
 
     if (!isOwner && !isAdmin)
       return res
@@ -257,7 +240,7 @@ exports.getUserByEmail = async (req, res) => {
 
     // Owner or admin may view
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "Admin";
+    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
 
     if (!isOwner && !isAdmin)
       return res
@@ -306,7 +289,7 @@ exports.updateUser = async (req, res) => {
 
     // Only owner or admin can update
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "Admin";
+    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
 
     if (!isOwner && !isAdmin)
       return res
@@ -342,9 +325,9 @@ exports.updateUser = async (req, res) => {
 
     // Only admins can update role
     if (role) {
-      if (!VALID_ROLES.includes(role))
+      if (!Object.values(USER_ROLE).includes(role))
         return res.status(400).json({
-          error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`,
+          error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(", ")}`,
         });
       if (isAdmin) user.role = role;
       else
@@ -392,7 +375,7 @@ exports.deleteUser = async (req, res) => {
 
     // Only owner or admin can delete
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === "Admin";
+    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
 
     if (!isOwner && !isAdmin)
       return res
@@ -432,17 +415,3 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-// API endpoint to Count users (admin only)
-exports.countUsers = async (req, res) => {
-  try {
-    const count = await User.countDocuments();
-
-    return res.status(200).json({
-      message: "Total number of users in the system",
-      totalUsers: count,
-    });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ error: "Failed to count users" });
-  }
-};

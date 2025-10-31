@@ -26,7 +26,7 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');

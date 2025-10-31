@@ -44,9 +44,4 @@ router.get('/get/attendees/:event_id', requireAdmin, eventController.getAttendee
 router.get('/get/waitlist/:event_id', requireAdmin, eventController.getWaitlistedUsers);
 router.patch('/promote/:event_id', requireAdmin, eventController.promoteWaitlistedUser);
 
-// Admin moderation (Task #114)
-router.patch('/approve/:event_id', requireAdmin, eventController.approveEvent);
-router.patch('/reject/:event_id', requireAdmin, eventController.rejectEvent);
-router.patch('/flag/:event_id', requireAdmin, eventController.flagEvent);
-
 module.exports = router;
