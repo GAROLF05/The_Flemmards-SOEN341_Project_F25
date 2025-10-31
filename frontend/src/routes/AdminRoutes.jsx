@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
+import ApproveEvents from "../pages/admin/ApproveEvents";
 
 const AdminRoutes = [
     {
@@ -23,6 +24,10 @@ const AdminRoutes = [
             {
                 path: 'approveOrganizers',
                 element: <ApproveOrganizers />
+            },
+            {
+                path: 'eventModeration',
+                element: <ApproveEvents />
             }
         ]
     }

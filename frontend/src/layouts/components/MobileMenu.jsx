@@ -53,6 +53,11 @@ const MobileMenu = ({ isOpen, onClose, accountType }) => {
                 Icon: Squares2X2Icon,
                 link: "/admin/approveOrganizers",
             },
+            {
+                title: translate("eventModeration"),
+                Icon: Squares2X2Icon,
+                link: "/admin/eventModeration",
+            },
         ]);
 
     return (
