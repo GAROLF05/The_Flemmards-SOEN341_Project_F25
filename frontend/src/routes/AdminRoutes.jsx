@@ -3,6 +3,7 @@ import MainLayout from "../layouts/MainLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
 import EventModeration from "../pages/admin/EventModeration";
+import Organizations from "../pages/admin/Organizations";
 
 const AdminRoutes = [
     {
@@ -28,6 +29,10 @@ const AdminRoutes = [
             {
                 path: 'eventModeration',
                 element: <EventModeration />
+            },
+            {
+                path: 'organizations',
+                element: <Organizations />
             }
         ]
     }

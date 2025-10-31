@@ -71,12 +71,12 @@ export default function EventModeration() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            <button onClick={() => handleDeny(event.id)} className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all transition-colors duration-300">
+                                            <button onClick={() => handleDeny(event.id, event.title)} className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all transition-colors duration-300">
                                                 <span className="sr-only">{translate("deny")}</span>
                                                 <XCircleIcon className="w-6 h-6" />
                                             </button>
 
-                                            <button onClick={() => handleApprove(event.id)} className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all transition-colors duration-300">
+                                            <button onClick={() => handleApprove(event.id, event.title)} className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all transition-colors duration-300">
                                                 <span className="sr-only">{translate("approve")}</span>
                                                 <CheckCircleIcon className="w-6 h-6" />
                                             </button>
