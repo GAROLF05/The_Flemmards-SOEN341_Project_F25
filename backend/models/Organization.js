@@ -87,8 +87,8 @@ const organizationSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'suspended'],
-        default: 'pending',
+        enum: Object.values(ORGANIZATION_STATUS),
+        default: ORGANIZATION_STATUS.PENDING,
         index: true
     },
 

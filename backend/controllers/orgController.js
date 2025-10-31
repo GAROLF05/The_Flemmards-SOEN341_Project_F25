@@ -26,7 +26,7 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
@@ -80,9 +80,8 @@ exports.createOrganization = async (req,res)=>{
 exports.getAllOrganizations = async (req,res)=>{
     try {
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const organizations = await Organization.find()
             .sort({ createdAt: -1 })
@@ -132,9 +131,8 @@ exports.getOrganizationById = async (req,res)=>{
 exports.getOrganizationByStatus = async (req,res)=>{
     try {
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { status } = req.params;
 
@@ -167,9 +165,8 @@ exports.getOrganizationByStatus = async (req,res)=>{
 exports.getPendingOrganizations = async (req,res)=>{
     try {
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const organizations = await Organization.find({ status: ORGANIZATION_STATUS.PENDING })
             .sort({ createdAt: -1 })
@@ -190,9 +187,8 @@ exports.getPendingOrganizations = async (req,res)=>{
 exports.updateOrganization = async (req,res)=>{
     try {
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { org_id } = req.params;
         const updates = req.body;
@@ -235,9 +231,8 @@ exports.updateOrganization = async (req,res)=>{
 exports.deleteOrganization = async (req,res)=>{
     try {
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { org_id } = req.params;
 
