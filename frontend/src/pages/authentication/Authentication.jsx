@@ -5,7 +5,7 @@ import { useNotification } from '../../hooks/useNotification';
 import Select from '../../components/select/Select';
 import Signup from './Signup';
 import Login from './Login';
-import { login } from '../../api/authenticationApi';
+import { login, signup } from '../../api/authenticationApi';
 
 export default function Authentication() {
 	const [loginForm, setLoginForm] = useState({
@@ -63,9 +63,23 @@ export default function Authentication() {
 
 	const handleSignUp = (e) => {
 		e.preventDefault();
-		showNotification('This is just a test for notifications.', 'error');
 
-		// todo: handle signup call here
+		const data = {
+			name: signUpForm.fullName,
+			username: signUpForm.fullName,
+			email: signUpForm.email,
+			password: signUpForm.password,
+			role: "Student"
+		}
+
+		signup(data)
+			.then(() => {
+				showNotification(translate("accountCreated"), 'success');
+				navigate("/login");
+			})
+			.catch(() => {
+				showNotification(translate("anErrorHasOccured"), 'error');
+			});
 	};
 
 	return (
