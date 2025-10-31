@@ -519,8 +519,6 @@ exports.countUsers = async (req,res) => {
     }
 }
 
-// ========== EVENT MODERATION (migrated from eventController) ==========
-
 // API Endpoint to approve event
 exports.approveEvent = async (req,res) => {
     try {
@@ -646,8 +644,6 @@ exports.flagEvent = async (req,res) => {
         return res.status(500).json({ error: 'Failed to flag event' });
     }
 }
-
-// ========== TICKET MANAGEMENT (migrated from ticketController) ==========
 
 // API Endpoint to get all tickets (admin only)
 exports.getAllTickets = async (req,res) => {
@@ -852,9 +848,6 @@ exports.deleteTicket = async (req,res) => {
     }
 }
 
-
-// ========== REGISTRATION MANAGEMENT (migrated from registrationController) ==========
-
 // API Endpoint to get all registrations (admin only)
 exports.getAllRegistrations = async (req,res) => {
     try {
@@ -893,6 +886,192 @@ exports.getAllRegistrations = async (req,res) => {
     } catch (e) {
         console.error('Error fetching all registrations:', e);
         return res.status(500).json({ error: 'Failed to fetch all registrations' });
+    }
+}
+
+// API Endpoint to delete a user (admin-forced) - For spam/banned users
+exports.deleteUser = async (req,res) => {
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        const { user_id } = req.params;
+
+        // Validate user_id
+        if (!user_id) {
+            return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(user_id)) {
+            return res.status(400).json({ error: 'Invalid user ID format' });
+        }
+
+        // Find user
+        const user = await User.findById(user_id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Prevent admin from deleting themselves
+        if (user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        // Prevent deleting administrators (optional safety check)
+        if (user.role === USER_ROLE.ADMINISTRATOR) {
+            return res.status(403).json({ error: 'Cannot delete an administrator account. Use a different method for administrator management.' });
+        }
+
+        // Perform deletion and related cleanup in a session
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            // Delete all tickets for this user
+            const tickets = await Ticket.find({ user: user_id }).session(session);
+            const ticketIds = tickets.map(t => t._id);
+            if (ticketIds.length > 0) {
+                await Ticket.deleteMany({ _id: { $in: ticketIds } }).session(session);
+            }
+
+            // Delete all registrations for this user
+            const registrations = await Registration.find({ user: user_id }).session(session);
+            const registrationIds = registrations.map(r => r._id);
+            if (registrationIds.length > 0) {
+                // Remove user from event's registered_users arrays
+                for (const reg of registrations) {
+                    await Event.updateOne(
+                        { _id: reg.event },
+                        { $pull: { registered_users: user_id } },
+                        { session }
+                    );
+                    // Remove from waitlist if present
+                    await Event.updateOne(
+                        { _id: reg.event },
+                        { $pull: { waitlist: reg._id } },
+                        { session }
+                    );
+                }
+                await Registration.deleteMany({ _id: { $in: registrationIds } }).session(session);
+            }
+
+            // Delete the user
+            await User.findByIdAndDelete(user_id, { session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            // Audit log
+            console.log(`[AUDIT] Admin ${req.user.email} deleted user ${user.email || user.username} (ID: ${user_id}) - Reason: spam/banned user`);
+
+            return res.status(200).json({
+                message: 'User and associated data deleted successfully',
+                deletedUser: {
+                    _id: user._id,
+                    email: user.email,
+                    username: user.username
+                }
+            });
+
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            console.error('Error during user deletion transaction:', e);
+            return res.status(500).json({ error: 'Failed to delete user and associated data' });
+        }
+
+    } catch (e) {
+        console.error('Error deleting user:', e);
+        return res.status(500).json({ error: 'Failed to delete user' });
+    }
+}
+
+// ========== ORGANIZATION DELETION ==========
+
+// API Endpoint to delete an organization (admin only) - For fraudulent org cleanup
+exports.deleteOrganization = async (req,res) => {
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        const { org_id } = req.params;
+
+        // Validate org_id
+        if (!org_id) {
+            return res.status(400).json({ error: 'Organization ID is required' });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID format' });
+        }
+
+        // Find organization
+        const organization = await Organization.findById(org_id);
+        if (!organization) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        // Perform deletion and related cleanup in a session
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            // Find all events for this organization
+            const events = await Event.find({ organization: org_id }).session(session);
+            const eventIds = events.map(e => e._id);
+
+            // Delete all tickets and registrations for each event
+            if (eventIds.length > 0) {
+                // Get all registrations for these events
+                const registrations = await Registration.find({ event: { $in: eventIds } }).session(session);
+                const registrationIds = registrations.map(r => r._id);
+
+                // Delete all tickets linked to these registrations
+                if (registrationIds.length > 0) {
+                    await Ticket.deleteMany({ registration: { $in: registrationIds } }).session(session);
+                }
+
+                // Delete all registrations
+                if (registrationIds.length > 0) {
+                    await Registration.deleteMany({ _id: { $in: registrationIds } }).session(session);
+                }
+
+                // Delete all events
+                await Event.deleteMany({ _id: { $in: eventIds } }).session(session);
+            }
+
+            // Delete the organization
+            await Organization.findByIdAndDelete(org_id, { session });
+
+            await session.commitTransaction();
+            session.endSession();
+
+            // Audit log
+            console.log(`[AUDIT] Admin ${req.user.email} deleted organization ${organization.name} (ID: ${org_id}) - Reason: fraudulent org cleanup`);
+            if (events.length > 0) {
+                console.log(`[AUDIT] Deleted ${events.length} associated events`);
+            }
+
+            return res.status(200).json({
+                message: 'Organization and associated data deleted successfully',
+                deletedOrganization: {
+                    _id: organization._id,
+                    name: organization.name,
+                    contactEmail: organization.contact.email
+                },
+                deletedEvents: events.length
+            });
+
+        } catch (e) {
+            await session.abortTransaction();
+            session.endSession();
+            console.error('Error during organization deletion transaction:', e);
+            return res.status(500).json({ error: 'Failed to delete organization and associated data' });
+        }
+
+    } catch (e) {
+        console.error('Error deleting organization:', e);
+        return res.status(500).json({ error: 'Failed to delete organization' });
     }
 }
 

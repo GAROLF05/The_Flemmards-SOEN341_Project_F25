@@ -22,11 +22,13 @@ router.get('/analytics', requireAdmin, adminController.getSystemAnalytics);
 // Organization management
 router.patch('/approve-organizer/:org_id', requireAdmin, adminController.approveOrganizer);
 router.patch('/suspend-organization/:org_id', requireAdmin, adminController.suspendOrganization);
+router.delete('/organizations/:org_id', requireAdmin, adminController.deleteOrganization);
 
 // User management
 router.get('/users/all', requireAdmin, adminController.getAllUsers);
 router.get('/users/count', requireAdmin, adminController.countUsers);
 router.patch('/update-user-role/:user_id', requireAdmin, adminController.updateUserRole);
+router.delete('/users/:user_id', requireAdmin, adminController.deleteUser);
 
 // Administrator management
 router.get('/administrators', requireAdmin, adminController.getAllAdministrators);
