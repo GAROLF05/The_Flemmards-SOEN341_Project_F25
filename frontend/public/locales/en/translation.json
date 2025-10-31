@@ -77,6 +77,7 @@
     "next": "Next",
     "noEventsFound": "No events found",
     "noEventsFoundDescription": "Try adjusting your search or filter.",
+    "noFileSelected": "No file selected.",
     "noOrganizationsFound": "No organizations found.",
     "noPendingApplications": "No pending applications.",
     "noPendingEvents": "No events pending moderation.",

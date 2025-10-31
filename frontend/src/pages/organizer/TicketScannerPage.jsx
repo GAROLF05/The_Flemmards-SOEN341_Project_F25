@@ -1,6 +1,7 @@
 import { ArrowUpTrayIcon, CheckCircleIcon, QrCodeIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useState, useRef } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
+import jsQR from "jsqr";
 
 const Scanner = () => {
     const [validationStatus, setValidationStatus] = useState(null); // null, 'success', 'error'
@@ -10,18 +11,42 @@ const Scanner = () => {
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        
-        if (file) {
-            setIsLoading(true);
-            setValidationStatus(null);
 
-            // Simulate processing delay
-            setTimeout(() => {
-                const isValid = Math.random() > 0.8;
-                setValidationStatus(isValid ? 'success' : 'error');
-                setIsLoading(false);
-            }, 1500);
-        }
+        if (!file)
+            return;
+
+        setIsLoading(true);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Create an invisible canvas
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // Get image data and decode QR
+                const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                setTimeout(() => { // Just wasting time
+                    if (code && code.data) {
+                        console.log(code.data);
+                        setValidationStatus('success');
+                    }
+                    else {
+                        setValidationStatus('error');
+                    }
+
+                    setIsLoading(false);
+                }, 1000);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
     };
 
     const resetScanner = () => {
