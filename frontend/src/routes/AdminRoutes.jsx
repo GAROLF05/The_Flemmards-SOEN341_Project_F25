@@ -1,5 +1,6 @@
+import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Admin from "../pages/admin/Admin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 const AdminRoutes = [
     {
@@ -8,7 +9,15 @@ const AdminRoutes = [
         children: [
             {
                 path: '',
-                element: <Admin />
+                element: <AdminDashboard />
+            },
+            {
+                path: 'home',
+                element: <Navigate to="/admin" />
+            },
+            {
+                path: 'dashboard',
+                element: <Navigate to="/admin" />
             }
         ]
     }
