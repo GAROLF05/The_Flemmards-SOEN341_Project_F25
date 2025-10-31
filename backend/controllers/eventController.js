@@ -26,10 +26,10 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
-const Organization = require('../models/Organization');
-const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
+const { Organization, ORGANIZATION_STATUS }= require('../models/Organization');
+const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
 // QR Code setup (npm install qrcode)
@@ -48,9 +48,8 @@ const { error } = require('console');
 exports.getAllEvents = async (req,res) => {
     try{
         // Only administrators can fetch all registrations
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find()
             .select('organization title description start_at end_at capacity status registered_users waitlist')
@@ -60,7 +59,7 @@ exports.getAllEvents = async (req,res) => {
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -91,9 +90,8 @@ exports.getAllEvents = async (req,res) => {
 exports.getEventById = async (req,res) => {
     try{
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const {event_id} =  req.params;
         if (!event_id)
@@ -109,7 +107,7 @@ exports.getEventById = async (req,res) => {
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -156,7 +154,7 @@ exports.getEventByOrganization = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -200,7 +198,7 @@ exports.getEventsByStatus = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -249,7 +247,7 @@ exports.getEventsByCategory = async (req,res)=>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -313,7 +311,7 @@ exports.getEventsByDateRange = async (req, res) => {
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -354,7 +352,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         const regs = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -528,9 +526,8 @@ exports.cancelEvent = async (req,res) => {
         if (!mongoose.Types.ObjectId.isValid(event_id)) return res.status(400).json({ error: 'Invalid event_id format' });
 
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         // Transactionally mark event cancelled, cancel registrations and delete tickets
         const session = await mongoose.startSession();
@@ -583,9 +580,8 @@ exports.deleteEvent = async (req,res) => {
         if (!mongoose.Types.ObjectId.isValid(event_id))
             return res.status(400).json({error: "Invalid event_id format"})
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const event = await Event.findById(event_id).lean();
         if (!event)
@@ -657,7 +653,7 @@ exports.getAttendees = async (req,res) => {
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -681,8 +677,7 @@ exports.getAttendees = async (req,res) => {
             _id: user._id,
             name: user.name,
             username: user.username,
-            email: user.email,
-            student_id: user.student_id
+            email: user.email
         }));
 
         return res.status(200).json({
@@ -722,7 +717,7 @@ exports.getWaitlistedUsers = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -750,10 +745,8 @@ exports.getWaitlistedUsers = async (req,res) =>{
             user: reg.user
                 ? {
                     _id: reg.user._id,
-                    first_name: reg.user.first_name,
-                    last_name: reg.user.last_name,
-                    email: reg.user.email,
-                    student_id: reg.user.student_id
+                    name: reg.user.name,
+                    email: reg.user.email
                 }
                 : null
         }));
@@ -897,125 +890,8 @@ async function promoteWaitlistForEvent(eventId) {
 }
 
 // Task #114: Admin functionality to moderate event listings
-exports.approveEvent = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-        const { event_id } = req.params;
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        const event = await Event.findByIdAndUpdate(
-            event_id,
-            { status: EVENT_STATUS.UPCOMING },
-            { new: true }
-        );
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Audit log
-        console.log(`[AUDIT] Admin ${req.user.email} approved event ${event.title} (ID: ${event_id})`);
-
-        return res.status(200).json({
-            message: 'Event approved successfully',
-            event
-        });
-    } catch (e) {
-        console.error('Error approving event:', e);
-        return res.status(500).json({ error: 'Failed to approve event' });
-    }
-};
-
-exports.rejectEvent = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { event_id } = req.params;
-        const { reason } = req.body;
-
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        const event = await Event.findByIdAndUpdate(
-            event_id,
-            { status: EVENT_STATUS.CANCELLED },
-            { new: true }
-        );
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Audit log
-        console.log(`[AUDIT] Admin ${req.user.email} rejected event ${event.title} (ID: ${event_id})`);
-        if (reason) {
-            console.log(`[AUDIT] Rejection reason: ${reason}`);
-        }
-
-        return res.status(200).json({
-            message: 'Event rejected successfully',
-            event,
-            reason
-        });
-    } catch (e) {
-        console.error('Error rejecting event:', e);
-        return res.status(500).json({ error: 'Failed to reject event' });
-    }
-};
-
-exports.flagEvent = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { event_id } = req.params;
-        const { flagReason } = req.body;
-
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        if (!flagReason) {
-            return res.status(400).json({ error: 'Flag reason is required' });
-        }
-
-        const event = await Event.findById(event_id);
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Audit log (Task #115 - flagging system)
-        console.log(`[AUDIT] Admin ${req.user.email} flagged event ${event.title} (ID: ${event_id})`);
-        console.log(`[AUDIT] Flag reason: ${flagReason}`);
-
-        return res.status(200).json({
-            message: 'Event flagged successfully',
-            event: {
-                _id: event._id,
-                title: event.title,
-                flagReason
-            }
-        });
-    } catch (e) {
-        console.error('Error flagging event:', e);
-        return res.status(500).json({ error: 'Failed to flag event' });
-    }
-};
-
-const { addComment } = require('../utility/commentanalysis');
+const { addComment } = require('../utility/comment_analysis');
 
 exports.postComment = async (req, res) => {
     const { eventId } = req.params; 
