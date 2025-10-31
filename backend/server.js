@@ -70,6 +70,9 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Serve uploaded images statically
+app.use('/uploads/events', express.static(path.join(__dirname, 'uploads', 'events')));
+
 // Serve frontend build in production (single-server deployment)
 const isProd = process.env.NODE_ENV === 'production';
 if (isProd) {

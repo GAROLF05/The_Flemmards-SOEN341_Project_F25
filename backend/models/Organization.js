@@ -28,7 +28,6 @@ const organizationSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: [true, 'Website URL is required'],
-        unique: true,
         validate: { // Validates URL
             validator: v => validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
             message: props => `${props.value} is not a valid URL`
@@ -41,7 +40,6 @@ const organizationSchema = new mongoose.Schema({
             required: [true, 'Contact email is required'],
             trim: true,
             lowercase: true,
-            unique: true,
             match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email address'],
         },
 
@@ -49,7 +47,6 @@ const organizationSchema = new mongoose.Schema({
             type: String,
             required: [true, 'Contact phone number is required'],
             trim: true,
-            unique: true,
             match: [/^\+?[0-9]{10,15}$/, 'Please enter a valid phone number (10–15 digits, optional +)']
         },
 
@@ -58,7 +55,6 @@ const organizationSchema = new mongoose.Schema({
                 type: String,
                 trim: true,
                 sparse: true,
-                unique: true,
                 match: [/^@[A-Za-z0-9_.]{2,30}$/, 'Invalid Instagram handle (e.g. @username)']
             },
 
@@ -66,7 +62,6 @@ const organizationSchema = new mongoose.Schema({
                 type: String,
                 trim: true,
                 sparse: true,
-                unique: true,
                 match: [/^@[A-Za-z0-9_]{1,15}$/, 'Invalid Twitter/X handle (e.g. @username)']
             },
 
@@ -74,7 +69,6 @@ const organizationSchema = new mongoose.Schema({
                 type: String,
                 trim: true,
                 sparse: true,
-                unique: true,
                 match: [/^@[A-Za-z0-9_.]{2,30}$/, 'Invalid Facebook handle (e.g. @username)']
             }
         }

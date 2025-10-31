@@ -1,0 +1,548 @@
+[
+  {
+    "name": "180 Degrees Consulting",
+    "description": "Aims to connect students with nonprofits and social enterprises, providing pro bono consulting to enhance social impact.",
+    "website": "https://www.180dc.org",
+    "contact": {
+      "email": "180degreesconsulting@csu.qc.ca",
+      "phone": "+15145550001",
+      "socials": {}
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "ACSiON Concordia",
+    "description": "Provides students from the African diaspora with a united forum for developing ethical leadership, professionalism and entrepreneurship",
+    "website": "https://www.acsion.org",
+    "contact": {
+      "email": "acsion@csu.qc.ca",
+      "phone": "+15145550002",
+      "socials": {
+        "instagram": "@acsionconcordia",
+        "facebook": "@acsionconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "AIESEC",
+    "description": "Founded in 1948, AIESEC is a non-governmental, and not-for-profit organization entirely run by youth for youth.",
+    "website": "https://www.aiesec.ca",
+    "contact": {
+      "email": "aiesec@csu.qc.ca",
+      "phone": "+15145550003",
+      "socials": {
+        "instagram": "@aiesec"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Alpha Epsilon Phi",
+    "description": "Founded in 1909, Alpha Epsilon Phi's goal was to foster lifelong friendship and sisterhood, academics, social involvement and community service.",
+    "website": "https://www.aephi.org",
+    "contact": {
+      "email": "aephipresident24@gmail.com",
+      "phone": "+15145550004",
+      "socials": {
+        "instagram": "@aephiconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Amana Club",
+    "description": "Raising awareness about the struggles and challenges faced by the ummah globally.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "amanaclub@csu.qc.ca",
+      "phone": "+15145550005",
+      "socials": {
+        "instagram": "@amanaclub"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Applied Human Sciences Student Association (AHSCSA)",
+    "description": "AHSCSA is a student association that plans academic and social events for applied human sciences students and builds connections with alumni and staff",
+    "website": "https://www.asfa.ca",
+    "contact": {
+      "email": "president.ahscsa@asfa.ca",
+      "phone": "+15145550006",
+      "socials": {
+        "facebook": "@ahscsa",
+        "instagram": "@ahscsa"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Applied Human Sciences Graduate Student Association (AHSCGSA)",
+    "description": "The AHSCGSA supports all graduate students registered in Human Systems Intervention or Youth Work.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "ahscgsa@gmail.com",
+      "phone": "+15145550007",
+      "socials": {
+        "instagram": "@ahscgsa"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Arab Student Network",
+    "description": "We are a cultural club that unites and celebrates the collective Arab identity. We want to promote the diversity of the Arab world.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "arabstudentnetwork@csu.qc.ca",
+      "phone": "+15145550008",
+      "socials": {
+        "instagram": "@arabstudentnetwork"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Art Matters",
+    "description": "Art Matters is a student run art festival. We are a Concordia fee levy group.",
+    "website": "https://www.artmattersfestival.org",
+    "contact": {
+      "email": "info@artmattersfestival.org",
+      "phone": "+15145550009",
+      "socials": {
+        "instagram": "@artmatters"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Arts and Science Federation of Associations",
+    "description": "The Federation of Associations for Arts and Science Students",
+    "website": "https://www.asfa.ca",
+    "contact": {
+      "email": "internal@asfa.ca",
+      "phone": "+15145550010",
+      "socials": {
+        "instagram": "@asfa_concordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Ascend Concordia",
+    "description": "Providing opportunities to help individuals not only cultivate leadership & professional growth but also bridge the cultural gap in the workplace.",
+    "website": "https://www.ascendleadership.ca",
+    "contact": {
+      "email": "ascendconu@csu.qc.ca",
+      "phone": "+15145550011",
+      "socials": {}
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Autodidacts Concordia Theatre",
+    "description": "A theatre club for students from any program, any faculty, and any level of experience.",
+    "website": "https://www.csu.qc.ca/the-a-c-t-club",
+    "contact": {
+      "email": "autodidacts.concordia.theatre@csu.qc.ca",
+      "phone": "+15145550012",
+      "socials": {
+        "facebook": "@autodidacts",
+        "instagram": "@autodidacts"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Bangladesh Students Concordia BSA",
+    "description": "Bangladesh Students' Association Concordia",
+    "website": "https://www.ieac.ca",
+    "contact": {
+      "email": "bsa@ieac.ca",
+      "phone": "+15145693423",
+      "socials": {
+        "facebook": "@bsaconcordia",
+        "instagram": "@bsaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Biology Student Association",
+    "description": "Member Association representing the biology undergraduate students",
+    "website": "https://www.asfa.ca",
+    "contact": {
+      "email": "bsa@asfa.com",
+      "phone": "+15145550013",
+      "socials": {
+        "facebook": "@bsaconcordia",
+        "instagram": "@bsaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Black Students Career Development",
+    "description": "Organizes flagship recruitment and networking events connecting hundreds of black students, alumni/professionals and recruiters together.",
+    "website": "https://www.linkedin.com/company/black-student-career-development",
+    "contact": {
+      "email": "bscd@csu.qc.ca",
+      "phone": "+15145550014",
+      "socials": {
+        "facebook": "@bscd",
+        "instagram": "@bscd"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Brazilian Student Association (BRASA) Concordia",
+    "description": "We offer monthly events (social, workshops, career fairs) for all students at Concordia University.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "brasa.concordia@csu.qc.ca",
+      "phone": "+15145550015",
+      "socials": {
+        "instagram": "@brasaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Business Law Committee",
+    "description": "Where business and law come together, connecting classrooms to boardrooms through events, networking, and collaboration.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "businesslawcommittee@csu.qc.ca",
+      "phone": "+15145550016",
+      "socials": {
+        "instagram": "@businesslawcommittee"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "CASA Cares",
+    "description": "CASA Cares is the charity wing of the John Molson School of Business at Concordia University. We are a student-run organization that aims to give back",
+    "website": "https://www.casacares.com",
+    "contact": {
+      "email": "info@casacares.com",
+      "phone": "+15145550017",
+      "socials": {
+        "facebook": "@casacares",
+        "instagram": "@casacares"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Canadian Refugee Initiative (The Refugee Centre)",
+    "description": "We are a canadian non-profit that provides a sustainable structure integration for Refugees and immigrants in Canada",
+    "website": "https://www.therefugeecentre.org",
+    "contact": {
+      "email": "info@therefugeecentre.org",
+      "phone": "+15148460005",
+      "socials": {
+        "facebook": "@refugeecentre",
+        "twitter": "@refugeecentre",
+        "instagram": "@refugeecentre"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The Concordian",
+    "description": "Award-winning, independent student media organization at Concordia University.",
+    "website": "https://theconcordian.com",
+    "contact": {
+      "email": "directors@theconcordian.com",
+      "phone": "+15148482424",
+      "socials": {
+        "facebook": "@theconcordian",
+        "twitter": "@theconcordian",
+        "instagram": "@theconcordian"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The Filmmaking Club",
+    "description": "A place for artists (not just film production students) to get together and collaborate on making really cool films together!",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "filmmaking@csu.qc.ca",
+      "phone": "+15145550018",
+      "socials": {
+        "instagram": "@filmmakingclub"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The Garnet Key Society",
+    "description": "Concordia University's official honour society that acts as a liaison between the Office of the President and the student body.",
+    "website": "https://garnetkeysociety.wordpress.com",
+    "contact": {
+      "email": "garnetkey@concordia.ca",
+      "phone": "+15145550019",
+      "socials": {
+        "facebook": "@garnetkey",
+        "instagram": "@garnetkey"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The Link Publication Society Inc.",
+    "description": "The Link is an independent, student-run, not-for-profit multi-media publication at Concordia University in Tio'tià:ke, now known as Montréal, Québec.",
+    "website": "https://thelinknewspaper.ca",
+    "contact": {
+      "email": "business@thelinknewspaper.ca",
+      "phone": "+15148482424",
+      "socials": {
+        "instagram": "@thelinknewspaper"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The Political Science Student Association of Concordia University",
+    "description": "Association of Students from the undergraduate Political Science department at Concordia University",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "genco@pssa.ca",
+      "phone": "+15145550020",
+      "socials": {
+        "facebook": "@pssaconcordia",
+        "twitter": "@pssaconcordia",
+        "instagram": "@pssaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "The StartUp Nation",
+    "description": "Enriching students with the remarkable identity, achievements, and culture of the nation of Israel within Concordia.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "thestartupnation@csu.qc.ca",
+      "phone": "+15145550021",
+      "socials": {
+        "instagram": "@thestartupnation"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Sustainability Action Fund",
+    "description": "A nonprofit organization providing funding to students working on Sustainability related projects at Concordia.",
+    "website": "https://www.safconcordia.ca",
+    "contact": {
+      "email": "executivedirector@safconcordia.ca",
+      "phone": "+15145550022",
+      "socials": {
+        "facebook": "@safconcordia",
+        "instagram": "@safconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Sustainability and Diversity Students Association",
+    "description": "Student association for the Loyola College for Diversity and Sustainability",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "sdsa.cu@gmail.com",
+      "phone": "+15145550023",
+      "socials": {
+        "facebook": "@sdsaconcordia",
+        "instagram": "@sdsaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Sustainable Concordia",
+    "description": "Sustainable Concordia is a fee levy group registered as a non-profit organization. Our mission is to push for a sustainable culture at Concordia",
+    "website": "http://sustainableconcordia.ca",
+    "contact": {
+      "email": "internal@sustainableconcordia.ca",
+      "phone": "+15145550024",
+      "socials": {
+        "facebook": "@sustainableconcordia",
+        "twitter": "@sustainablecon",
+        "instagram": "@sustainableconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Sustainable Fashion and Thrift Club",
+    "description": "Our club hosts regular thrifting events with local vintage shops, thrift stores, and small vendors.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "thriftclub@csu.qc.ca",
+      "phone": "+15145550025",
+      "socials": {
+        "instagram": "@thriftclubconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Swab the World Concordia",
+    "description": "Non-profit organization dedicated to expanding the stem donor data base, with an emphasis on registering donors who are members of an ethnic minority.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "swabconu@csu.qc.ca",
+      "phone": "+15145550026",
+      "socials": {
+        "instagram": "@swabtheworld"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Syrian Students Association",
+    "description": "Our goal is to promote diversity, and equality, and help newcomers integrate into the Canadian Society.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "ssa.concordia@csu.qc.ca",
+      "phone": "+15145550027",
+      "socials": {
+        "facebook": "@ssaconcordia",
+        "instagram": "@ssaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Urban Planning Association",
+    "description": "Student Association representing students in Urban Planning and Urban Studies programs",
+    "website": "https://www.asfa.ca",
+    "contact": {
+      "email": "president.upa@asfa.ca",
+      "phone": "+15145550028",
+      "socials": {
+        "instagram": "@upaconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Vietnamese Concordia Association",
+    "description": "Together, we are building a stronger Viet community in Concordia and Montreal. Join us if love anything Viet culture.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "vca@csu.qc.ca",
+      "phone": "+15145550029",
+      "socials": {}
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Women In Engineering",
+    "description": "Women In Engineering",
+    "website": "https://www.womeninengineeringconcordia.com",
+    "contact": {
+      "email": "president.wie@ecaconcordia.ca",
+      "phone": "+15145550030",
+      "socials": {
+        "facebook": "@wieconcordia",
+        "instagram": "@wieconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "United for Literacy",
+    "description": "A Canada-wide volunteer-based literacy organization. We believe that literacy is a fundamental right.",
+    "website": "https://www.unitedforliteracy.ca",
+    "contact": {
+      "email": "unitedforliteracy@csu.qc.ca",
+      "phone": "+15145550031",
+      "socials": {
+        "facebook": "@unitedforliteracy"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Undergraduate Students Association in Translation (USAT)",
+    "description": "All undergraduate translation students in a certificate, minor, major or honours program may attend our events.",
+    "website": "https://www.asfa.ca",
+    "contact": {
+      "email": "president.usat@asfa.ca",
+      "phone": "+15145550032",
+      "socials": {
+        "facebook": "@usatconcordia",
+        "instagram": "@usatconcordia"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Troitsky",
+    "description": "The troitsky bridge building competition hosted by concordia university",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "internal.troitsky@ecaconcordia.ca",
+      "phone": "+15145550033",
+      "socials": {}
+    },
+    "verified": false,
+    "status": "approved"
+  },
+  {
+    "name": "Stronger Than Stigma Concordia",
+    "description": "A student run initiative focused on helping students overcome the social barriers that surround mental health.",
+    "website": "https://www.concordia.ca",
+    "contact": {
+      "email": "strongerthanstigma@csu.qc.ca",
+      "phone": "+15145550034",
+      "socials": {
+        "instagram": "@strongerthanstigma"
+      }
+    },
+    "verified": false,
+    "status": "approved"
+  }
+]
+
