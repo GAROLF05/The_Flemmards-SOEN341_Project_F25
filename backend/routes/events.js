@@ -18,7 +18,7 @@ const { requireAuth, requireAdmin } = require('../middlewares/auth');
 // ToDO: Add a verifyUser jwt token
 
 // Public routes for students to browse events
-router.get('/browse', eventController.browseEvents);
+//router.get('/browse', eventController.browseEvents);
 
 // Create
 router.post('/create', requireAdmin, eventController.createEvent);

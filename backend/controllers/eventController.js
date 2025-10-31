@@ -1015,7 +1015,7 @@ exports.flagEvent = async (req, res) => {
     }
 };
 
-const { addComment } = require('../utility/commentanalysis');
+const { addComment } = require('../utility/comment_analysis');
 
 exports.postComment = async (req, res) => {
     const { eventId } = req.params; 
