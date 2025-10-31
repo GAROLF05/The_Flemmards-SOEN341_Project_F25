@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const axiosClient = axios.create({
-    baseURL: import.meta.env.REACT_APP_API_BASE_URL,
+    baseURL: import.meta.env.VITE_API_URL,
     headers: {
         "Content-Type": "application/json",
     },
@@ -13,7 +13,7 @@ axiosClient.interceptors.request.use(config => {
     const apiKey = import.meta.env.REACT_APP_API_KEY;
     config.headers["x-api-key"] = apiKey;
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("auth-token");
 
     if (token)
         config.headers.Authorization = `Bearer ${token}`;
@@ -23,9 +23,7 @@ axiosClient.interceptors.request.use(config => {
 
 // Handle responses
 axiosClient.interceptors.response.use(response =>
-    response.data, error => {
-        console.error("API Error:", error);
-
+    response, error => {
         return Promise.reject(error);
     }
 );

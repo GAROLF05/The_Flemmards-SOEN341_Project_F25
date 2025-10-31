@@ -1,4 +1,6 @@
 const ENDPOINTS = {
+	LOGIN: "/users/login",
+
 	EVENTS: "/events",
 	EVENT: (id) => `/events/${id}`,
 	REGISTRATION: "/registrations",
