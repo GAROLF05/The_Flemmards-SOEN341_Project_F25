@@ -36,17 +36,22 @@ export function NotificationProvider({ children }) {
         <NotificationContext.Provider value={contextValue}>
             {children}
             {/* Notification Container */}
-            <div className="fixed top-0 right-0 p-4 sm:p-6 z-50 w-full max-w-sm">
-                 {notifications.map(notification => (
-                    <Notification
-                        key={notification.id}
-                        message={notification.message}
-                        type={notification.type}
-                        isExiting={notification.isExiting}
-                        onClose={() => closeNotification(notification.id)}
-                    />
-                ))}
-            </div>
+            {
+                notifications.length > 0 &&
+                (
+                    <div className="fixed top-0 right-0 p-4 sm:p-6 z-150 w-full max-w-sm">
+                        {notifications.map(notification => (
+                            <Notification
+                                key={notification.id}
+                                message={notification.message}
+                                type={notification.type}
+                                isExiting={notification.isExiting}
+                                onClose={() => closeNotification(notification.id)}
+                            />
+                        ))}
+                    </div>
+                )
+            }
         </NotificationContext.Provider>
     );
 }

@@ -1,7 +1,8 @@
-import { PencilSquareIcon, PlusCircleIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
+import Modal from '../../components/modal/Modal';
 
 // --- MOCK DATA ---
 const organizationsData = [
@@ -29,42 +30,35 @@ const CreateOrganizationModal = ({ isOpen, onClose, onAddOrganization }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onAddOrganization({ ...newOrg, id: Date.now(), role: 'Organizer' }); // Role is now set internally
+        onAddOrganization({ ...newOrg, id: Date.now(), role: 'Organizer' });
         onClose();
     };
 
     return (
-        <div className={`fixed inset-0 z-[70] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
-            <div className="fixed inset-0 bg-black/70 transition-opacity duration-300" onClick={onClose} style={{ opacity: isOpen ? 1 : 0 }}></div>
-
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}>
-                    <form onSubmit={handleSubmit} className="p-8">
-                        <button type="button" onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"> <XMarkIcon className="h-6 w-6" /> </button>
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 transition-colors duration-300">{translate("addNewOrganization")}</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">{translate("organizationName")}</label>
-                                <input id="name" name="name" value={newOrg.name} onChange={handleChange} placeholder="e.g., Evenko" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
-                            </div>
-                            <div>
-                                <label htmlFor="contact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("contactName")}</label>
-                                <input id="contact" name="contact" value={newOrg.contact} onChange={handleChange} placeholder="e.g., Alice Martin" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
-                            </div>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("contactEmail")}</label>
-                                <input id="email" name="email" type="email" value={newOrg.email} onChange={handleChange} placeholder="e.g., alice@evenko.ca" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
-                            </div>
-                        </div>
-                        <div className="mt-8 flex justify-end">
-                            <button type="submit" className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
-                                {translate("addOrganization")}
-                            </button>
-                        </div>
-                    </form>
+        <Modal isOpen={isOpen} onClose={onClose} width="small">
+            <form onSubmit={handleSubmit} className="p-8">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 transition-colors duration-300">{translate("addNewOrganization")}</h2>
+                <div className="space-y-4">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 transition-colors duration-300">{translate("organizationName")}</label>
+                        <input id="name" name="name" value={newOrg.name} onChange={handleChange} placeholder="e.g., Evenko" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
+                    </div>
+                    <div>
+                        <label htmlFor="contact" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("contactName")}</label>
+                        <input id="contact" name="contact" value={newOrg.contact} onChange={handleChange} placeholder="e.g., Alice Martin" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("contactEmail")}</label>
+                        <input id="email" name="email" type="email" value={newOrg.email} onChange={handleChange} placeholder="e.g., alice@evenko.ca" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200 transition-colors duration-300" required />
+                    </div>
                 </div>
-            </div>
-        </div>
+                <div className="mt-8 flex justify-end">
+                    <button type="submit" className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
+                        {translate("addOrganization")}
+                    </button>
+                </div>
+            </form>
+        </Modal>
     );
 };
 
@@ -157,7 +151,6 @@ export default function Organizations() {
                 onClose={() => setIsCreateModalOpen(false)}
                 onAddOrganization={handleAddOrganization}
             />
-
         </>
     );
 }
