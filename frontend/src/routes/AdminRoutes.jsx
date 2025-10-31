@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
 
 const AdminRoutes = [
     {
@@ -18,6 +19,10 @@ const AdminRoutes = [
             {
                 path: 'dashboard',
                 element: <Navigate to="/admin" />
+            },
+            {
+                path: 'approveOrganizers',
+                element: <ApproveOrganizers />
             }
         ]
     }
