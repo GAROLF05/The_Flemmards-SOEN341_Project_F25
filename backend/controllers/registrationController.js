@@ -249,7 +249,7 @@ exports.getRegistrationById = async (req, res) => {
         const reg = await Registration.findById(reg_id)
             .populate({
                 path: 'user',
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event',
@@ -289,7 +289,7 @@ exports.getRegistrationByRegId = async (req, res) => {
         const reg = await Registration.findOne({ registrationId: registrationId })
             .populate({
                 path: 'user',
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event',
@@ -333,7 +333,7 @@ exports.getRegistrationByUser = async (req, res) => {
     const reg = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -385,7 +385,7 @@ exports.getRegistrationByEvent = async (req, res) => {
         const registrations = await Registration.find({ event: event_id })
             .populate({
                 path: 'user', 
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event', 

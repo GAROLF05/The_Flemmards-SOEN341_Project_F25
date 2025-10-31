@@ -208,7 +208,7 @@ exports.getTicketsById = async (req,res)=>{
         const ticket = await Ticket.findById(ticket_id)
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -247,7 +247,7 @@ exports.getTicketsByTicketId = async (req,res)=>{
         const ticket = await Ticket.findOne({ticketId: ticketID})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -456,7 +456,7 @@ exports.scanTicket = async (req, res) => {
             })
             .populate({
                 path: 'user',
-                select: 'name email student_id'
+                select: 'name email'
             });
 
         if (!ticket) {
@@ -526,7 +526,6 @@ exports.scanTicket = async (req, res) => {
                 user: {
                     name: ticket.user?.name,
                     email: ticket.user?.email,
-                    student_id: ticket.user?.student_id
                 },
                 event: {
                     title: ticket.event?.title,
@@ -597,7 +596,7 @@ exports.getTicketsByEvent = async (req,res)=>{
         const eventTickets = await Ticket.find({event: event_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -642,7 +641,7 @@ exports.getTicketsByUser = async (req,res)=>{
         const userTickets = await Ticket.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -714,7 +713,7 @@ exports.exportAttendeesCSV = async (req, res) => {
         const registrations = await Registration.find({ event: event_id })
             .populate({
                 path: 'user',
-                select: 'name email student_id phone'
+                select: 'name email'
             })
             .populate({
                 path: 'ticketIds',
@@ -737,10 +736,8 @@ exports.exportAttendeesCSV = async (req, res) => {
         // CSV Header
         csvRows.push([
             'Registration ID',
-            'Student ID',
             'Name',
             'Email',
-            'Phone',
             'Quantity',
             'Status',
             'Registered At',
@@ -752,10 +749,8 @@ exports.exportAttendeesCSV = async (req, res) => {
         // CSV Data rows
         for (const reg of registrations) {
             // Handle invalid data gracefully
-            const studentId = reg.user?.student_id || 'N/A';
             const name = reg.user?.name || 'Unknown';
             const email = reg.user?.email || 'N/A';
-            const phone = reg.user?.phone || 'N/A';
             const quantity = reg.quantity || 0;
             const status = reg.status || 'unknown';
             const registeredAt = reg.createdAt ? new Date(reg.createdAt).toISOString() : 'N/A';
@@ -774,10 +769,8 @@ exports.exportAttendeesCSV = async (req, res) => {
 
             csvRows.push([
                 reg.registrationId || reg._id,
-                studentId,
                 `"${name}"`, // Quote in case name contains commas
                 email,
-                phone,
                 quantity,
                 status,
                 registeredAt,

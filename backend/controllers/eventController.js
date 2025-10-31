@@ -59,7 +59,7 @@ exports.getAllEvents = async (req,res) => {
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -107,7 +107,7 @@ exports.getEventById = async (req,res) => {
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -154,7 +154,7 @@ exports.getEventByOrganization = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -198,7 +198,7 @@ exports.getEventsByStatus = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -247,7 +247,7 @@ exports.getEventsByCategory = async (req,res)=>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -311,7 +311,7 @@ exports.getEventsByDateRange = async (req, res) => {
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -352,7 +352,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         const regs = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -653,7 +653,7 @@ exports.getAttendees = async (req,res) => {
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -677,8 +677,7 @@ exports.getAttendees = async (req,res) => {
             _id: user._id,
             name: user.name,
             username: user.username,
-            email: user.email,
-            student_id: user.student_id
+            email: user.email
         }));
 
         return res.status(200).json({
@@ -718,7 +717,7 @@ exports.getWaitlistedUsers = async (req,res) =>{
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -746,10 +745,8 @@ exports.getWaitlistedUsers = async (req,res) =>{
             user: reg.user
                 ? {
                     _id: reg.user._id,
-                    first_name: reg.user.first_name,
-                    last_name: reg.user.last_name,
-                    email: reg.user.email,
-                    student_id: reg.user.student_id
+                    name: reg.user.name,
+                    email: reg.user.email
                 }
                 : null
         }));

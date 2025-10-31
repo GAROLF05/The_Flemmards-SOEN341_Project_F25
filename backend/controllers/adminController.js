@@ -456,7 +456,7 @@ exports.getPendingEvents = async (req,res) => {
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .sort({ createdAt: -1 })
             .lean()
@@ -655,7 +655,7 @@ exports.getAllTickets = async (req,res) => {
         const tickets = await Ticket.find()
             .populate({
                 path: 'user', 
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event', 
@@ -858,7 +858,7 @@ exports.getAllRegistrations = async (req,res) => {
         const registrations = await Registration.find()
             .populate({
                 path: 'user',
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event',
