@@ -6,11 +6,22 @@
 export const transformEventForFrontend = (backendEvent) => {
     // Helper to safely get location name
     const getLocationName = () => {
-        if (!backendEvent.location) return '';
-        if (typeof backendEvent.location === 'string') return backendEvent.location;
-        if (typeof backendEvent.location === 'object') {
-            return backendEvent.location.name || backendEvent.location.address || '';
+        if (!backendEvent.location) {
+            console.warn('Event has no location:', backendEvent._id || backendEvent.id);
+            return '';
         }
+        if (typeof backendEvent.location === 'string') {
+            return backendEvent.location;
+        }
+        if (typeof backendEvent.location === 'object') {
+            // Location is an object with name and address
+            const locationName = backendEvent.location.name || backendEvent.location.address || '';
+            if (!locationName) {
+                console.warn('Event location object has no name or address:', backendEvent.location, 'for event:', backendEvent._id || backendEvent.id);
+            }
+            return locationName;
+        }
+        console.warn('Event location is unexpected type:', typeof backendEvent.location, backendEvent.location, 'for event:', backendEvent._id || backendEvent.id);
         return '';
     };
 

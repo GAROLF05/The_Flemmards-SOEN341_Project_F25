@@ -46,17 +46,24 @@ export const getEventsByUser = (userId) => api.get(ENDPOINTS.EVENTS_BY_USER(user
 
 // Create event (Admin only, supports multipart/form-data for image upload)
 export const createEvent = (eventData, imageFile = null) => {
-    if (imageFile) {
-        // Use FormData for file upload
+    console.log('Creating event:', eventData.title);
+    if (imageFile || (eventData.location && typeof eventData.location === 'object')) {
+        // Use FormData for file upload or when location is an object
         const formData = new FormData();
         Object.keys(eventData).forEach(key => {
             if (key === 'location' && typeof eventData[key] === 'object') {
-                formData.append(key, JSON.stringify(eventData[key]));
+                // Backend expects location[name] and location[address] form fields
+                formData.append('location[name]', eventData[key].name || '');
+                formData.append('location[address]', eventData[key].address || '');
             } else {
                 formData.append(key, eventData[key]);
             }
         });
         formData.append('image', imageFile);
+
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
 
         return api.post(ENDPOINTS.EVENT_CREATE, formData, {
             headers: {
@@ -71,6 +78,7 @@ export const createEvent = (eventData, imageFile = null) => {
 
 // Update event (Admin only, supports multipart/form-data for image upload)
 export const updateEvent = (eventId, eventData, imageFile = null) => {
+    console.log('Updating event:', eventId);
     if (imageFile) {
         // Use FormData for file upload
         const formData = new FormData();
@@ -95,10 +103,16 @@ export const updateEvent = (eventId, eventData, imageFile = null) => {
 };
 
 // Cancel event (Admin only)
-export const cancelEvent = (eventId) => api.patch(ENDPOINTS.EVENT_CANCEL(eventId));
+export const cancelEvent = (eventId) => {
+    console.log('Cancelling event:', eventId);
+    return api.patch(ENDPOINTS.EVENT_CANCEL(eventId));
+};
 
 // Delete event (Admin only)
-export const deleteEvent = (eventId) => api.delete(ENDPOINTS.EVENT_DELETE(eventId));
+export const deleteEvent = (eventId) => {
+    console.log('Deleting event:', eventId);
+    return api.delete(ENDPOINTS.EVENT_DELETE(eventId));
+};
 
 // Get attendees for event (Admin only)
 export const getEventAttendees = (eventId) => api.get(ENDPOINTS.EVENT_ATTENDEES(eventId));
