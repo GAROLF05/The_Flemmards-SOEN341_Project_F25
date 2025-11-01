@@ -187,9 +187,9 @@ exports.getAllOrganizations = async (req,res)=>{
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
-        // Get only approved organizations that have an organizer user
+        // Get approved and suspended organizations that have an organizer user
         const organizations = await Organization.find({
-            status: ORGANIZATION_STATUS.APPROVED,
+            status: { $in: [ORGANIZATION_STATUS.APPROVED, ORGANIZATION_STATUS.SUSPENDED] },
             organizer: { $exists: true, $ne: null }
         })
             .populate({
@@ -204,7 +204,7 @@ exports.getAllOrganizations = async (req,res)=>{
         const filteredOrganizations = organizations.filter(org => org.organizer !== null && org.organizer !== undefined);
 
         return res.status(200).json({
-            message: 'Approved organizations fetched successfully',
+            message: 'Organizations fetched successfully',
             total: filteredOrganizations.length,
             organizations: filteredOrganizations
         });

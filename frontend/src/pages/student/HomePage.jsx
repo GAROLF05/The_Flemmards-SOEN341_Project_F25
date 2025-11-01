@@ -101,9 +101,16 @@ const EventCard = ({ event, onViewDetails }) => {
                 <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
                         <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{event.category}</span>
-                        <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
-                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
-                        </span>
+                        <div className="flex gap-2">
+                            {event.organizationStatus === 'suspended' && (
+                                <span className="inline-block bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300" title="Organization Suspended">
+                                    Suspended
+                                </span>
+                            )}
+                            <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
+                                {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                            </span>
+                        </div>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300 line-clamp-2">{event.description}</p>
@@ -393,9 +400,23 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                        {translate("reserveNow")}
-                    </button>
+                    {event.organizationStatus === 'suspended' ? (
+                        <div className="w-full">
+                            <button 
+                                disabled 
+                                className="w-full bg-gray-400 dark:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60 text-lg"
+                            >
+                                Registration Unavailable
+                            </button>
+                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                This event's organization has been suspended. Registration is currently unavailable.
+                            </p>
+                        </div>
+                    ) : (
+                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                            {translate("reserveNow")}
+                        </button>
+                    )}
                 </div>
             </>
         </Modal>

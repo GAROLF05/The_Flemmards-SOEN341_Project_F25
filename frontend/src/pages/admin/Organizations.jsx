@@ -1,8 +1,8 @@
-import { PencilSquareIcon, TrashIcon, ShieldCheckIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
-import { getAllOrganizations, deleteOrganization, getOrganizationById, updateOrganization } from '../../api/organizationApi';
+import { getAllOrganizations, getOrganizationById, updateOrganization } from '../../api/organizationApi';
 import { getEventsByOrganization } from '../../api/eventApi';
 import { adminApi } from '../../api/adminApi';
 import Modal from '../../components/modal/Modal';
@@ -143,40 +143,15 @@ export default function Organizations() {
             setModerationModalOpen(false);
         } catch (error) {
             console.error('Error suspending/unsuspending organization:', error);
-            showNotification(
-                error.response?.data?.error || error.message || 'Failed to update organization status',
-                'error'
-            );
+            console.error('Error response:', error.response?.data);
+            console.error('Selected org ID:', selectedOrg._id);
+            const errorMessage = error.response?.data?.error || error.response?.data?.details || error.message || 'Failed to update organization status';
+            showNotification(errorMessage, 'error');
         } finally {
             setIsSuspending(false);
         }
     };
 
-    const handleDelete = async (id, name) => {
-        try {
-            await deleteOrganization(id);
-            showNotification(`The organization ${name} has been deleted successfully.`, 'success');
-            // Refresh the list after deleting
-            const refreshResponse = await getAllOrganizations();
-            const orgs = refreshResponse.organizations || [];
-            const mappedOrgs = orgs.map(org => ({
-                id: org._id,
-                name: org.name || 'Unnamed Organization',
-                contact: org.organizer?.name || org.contact?.name || 'N/A',
-                email: org.organizer?.email || org.contact?.email || 'N/A',
-                role: org.status || 'Pending',
-                _id: org._id,
-                raw: org
-            }));
-            setOrganizations(mappedOrgs);
-        } catch (error) {
-            console.error('Error deleting organization:', error);
-            showNotification(
-                error.response?.data?.error || error.message || 'Failed to delete organization',
-                'error'
-            );
-        }
-    };
 
     return (
         <>
@@ -184,7 +159,7 @@ export default function Organizations() {
                 <div className="flex justify-between items-center mt-2">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">{translate("manageOrganizations")}</h1>
-                        <p className="mt-1 text-gray-600 dark:text-gray-400 transition-colors duration-300">{translate("manageOrganizationsSubtitle") || "View and manage approved organizations"}</p>
+                        <p className="mt-1 text-gray-600 dark:text-gray-400 transition-colors duration-300">{translate("manageOrganizationsSubtitle") || "View and manage approved and suspended organizations"}</p>
                     </div>
                 </div>
             </div>
@@ -220,19 +195,18 @@ export default function Organizations() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">{org.email}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button 
                                                 onClick={() => handleModerate(org)} 
-                                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all transition-colors duration-300 cursor-pointer"
+                                                className={`p-1 rounded-full transition-all transition-colors duration-300 cursor-pointer ${
+                                                    org.role === 'suspended' || org.raw?.status === 'suspended'
+                                                        ? 'text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50'
+                                                        : 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50'
+                                                }`}
                                                 title="Moderate Organization"
                                             >
                                                 <span className="sr-only">Moderate</span>
                                                 <ShieldCheckIcon className="w-5 h-5" />
-                                            </button>
-
-                                            <button onClick={() => handleDelete(org.id, org.name)} className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all transition-colors duration-300 cursor-pointer">
-                                                <span className="sr-only">{translate("delete")}</span>
-                                                <TrashIcon className="w-5 h-5" />
                                             </button>
                                         </td>
                                     </tr>

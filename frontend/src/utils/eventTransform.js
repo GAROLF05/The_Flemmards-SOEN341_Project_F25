@@ -35,6 +35,15 @@ export const transformEventForFrontend = (backendEvent) => {
         return '';
     };
 
+    // Helper to safely get organization status
+    const getOrganizationStatus = () => {
+        if (!backendEvent.organization) return null;
+        if (typeof backendEvent.organization === 'object') {
+            return backendEvent.organization.status || null;
+        }
+        return null;
+    };
+
     // Helper to format category
     const formatCategory = (cat) => {
         if (!cat) return 'Other';
@@ -77,6 +86,7 @@ export const transformEventForFrontend = (backendEvent) => {
             location: getLocationName(),
             address: backendEvent.location?.address || '',
             organization: getOrganizationName(),
+            organizationStatus: getOrganizationStatus(),
             imageUrl: getImageUrl(),
             category: formatCategory(backendEvent.category),
             price: 'Free', // Backend doesn't have price field, defaulting to Free
@@ -102,6 +112,7 @@ export const transformEventForFrontend = (backendEvent) => {
             location: '',
             address: '',
             organization: '',
+            organizationStatus: null,
             imageUrl: '/uploads/events/default-event-image.svg',
             category: 'Other',
             price: 'Free',

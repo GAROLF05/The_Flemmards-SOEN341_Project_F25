@@ -268,7 +268,7 @@ exports.suspendOrganization = async (req,res) => {
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { org_id } = req.params;
-        const { suspensionReason } = req.body;
+        const suspensionReason = req.body?.suspensionReason;
 
         // Validate org_id
         if (!org_id) {
@@ -279,15 +279,17 @@ exports.suspendOrganization = async (req,res) => {
             return res.status(400).json({ error: 'Invalid organization ID format' });
         }
 
-        // Find organization
-        const organization = await Organization.findById(org_id);
+        // Find and update organization status to suspended
+        // Using findByIdAndUpdate to avoid full document validation issues
+        const organization = await Organization.findByIdAndUpdate(
+            org_id,
+            { status: ORGANIZATION_STATUS.SUSPENDED },
+            { new: true, runValidators: false } // Only update status, skip full validation
+        );
+        
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
         }
-
-        // Update organization status to suspended
-        organization.status = ORGANIZATION_STATUS.SUSPENDED;
-        await organization.save();
 
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} suspended organization ${organization.name} (ID: ${org_id})`);
@@ -312,7 +314,16 @@ exports.suspendOrganization = async (req,res) => {
 
     } catch (e) {
         console.error('Error suspending organization:', e);
-        return res.status(500).json({ error: 'Failed to suspend organization' });
+        console.error('Error stack:', e.stack);
+        console.error('Error details:', {
+            name: e.name,
+            message: e.message,
+            errors: e.errors
+        });
+        return res.status(500).json({ 
+            error: 'Failed to suspend organization',
+            details: e.message || 'Internal server error'
+        });
     }
 }
 
