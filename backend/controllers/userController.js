@@ -136,9 +136,9 @@ exports.loginUser = async (req, res) => {
         // Verify password for administrator
         const isValidPassword = await bcrypt.compare(password, admin.password);
         if (!isValidPassword)
-          return res
-            .status(401)
-            .json({ error: "Invalid email/username or password" });
+      return res
+        .status(401)
+        .json({ error: "Invalid email/username or password" });
 
         // Create admin user object for JWT
         user = {
@@ -155,11 +155,11 @@ exports.loginUser = async (req, res) => {
       }
     } else {
       // Verify password for regular user
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword)
-        return res
-          .status(401)
-          .json({ error: "Invalid email/username or password" });
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword)
+      return res
+        .status(401)
+        .json({ error: "Invalid email/username or password" });
     }
 
     // Create JWT token
@@ -296,6 +296,7 @@ exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .select("-password")
+      .populate("organization", 'name description website contact status verified _id')
       .lean()
       .exec();
 

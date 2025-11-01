@@ -54,6 +54,11 @@ exports.createOrganization = async (req,res)=>{
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // Validate contact object structure
+        if (!contact.email || !contact.phone) {
+            return res.status(400).json({ error: 'Contact object must include email and phone' });
+        }
+
         // Check if user is authenticated and is an organizer
         if (!req.user || !req.user._id) {
             return res.status(401).json({ error: 'Authentication required' });
@@ -90,9 +95,14 @@ exports.createOrganization = async (req,res)=>{
         user.organization = organization._id;
         await user.save();
 
+        // Populate organizer information in response
+        const populatedOrg = await Organization.findById(organization._id)
+            .populate('organizer', 'name email username')
+            .lean();
+
         return res.status(201).json({
             message: 'Organization created successfully. Awaiting admin approval.',
-            organization
+            organization: populatedOrg
         });
     } catch (e) {
         console.error('Error creating organization:', e);
@@ -111,6 +121,7 @@ exports.getAllOrganizations = async (req,res)=>{
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const organizations = await Organization.find()
+            .populate('organizer', 'name email username')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -138,7 +149,9 @@ exports.getOrganizationById = async (req,res)=>{
             return res.status(400).json({ error: 'Invalid organization ID format' });
         }
 
-        const organization = await Organization.findById(org_id).lean();
+        const organization = await Organization.findById(org_id)
+            .populate('organizer', 'name email username')
+            .lean();
 
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
@@ -174,6 +187,7 @@ exports.getOrganizationByStatus = async (req,res)=>{
         }
 
         const organizations = await Organization.find({ status })
+            .populate('organizer', 'name email username')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -196,6 +210,7 @@ exports.getPendingOrganizations = async (req,res)=>{
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const organizations = await Organization.find({ status: ORGANIZATION_STATUS.PENDING })
+            .populate('organizer', 'name email username')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -228,14 +243,16 @@ exports.updateOrganization = async (req,res)=>{
             return res.status(400).json({ error: 'Invalid organization ID format' });
         }
 
-        // Prevent updating _id
+        // Prevent updating _id and organizer (one-to-one relationship must be maintained)
         delete updates._id;
+        delete updates.organizer;
 
         const organization = await Organization.findByIdAndUpdate(
             org_id,
             updates,
             { new: true, runValidators: true }
-        );
+        )
+        .populate('organizer', 'name email username');
 
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
@@ -320,7 +337,9 @@ exports.getOrganizationStats = async (req,res)=>{
             return res.status(400).json({ error: 'Invalid organization ID format' });
         }
 
-        const organization = await Organization.findById(org_id).lean();
+        const organization = await Organization.findById(org_id)
+            .populate('organizer', 'name email username')
+            .lean();
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
         }

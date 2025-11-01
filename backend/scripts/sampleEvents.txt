@@ -1,6 +1,8 @@
 [
   {
-    "organization": "69050a341c29e71476bae1ba",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df34"
+    },
     "title": "AI & Machine Learning Workshop",
     "description": "Learn the fundamentals of artificial intelligence and machine learning. Hands-on session with practical examples and real-world applications.",
     "category": "technology",
@@ -19,7 +21,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4b"
+    },
     "title": "Web Development Bootcamp",
     "description": "Intensive web development course covering HTML, CSS, JavaScript, and React. Build real projects during the workshop.",
     "category": "technology",
@@ -38,7 +42,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1ba",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df34"
+    },
     "title": "Cybersecurity Summit 2025",
     "description": "Expert talks on cybersecurity, ethical hacking, and data protection. Network with industry professionals.",
     "category": "technology",
@@ -57,7 +63,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b2",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2c"
+    },
     "title": "Hackathon: Build Something Amazing",
     "description": "48-hour hackathon. Form teams, build projects, and compete for prizes. Food and drinks provided.",
     "category": "technology",
@@ -76,7 +84,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c0",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3a"
+    },
     "title": "Blockchain & Cryptocurrency Seminar",
     "description": "Introduction to blockchain technology and its applications. Q&A session with industry experts.",
     "category": "technology",
@@ -95,7 +105,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bb",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df35"
+    },
     "title": "Jazz Night at the Campus",
     "description": "Live jazz performance featuring local artists. Relax and enjoy smooth melodies in an intimate setting.",
     "category": "music",
@@ -114,7 +126,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b8",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df32"
+    },
     "title": "Electronic Music Festival",
     "description": "All-day electronic music festival with multiple DJs and live performances. Food trucks available.",
     "category": "music",
@@ -133,7 +147,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bf",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df39"
+    },
     "title": "Acoustic Open Mic Night",
     "description": "Students showcase their musical talents. All genres welcome. Sign up at the door.",
     "category": "music",
@@ -152,7 +168,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bb",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df35"
+    },
     "title": "Classical Concert Series",
     "description": "Performance by the university orchestra featuring classical masterpieces. Formal attire encouraged.",
     "category": "music",
@@ -171,7 +189,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c4",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3e"
+    },
     "title": "Rock Band Competition",
     "description": "Battle of the bands! Multiple student bands compete for the title. Voting by audience.",
     "category": "music",
@@ -190,7 +210,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d4",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4e"
+    },
     "title": "Basketball Tournament Finals",
     "description": "Championship game of the inter-university basketball tournament. Cheer on your team!",
     "category": "sports",
@@ -209,7 +231,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d5",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4f"
+    },
     "title": "5K Fun Run",
     "description": "Charity fun run through campus and surrounding area. All fitness levels welcome. T-shirts included.",
     "category": "sports",
@@ -228,7 +252,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1cf",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df49"
+    },
     "title": "Soccer Match: Alumni vs Current Students",
     "description": "Traditional soccer match between alumni and current students. BBQ after the game.",
     "category": "sports",
@@ -247,7 +273,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d5",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4f"
+    },
     "title": "Yoga & Meditation Session",
     "description": "Outdoor yoga session for stress relief and wellness. Bring your own mat. All levels welcome.",
     "category": "sports",
@@ -266,7 +294,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d4",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4e"
+    },
     "title": "Swimming Competition",
     "description": "Inter-department swimming competition. Watch talented athletes compete in various events.",
     "category": "sports",
@@ -285,7 +315,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b0",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2a"
+    },
     "title": "Creative Writing Workshop",
     "description": "Improve your writing skills with expert guidance. Exercises and peer feedback included.",
     "category": "workshop",
@@ -304,7 +336,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b8",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df32"
+    },
     "title": "Photography Masterclass",
     "description": "Learn professional photography techniques. Bring your camera. Equipment demonstration included.",
     "category": "workshop",
@@ -323,7 +357,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2b"
+    },
     "title": "Cooking Workshop: Italian Cuisine",
     "description": "Learn to cook authentic Italian dishes. Hands-on cooking experience. Recipe cards provided.",
     "category": "workshop",
@@ -342,7 +378,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b8",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df32"
+    },
     "title": "Pottery & Ceramics Workshop",
     "description": "Create your own ceramic pieces. All materials provided. Take home your creations.",
     "category": "workshop",
@@ -361,7 +399,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1ba",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df34"
+    },
     "title": "Public Speaking Workshop",
     "description": "Overcome stage fright and improve your presentation skills. Practice sessions included.",
     "category": "workshop",
@@ -380,7 +420,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1be",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df38"
+    },
     "title": "Industry Networking Mixer",
     "description": "Connect with professionals from various industries. Light refreshments served.",
     "category": "networking",
@@ -399,7 +441,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2b"
+    },
     "title": "Alumni Networking Dinner",
     "description": "Annual alumni networking dinner. Three-course meal. Business casual attire.",
     "category": "networking",
@@ -418,7 +462,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c8",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df42"
+    },
     "title": "Startup Pitch Night",
     "description": "Watch student startups pitch their ideas. Network with entrepreneurs and investors.",
     "category": "networking",
@@ -437,7 +483,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1be",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df38"
+    },
     "title": "Career Fair Preparation Workshop",
     "description": "Learn how to make the most of career fairs. Resume review and mock interviews.",
     "category": "networking",
@@ -456,7 +504,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2b"
+    },
     "title": "Mentorship Speed Dating",
     "description": "Rotate through mentors from different industries. Find your perfect mentor match.",
     "category": "networking",
@@ -475,7 +525,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3b"
+    },
     "title": "Charity Bake Sale",
     "description": "Homemade baked goods for sale. All proceeds go to local food bank. Variety of treats available.",
     "category": "fundraiser",
@@ -494,7 +546,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c1",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3b"
+    },
     "title": "Charity Auction Gala",
     "description": "Formal gala with silent and live auctions. Proceeds support scholarship fund. Black tie optional.",
     "category": "fundraiser",
@@ -513,7 +567,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d2",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4c"
+    },
     "title": "Book Drive for Schools",
     "description": "Collect and donate books to underprivileged schools. Drop-off location. Refreshments for donors.",
     "category": "fundraiser",
@@ -532,7 +588,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d5",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4f"
+    },
     "title": "Walk for Mental Health Awareness",
     "description": "Community walk to raise awareness and funds for mental health services. T-shirts and snacks provided.",
     "category": "fundraiser",
@@ -551,7 +609,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bf",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df39"
+    },
     "title": "Fundraising Concert",
     "description": "Live performances by student bands. All ticket sales support student emergency fund.",
     "category": "fundraiser",
@@ -570,7 +630,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b5",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df2f"
+    },
     "title": "Study Skills Seminar",
     "description": "Learn effective study techniques and time management strategies. Handouts and resources provided.",
     "category": "education",
@@ -589,7 +651,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bd",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df37"
+    },
     "title": "Research Symposium",
     "description": "Students present their research findings. Multiple sessions across various disciplines.",
     "category": "education",
@@ -608,7 +672,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1d3",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df4d"
+    },
     "title": "Language Exchange Meetup",
     "description": "Practice speaking different languages with native speakers. Coffee and snacks provided.",
     "category": "education",
@@ -627,7 +693,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1ca",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df44"
+    },
     "title": "Guest Lecture: Climate Change",
     "description": "Renowned environmental scientist discusses climate change solutions. Q&A session included.",
     "category": "education",
@@ -646,7 +714,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c0",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3a"
+    },
     "title": "Financial Literacy Workshop",
     "description": "Learn about budgeting, investing, and financial planning. Real-world examples and tips.",
     "category": "education",
@@ -665,7 +735,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c4",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3e"
+    },
     "title": "Movie Night: Classic Films",
     "description": "Outdoor screening of classic films. Bring blankets and snacks. Popcorn provided.",
     "category": "entertainment",
@@ -684,7 +756,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bb",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df35"
+    },
     "title": "Comedy Night",
     "description": "Stand-up comedy featuring student and professional comedians. Laughs guaranteed!",
     "category": "entertainment",
@@ -703,7 +777,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b7",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df31"
+    },
     "title": "Board Game Tournament",
     "description": "Competitive board game tournament. Multiple games available. Prizes for winners.",
     "category": "entertainment",
@@ -722,7 +798,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1bf",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df39"
+    },
     "title": "Karaoke Night",
     "description": "Sing your heart out! Song selection available. Snacks and drinks for sale.",
     "category": "entertainment",
@@ -741,7 +819,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b7",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df31"
+    },
     "title": "Escape Room Challenge",
     "description": "Team up to solve puzzles and escape the room. Multiple themed rooms available.",
     "category": "entertainment",
@@ -760,7 +840,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b9",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df33"
+    },
     "title": "Spring Festival",
     "description": "Annual spring festival with food vendors, live music, and activities. Family-friendly event.",
     "category": "other",
@@ -779,7 +861,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b8",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df32"
+    },
     "title": "Art Exhibition Opening",
     "description": "View student and faculty artwork. Wine and cheese reception. Gallery walkthrough included.",
     "category": "other",
@@ -798,7 +882,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1be",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df38"
+    },
     "title": "Career Fair",
     "description": "Meet employers and explore job opportunities. Resume review available. Multiple industries represented.",
     "category": "other",
@@ -817,7 +903,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1b7",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df31"
+    },
     "title": "Cultural Festival",
     "description": "Celebrate diversity with food, performances, and cultural displays from around the world.",
     "category": "other",
@@ -836,7 +924,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c5",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3f"
+    },
     "title": "Graduation Ceremony Reception",
     "description": "Post-graduation reception for graduates and families. Light refreshments and photo opportunities.",
     "category": "other",
@@ -855,7 +945,9 @@
     "image": null
   },
   {
-    "organization": "69050a341c29e71476bae1c2",
+    "organization": {
+      "$oid": "69064714b3b6e22e0d41df3c"
+    },
     "title": "Volunteer Fair",
     "description": "Discover volunteer opportunities with local organizations. Sign up on the spot.",
     "category": "other",

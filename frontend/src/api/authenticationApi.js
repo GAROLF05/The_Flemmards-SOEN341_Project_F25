@@ -9,3 +9,6 @@ export const signup = (data) =>
 
 export const logout = () =>
     axiosClient.post(ENDPOINTS.LOGOUT);
+
+export const getUserProfile = () =>
+    axiosClient.get(ENDPOINTS.USER_PROFILE);

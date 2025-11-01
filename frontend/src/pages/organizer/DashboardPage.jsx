@@ -2,7 +2,8 @@ import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/react
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
-import { getAllEvents } from '../../api/eventApi';
+import { getUserProfile } from '../../api/authenticationApi';
+import { getEventsByOrganization } from '../../api/eventApi';
 import { transformEventsForFrontend } from '../../utils/eventTransform';
 
 // --- MOCK DATA (fallback) ---
@@ -654,11 +655,66 @@ const DashboardPage = () => {
         const fetchEvents = async () => {
             try {
                 setLoading(true);
-                const response = await getAllEvents();
-                console.log('API Response:', response); // Debug log
+
+                const userProfileResponse = await getUserProfile();
+                console.log('User profile response:', userProfileResponse); // Debug
+                
+                // axios wraps the response in .data
+                const userProfile = userProfileResponse?.data || userProfileResponse;
+                const user = userProfile?.user || userProfile;
+                
+                console.log('User object:', user); // Debug
+                console.log('User organization:', user?.organization); // Debug
+                
+                if (!user) {
+                    console.error('User not found in response');
+                    setEvents([]);
+                    setLoading(false);
+                    return;
+                }
+
+                if (!user.organization) {
+                    console.warn('User does not have an organization. User data:', {
+                        _id: user._id,
+                        email: user.email,
+                        role: user.role,
+                        organization: user.organization
+                    });
+                    setEvents([]);
+                    setLoading(false);
+                    return;
+                }
+
+                // Extract organization ID - handle both populated object and string ObjectId
+                let orgId;
+                if (typeof user.organization === 'string') {
+                    orgId = user.organization;
+                } else if (user.organization && user.organization._id) {
+                    orgId = user.organization._id;
+                } else if (user.organization && typeof user.organization === 'object') {
+                    // Try to extract _id or convert to string
+                    orgId = user.organization._id || user.organization.toString();
+                }
+                
+                console.log('Extracted organization ID:', orgId); // Debug
+                console.log('Organization type:', typeof user.organization); // Debug
+                
+                if (!orgId) {
+                    console.error('Organization ID not found. Organization value:', user.organization);
+                    setEvents([]);
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await getEventsByOrganization(orgId);
+                console.log('API Response (raw):', response); // Debug log
+                
+                // axios wraps the response in .data
+                const responseData = response?.data || response;
+                console.log('API Response (unwrapped):', responseData); // Debug log
                 
                 // Handle different response formats
-                const eventsArray = response.events || response || [];
+                const eventsArray = responseData?.events || responseData || [];
                 console.log('Events extracted:', eventsArray.length, eventsArray); // Debug log
                 
                 if (!Array.isArray(eventsArray)) {
