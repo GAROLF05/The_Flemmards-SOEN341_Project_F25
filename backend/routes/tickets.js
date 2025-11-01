@@ -31,7 +31,4 @@ router.put('/ticket/cancel/:ticket_id', requireAuth, ticketController.cancelTick
 router.get('/user/:user_id', requireAuth, ticketController.getTicketsByUser);
 router.get('/event/:event_id', requireAuth, ticketController.getTicketsByEvent);
 
-// Task #58: Export attendee list as CSV (organizer or admin)
-router.get('/export-csv/:event_id', requireAuth, ticketController.exportAttendeesCSV);
-
 module.exports = router;

@@ -42,8 +42,9 @@ router.patch('/cancel/:event_id', requireAdmin, eventController.cancelEvent);
 // Delete
 router.delete('/delete/:event_id', requireAdmin, eventController.deleteEvent);
 
-// Attendee management
-router.get('/get/attendees/:event_id', requireAdmin, eventController.getAttendees);
+// Attendee management (Admin or Event Organizer)
+router.get('/get/attendees/:event_id', requireAuth, eventController.getAttendees);
+router.get('/export-csv/:event_id', requireAuth, eventController.exportAttendeesCSV);
 router.get('/get/waitlist/:event_id', requireAdmin, eventController.getWaitlistedUsers);
 router.patch('/promote/:event_id', requireAdmin, eventController.promoteWaitlistedUser);
 

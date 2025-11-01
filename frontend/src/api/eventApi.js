@@ -1,4 +1,5 @@
 import api from "./axiosClient";
+import axios from "axios";
 import ENDPOINTS from "./endpoints";
 
 // Browse events (Public - for students)
@@ -114,6 +115,23 @@ export const deleteEvent = (eventId) => {
 
 // Get attendees for event (Admin only)
 export const getEventAttendees = (eventId) => api.get(ENDPOINTS.EVENT_ATTENDEES(eventId));
+
+// Export attendees as CSV (Admin or Organizer)
+export const exportAttendeesCSV = async (eventId) => {
+    console.log('Exporting attendees CSV for event:', eventId);
+    // Use axios directly to bypass interceptor that returns only response.data
+    // We need full response with headers for blob downloads
+    const token = localStorage.getItem("auth-token");
+    const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+    
+    const response = await axios.get(`${baseURL}/events/export-csv/${eventId}`, {
+        responseType: 'blob',
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        }
+    });
+    return response;
+};
 
 // Get waitlist for event (Admin only)
 export const getEventWaitlist = (eventId) => api.get(ENDPOINTS.EVENT_WAITLIST(eventId));
