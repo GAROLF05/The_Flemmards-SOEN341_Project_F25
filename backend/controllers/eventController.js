@@ -26,7 +26,7 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User, USER_ROLE } = require('../models/User');
 const { Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY } = require('../models/Event');
 const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
@@ -545,8 +545,28 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
 exports.createEvent = async (req,res)=>{
 
     try {
-        const { ensureAdmin } = require('../utils/authHelpers');
-        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+        // Check authentication
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        }
+
+        // Check if user is admin or organizer
+        const { isAdmin } = require('../utils/authHelpers');
+        
+        const userIsAdmin = await isAdmin(req);
+        // Handle role comparison - check both exact match and case-insensitive
+        const userRole = req.user.role || '';
+        const userIsOrganizer = userRole === USER_ROLE.ORGANIZER || 
+                                 userRole.toLowerCase() === USER_ROLE.ORGANIZER.toLowerCase();
+
+        if (!userIsAdmin && !userIsOrganizer) {
+            return res.status(403).json({ 
+                code: 'FORBIDDEN', 
+                message: 'Only administrators and organizers can create events',
+                userRole: userRole,
+                expectedRole: USER_ROLE.ORGANIZER
+            });
+        }
 
         // Handle both JSON and multipart/form-data (file upload)
         let requestBody = req.body;
@@ -596,7 +616,35 @@ exports.createEvent = async (req,res)=>{
         const org = await Organization.findById(organization).lean();
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
-        // Task #122: Restrict event creation to only approved organizers
+        // If user is organizer (not admin), verify they own this organization
+        if (!userIsAdmin && userIsOrganizer) {
+            // Fetch full user to get organization reference
+            const user = await User.findById(req.user._id).select('organization').lean();
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            // Check if organizer's organization matches the event organization
+            // Handle both ObjectId and string formats
+            let userOrgId = null;
+            if (user.organization) {
+                userOrgId = user.organization.toString ? user.organization.toString() : String(user.organization);
+            }
+            
+            const eventOrgId = String(organization);
+            
+            if (!userOrgId || userOrgId !== eventOrgId) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Organizers can only create events for their own organization',
+                    message: userOrgId 
+                        ? 'You do not have permission to create events for this organization'
+                        : 'You must be associated with an organization to create events'
+                });
+            }
+        }
+
+        // Task #122: Restrict event creation to only approved organizations
         if (org.status !== 'approved') {
             return res.status(403).json({ 
                 error: 'Only approved organizations can create events',
@@ -612,20 +660,34 @@ exports.createEvent = async (req,res)=>{
         if (req.file) {
             // File uploaded via multer - construct URL
             imageUrl = `/uploads/events/${req.file.filename}`;
-            console.log(`[AUDIT] Image uploaded: ${req.file.filename} for event: ${title}`);
+            console.log(`[AUDIT] Image uploaded: ${req.file.filename} for event: ${title || 'Unknown'}`);
         } else if (requestBody.image && requestBody.image.trim()) {
             // Image URL or base64 provided in request body (fallback option)
             imageUrl = requestBody.image.trim();
         }
 
+        // Validate dates before creating event
+        const startDate = new Date(start_at);
+        const endDate = new Date(end_at);
+        
+        if (isNaN(startDate.getTime())) {
+            return res.status(400).json({ error: 'Invalid start_at date format' });
+        }
+        if (isNaN(endDate.getTime())) {
+            return res.status(400).json({ error: 'Invalid end_at date format' });
+        }
+        if (endDate <= startDate) {
+            return res.status(400).json({ error: 'end_at must be after start_at' });
+        }
+
         const eventDoc = await Event.create({
             organization,
-            title,
-            description,
-            start_at: new Date(start_at),
-            end_at: new Date(end_at),
+            title: title.trim(),
+            description: description ? description.trim() : '',
+            start_at: startDate,
+            end_at: endDate,
             capacity: Number(capacity) || 0,
-            category,
+            category: category || CATEGORY.OTHER,
             location,
             status: EVENT_STATUS.UPCOMING,
             moderationStatus: MODERATION_STATUS.PENDING_APPROVAL,
@@ -642,6 +704,10 @@ exports.createEvent = async (req,res)=>{
         });
     } catch (e) {
         console.error('Error creating event:', e);
+        console.error('Error stack:', e.stack);
+        console.error('Request body:', req.body);
+        console.error('User:', req.user);
+        
         // If file was uploaded but event creation failed, clean up the file
         if (req.file) {
             const fs = require('fs');
@@ -655,7 +721,11 @@ exports.createEvent = async (req,res)=>{
                 console.error('Error cleaning up uploaded file:', cleanupError);
             }
         }
-        return res.status(500).json({ error: 'Failed to create event' });
+        return res.status(500).json({ 
+            error: 'Failed to create event',
+            message: e.message || 'An unexpected error occurred',
+            details: process.env.NODE_ENV === 'development' ? e.stack : undefined
+        });
     }
 
 }
