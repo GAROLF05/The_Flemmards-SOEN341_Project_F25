@@ -12,7 +12,7 @@ export default function StudentHome() {
       try {
         const data = await fetchEvents();
         setEvents(data);
-      } catch (e) {
+      } catch {
         // fallback mock so you can see the UI even if backend isn't ready
         setEvents([
           { event_id: 1, title: "Tech Fair", description: "Student tech showcase", start_at: "2025-10-20T10:00:00Z", end_at:"2025-10-20T18:00:00Z", location:"Hall Building" },

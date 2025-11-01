@@ -3,11 +3,12 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getUserProfile } from '../../api/authenticationApi';
-import { getEventsByOrganization, createEvent, getEventAttendees, exportAttendeesCSV } from '../../api/eventApi';
+import { getEventsByOrganization, createEvent, exportAttendeesCSV } from '../../api/eventApi';
 import { transformEventsForFrontend, transformEventForFrontend } from '../../utils/eventTransform';
 import { useNotification } from '../../hooks/useNotification';
 
 // --- MOCK DATA (fallback) ---
+// eslint-disable-next-line no-unused-vars
 const initialEventsData = [
     {
         id: 1,
@@ -455,7 +456,7 @@ const AnalyticsModal = ({ event, isOpen, onClose }) => {
 };
 
 const EventDetailsModal = ({ event, isOpen, onClose }) => {
-    const { translate } = useLanguage();
+    // const { translate } = useLanguage();
 
     if (!event)
         return null;
@@ -477,10 +478,10 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
         });
     };
 
-    const formatTime = (date) => {
-        if (!date) return '';
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    };
+    // const formatTime = (date) => {
+    //     if (!date) return '';
+    //     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    // };
 
     return (
         <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
@@ -1003,6 +1004,7 @@ const DashboardPage = () => {
         fetchEvents();
     }, []);
 
+    // eslint-disable-next-line no-unused-vars
     const uniqueOrganizations = useMemo(() => [...new Set(events.map(event => event.organization))].sort(), [events]);
 
     useEffect(() => {

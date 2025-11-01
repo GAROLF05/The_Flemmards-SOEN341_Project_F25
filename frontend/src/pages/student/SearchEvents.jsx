@@ -18,13 +18,13 @@ export default function SearchEvents() {
       try {
         const res = await searchEvents({ q: query, category, page });
         setEvents(res.items || []);
-      } catch (e) {
+      } catch {
         showNotification("Failed to load events", "error");
       } finally {
         setLoading(false);
       }
     })();
-  }, [query, category, page]);
+  }, [query, category, page, showNotification]);
 
   if (loading) return <div className="p-6">Loading events...</div>;
 

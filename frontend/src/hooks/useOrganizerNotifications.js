@@ -3,6 +3,7 @@ import { useNotification } from './useNotification';
 import { useLanguage } from './useLanguage';
 
 // Mock function to simulate email sending - replace with actual API call
+// eslint-disable-next-line no-unused-vars
 const mockSendEmail = async (recipientEmail, subject, message) => {
     // Simulated delay to mimic API call
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -51,7 +52,7 @@ export function useOrganizerNotifications() {
             );
 
             return true;
-        } catch (error) {
+        } catch {
             showNotification(
                 'error',
                 translate('errorSendingNotification')

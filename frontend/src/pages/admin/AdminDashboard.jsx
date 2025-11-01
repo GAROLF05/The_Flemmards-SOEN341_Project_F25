@@ -14,6 +14,7 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
 
 // --- MOCK DATA ---
+// eslint-disable-next-line no-unused-vars
 const mockEventsData = [
   { id: 1, organization: 'Evenko', price: 55, capacity: 5000, ticketsIssued: 4500, attendees: 4200 },
   { id: 2, organization: 'Osheaga', price: 75, capacity: 10000, ticketsIssued: 8500, attendees: 8000 },
