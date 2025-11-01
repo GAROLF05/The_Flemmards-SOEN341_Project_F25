@@ -1,5 +1,6 @@
 name: CI
 
+# Run on every push and pull request
 on:
   push:
     branches: [ '*' ]
@@ -7,48 +8,35 @@ on:
     branches: [ '*' ]
 
 jobs:
-  frontend:
+  test:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Get the code from GitHub
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # Step 2: Setup Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'npm'
 
-    - name: Install root dependencies
-      run: npm ci
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm ci --prefix frontend
 
-    - name: Install frontend dependencies
-      run: npm ci --prefix frontend
-
-    - name: Run ESLint on frontend
+    # Step 4: Run frontend linting
+    - name: Lint frontend code
       run: npm run lint --prefix frontend
 
+    # Step 5: Build frontend
     - name: Build frontend
       run: npm run build --prefix frontend
 
-  backend-api-tests:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install root dependencies
-      run: npm ci
-
-    - name: Run backend API tests
+    # Step 6: Run tests
+    - name: Run tests
       run: npm test
-      env:
-        NODE_ENV: test
-        JWT_SECRET: test-secret-key-for-ci-testing
-
