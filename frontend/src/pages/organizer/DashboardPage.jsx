@@ -525,7 +525,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                         {event.organization && (
                             <div className="mb-6">
                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Organization</h3>
-                                <p className="text-gray-600 dark:text-gray-300">{event.organization}</p>
+                                <p className="text-gray-600 dark:text-gray-300">{event.organization.toString()}</p>
                             </div>
                         )}
 
@@ -549,7 +549,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
 };
 
 const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categories }) => {
-    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', date: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
+    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -618,7 +618,8 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
         // Validate required fields with specific messages
         const missingFields = [];
         if (!newEvent.title || !newEvent.title.trim()) missingFields.push('Event Title');
-        if (!newEvent.date) missingFields.push('Date and Time');
+        if (!newEvent.startAt) missingFields.push('Starts At');
+        if (!newEvent.endAt) missingFields.push('Ends At');
         if (!newEvent.location || !newEvent.location.trim()) missingFields.push('Location Name');
         if (!newEvent.locationAddress || !newEvent.locationAddress.trim()) missingFields.push('Location Address');
         if (!newEvent.description || !newEvent.description.trim()) missingFields.push('Description');
@@ -632,23 +633,34 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
         setIsSubmitting(true);
 
         try {
-            // Parse date and time
-            const dateTime = new Date(newEvent.date);
-            if (isNaN(dateTime.getTime())) {
-                alert('Please enter a valid date and time');
+            // Parse start and end dates
+            const startDateTime = new Date(newEvent.startAt);
+            const endDateTime = new Date(newEvent.endAt);
+            
+            if (isNaN(startDateTime.getTime())) {
+                alert('Please enter a valid start date and time');
                 setIsSubmitting(false);
                 return;
             }
-
-            // Calculate end_at (default 2 hours duration if not specified)
-            const endDateTime = new Date(dateTime.getTime() + 2 * 60 * 60 * 1000);
+            
+            if (isNaN(endDateTime.getTime())) {
+                alert('Please enter a valid end date and time');
+                setIsSubmitting(false);
+                return;
+            }
+            
+            if (endDateTime <= startDateTime) {
+                alert('End date and time must be after start date and time');
+                setIsSubmitting(false);
+                return;
+            }
 
             // Prepare event data for API
             const eventData = {
                 organization: organizationId,
                 title: newEvent.title,
                 category: newEvent.category,
-                start_at: dateTime.toISOString(),
+                start_at: startDateTime.toISOString(),
                 end_at: endDateTime.toISOString(),
                 capacity: newEvent.capacity || 0,
                 description: newEvent.description || '',
@@ -669,7 +681,7 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
             onAddEvent(transformedEvent);
             
             // Reset form
-            setNewEvent({ title: '', category: 'Music', date: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
+            setNewEvent({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
             setImageFile(null);
             setImagePreview(null);
             setIsSubmitting(false);
@@ -720,7 +732,8 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div> <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Title</label> <input id="title" name="title" value={newEvent.title} onChange={handleChange} placeholder="e.g., Summer Music Fest" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div> <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label> <select id="category" name="category" value={newEvent.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200"> {categories.filter(c => c !== 'All' && c !== 'Featured').map(cat => <option key={cat} value={cat}>{cat}</option>)} </select> </div>
-                            <div> <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date and Time</label> <input id="date" name="date" type="datetime-local" value={newEvent.date} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="startAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Starts At</label> <input id="startAt" name="startAt" type="datetime-local" value={newEvent.startAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="endAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ends At</label> <input id="endAt" name="endAt" type="datetime-local" value={newEvent.endAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div> <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Name</label> <input id="location" name="location" value={newEvent.location} onChange={handleChange} placeholder="e.g., Place des Arts" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div> <label htmlFor="locationAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Address</label> <input id="locationAddress" name="locationAddress" value={newEvent.locationAddress} onChange={handleChange} placeholder="e.g., 175 Sainte-Catherine St W, Montreal, QC" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div className="md:col-span-2">
