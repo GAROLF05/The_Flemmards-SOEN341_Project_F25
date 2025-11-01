@@ -1,8 +1,11 @@
-import { PencilSquareIcon, PlusCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { PencilSquareIcon, PlusCircleIcon, TrashIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import Modal from '../../components/modal/Modal';
+import OrganizationMembersManager from '../../components/admin/OrganizationMembersManager';
+import { useOrganizerNotifications } from '../../hooks/useOrganizerNotifications';
+import { adminApi } from '../../api/adminApi';
 
 // --- MOCK DATA ---
 const organizationsData = [
@@ -68,17 +71,68 @@ export default function Organizations() {
     const { showNotification } = useNotification();
     const { translate } = useLanguage();
 
-    const handleEditRole = () => {
-        // console.log(`Editing role for organization ${id}`);
+    const handleEditRole = (id) => {
+        // Toggle organization selection
+        setSelectedOrganization(prev => prev?.id === id ? null : organizations.find(org => org.id === id));
     };
 
-    const handleDelete = (id, name) => {
-        showNotification(`The organization ${name} has been deleted successfully.`, 'success');
-        setOrganizations(prev => prev.filter(org => org.id !== id));
+    const handleDelete = async (id) => {
+        try {
+            await adminApi.deleteOrganization(id);
+            setOrganizations(prev => prev.filter(org => org.id !== id));
+            showNotification('success', translate("organizationDeletedSuccessfully"));
+
+            if (selectedOrganization?.id === id) {
+                setSelectedOrganization(null);
+            }
+        } catch (error) {
+            console.error('Error deleting organization:', error);
+            showNotification('error', translate('errorDeletingOrganization'));
+        }
     };
 
-    const handleAddOrganization = (newOrg) => {
-        setOrganizations(prev => [{ ...newOrg, role: 'Organizer' }, ...prev]);
+    const { notifyOrganizer } = useOrganizerNotifications();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        loadOrganizations();
+    }, []);
+
+    const loadOrganizations = async () => {
+        try {
+            setIsLoading(true);
+            const data = await adminApi.getOrganizations();
+            setOrganizations(data);
+        } catch (error) {
+            console.error('Error loading organizations:', error);
+            showNotification('error', translate('errorLoadingOrganizations'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleAddOrganization = async (newOrg) => {
+        try {
+            setOrganizations(prev => [{ ...newOrg, role: 'Organizer' }, ...prev]);
+            showNotification('success', translate("organizationCreatedSuccessfully"));
+
+            await notifyOrganizer({
+                organizerEmail: newOrg.email,
+                organizerName: newOrg.contact,
+                status: 'approved',
+                eventTitle: translate('organizationRegistration'),
+                feedback: translate('organizationApprovalMessage')
+            });
+
+            await adminApi.sendNotification(
+                newOrg.email,
+                translate('organizationApprovalSubject'),
+                translate('organizationApprovalMessage')
+            );
+        } catch (error) {
+            console.error('Error creating organization:', error);
+            showNotification('error', translate('errorCreatingOrganization'));
+        }
     };
 
     return (
@@ -122,9 +176,12 @@ export default function Organizations() {
                                             <div className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">{org.email}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            <button onClick={() => handleEditRole(org.id)} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all transition-colors duration-300 cursor-pointer">
-                                                <span className="sr-only">{translate("editRole")}</span>
-                                                <PencilSquareIcon className="w-5 h-5" />
+                                            <button
+                                                onClick={() => handleEditRole(org.id)}
+                                                className={`text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 p-1 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all transition-colors duration-300 cursor-pointer ${selectedOrganization?.id === org.id ? 'bg-indigo-100 dark:bg-indigo-900/50' : ''}`}
+                                            >
+                                                <span className="sr-only">{translate("manageMembers")}</span>
+                                                <UserGroupIcon className="w-5 h-5" />
                                             </button>
 
                                             <button onClick={() => handleDelete(org.id)} className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all transition-colors duration-300 cursor-pointer">
@@ -145,6 +202,15 @@ export default function Organizations() {
                     </table>
                 </div>
             </div>
+
+            {selectedOrganization && (
+                <div className="mt-8 bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 transition-colors duration-300">
+                    <OrganizationMembersManager
+                        organizationId={selectedOrganization.id}
+                        organizationName={selectedOrganization.name}
+                    />
+                </div>
+            )}
 
             <CreateOrganizationModal
                 isOpen={isCreateModalOpen}

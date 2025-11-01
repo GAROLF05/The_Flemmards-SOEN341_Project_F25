@@ -1,4 +1,12 @@
 const ENDPOINTS = {
+	// Admin & Organization Management
+	ORGANIZATIONS_ALL: "/organizations/all",
+	ORGANIZATION_STATUS: (id) => `/organizations/${id}/status`,
+	ORGANIZATION_DELETE: (id) => `/organizations/${id}`,
+	ORGANIZATION_ADD_MEMBER: (orgId) => `/organizations/${orgId}/members`,
+	ORGANIZATION_REMOVE_MEMBER: (orgId, memberId) => `/organizations/${orgId}/members/${memberId}`,
+	EVENT_STATUS: (id) => `/events/${id}/status`,
+	SEND_NOTIFICATION: "/notifications/send",
 	LOGIN: "/users/login",
 	SIGNUP: "/users/register",
 
