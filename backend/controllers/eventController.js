@@ -694,6 +694,8 @@ exports.createEvent = async (req,res)=>{
             image: imageUrl,
         });
 
+        console.log('Event created:', eventDoc._id, title.trim());
+
         // Convert to plain object and apply default image if needed
         const eventObj = eventDoc.toObject();
         const normalizedEvent = normalizeEventImage(eventObj);
@@ -833,6 +835,7 @@ exports.updateEvent = async (req,res) => {
             const updatedObj = updated.toObject();
             const normalizedEvent = normalizeEventImage(updatedObj);
 
+            console.log('Event updated:', event_id, updated.title);
             return res.status(200).json({ message: 'Event updated', event: normalizedEvent });
         } catch (e) {
             await session.abortTransaction();
@@ -887,6 +890,7 @@ exports.cancelEvent = async (req,res) => {
             await session.commitTransaction();
             session.endSession();
 
+            console.log('Event cancelled:', event._id, regIds.length, 'registrations');
             return res.status(200).json({ message: 'Event cancelled and related registrations/tickets cleaned up', eventId: event._id, cancelledRegistrations: regIds.length });
         } catch (e) {
             await session.abortTransaction();
@@ -944,6 +948,7 @@ exports.deleteEvent = async (req,res) => {
 
             await session.commitTransaction();
 
+            console.log('Event deleted:', event._id, event.title, deletedRegistrationsCount, 'regs', deletedTicketsCount, 'tickets');
             return res.status(200).json({
                 message: `Event '${event.title}' and all related data deleted successfully`,
                 deletedEventId: event._id,
