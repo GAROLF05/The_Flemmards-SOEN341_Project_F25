@@ -91,9 +91,10 @@ exports.registerToEvent = async (req, res) => {
         session.startTransaction();
 
         let registration;
+        let event;
         try {
             // Fetch event to check its capacity and status
-            const event = await Event.findById(eventId);
+            event = await Event.findById(eventId);
             if (!event)
                 return res.status(404).json({ code: 'EVENT_NOT_FOUND', message: 'Event not found' });
 
@@ -108,13 +109,14 @@ exports.registerToEvent = async (req, res) => {
             // Is the registration going to be confirmed or a waitlist based on the number of tickets he's trying to get
             let registrationStatus = qty > event.capacity ? REGISTRATION_STATUS.WAITLISTED : REGISTRATION_STATUS.CONFIRMED;
 
-            // Create
-            registration = await Registration.create({
+            // Create registration with session (using new Model() + save() for session support)
+            registration = new Registration({
                 user: req.user._id,
                 event: eventId,
                 quantity: qty,
                 status: registrationStatus
-            }, { session });
+            });
+            await registration.save({ session });
 
             if (registrationStatus === REGISTRATION_STATUS.CONFIRMED) {
                 // atomic decrement and addToSet to prevent duplicates
@@ -129,6 +131,7 @@ exports.registerToEvent = async (req, res) => {
             await event.save({ session });
             await session.commitTransaction();
 
+            console.log('Registration created:', registration._id, registrationStatus, eventId);
         } catch (e) {
             await session.abortTransaction();
             throw e;
@@ -140,7 +143,7 @@ exports.registerToEvent = async (req, res) => {
             const name = req.user.username || req.user.name || "there";
             const email = req.user.email;
             const eventTitle = event.title || "your event";
-            const registrationId = registration[0]._id;
+            const registrationId = registration._id;
 
             // Create a ticket download link
             const ticketLink = `${process.env.FRONTEND_URL || "http://localhost:3000"
@@ -157,24 +160,24 @@ exports.registerToEvent = async (req, res) => {
 
             // Determine email subject based on registration status
             const subject =
-                registration[0].status === REGISTRATION_STATUS.CONFIRMED
+                registration.status === REGISTRATION_STATUS.CONFIRMED
                     ? "Event Registration - Confirmation"
                     : "Event Registration - Waitlisted";
 
             // Determine email message based on registration status
             const message =
-                registration[0].status === REGISTRATION_STATUS.CONFIRMED
+                registration.status === REGISTRATION_STATUS.CONFIRMED
                     ? `<p>Your registration has been confirmed! Download your ticket(s) below.</p>`
                     : `<p>The event is currently full. You've been added to the waitlist and will be notified if a spot opens up.</p>`;
 
             // Prepare attachments for confirmed registrations
             const attachments = [];
             if (
-                registration[0].status === REGISTRATION_STATUS.CONFIRMED &&
-                registration[0].qrDataUrl
+                registration.status === REGISTRATION_STATUS.CONFIRMED &&
+                registration.qrDataUrl
             ) {
                 // Attach QR code as base64 data URL
-                const base64Data = registration[0].qrDataUrl.replace(
+                const base64Data = registration.qrDataUrl.replace(
                     /^data:image\/png;base64,/,
                     ""
                 );
@@ -195,14 +198,14 @@ exports.registerToEvent = async (req, res) => {
                 <h2>Hey ${name}!</h2>
                 <p>Thanks for registering for <strong>${eventTitle}</strong>!</p>
                 ${message}
-                ${registration[0].status === REGISTRATION_STATUS.CONFIRMED
+                ${registration.status === REGISTRATION_STATUS.CONFIRMED
                         ? `<p><strong>📥 Download your ticket:</strong> <a href="${ticketLink}" style="color: #007bff; text-decoration: none;">Click here</a></p>
                        <p><strong>Your QR Code:</strong></p>
                        <img src="cid:qrcode" alt="Ticket QR Code" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;" />`
                         : ``
                     }
                 <p style="margin-top: 30px; color: #666; font-size: 12px;">
-                    Registration ID: ${registration[0]._id}
+                    Registration ID: ${registration._id}
                 </p>
                 <p style="color: #666;">– The Flemmards Team</p>
             </div>
@@ -219,11 +222,11 @@ exports.registerToEvent = async (req, res) => {
 
         // Final response
         return res.status(201).json({
-            code: registration[0].status,
-            message: registration[0].status === REGISTRATION_STATUS.CONFIRMED
+            code: registration.status,
+            message: registration.status === REGISTRATION_STATUS.CONFIRMED
                 ? 'Registration confirmed successfully!'
                 : 'Event full — you have been added to the waitlist.',
-            registration: registration[0],
+            registration: registration,
         });
 
     } catch (e) {
