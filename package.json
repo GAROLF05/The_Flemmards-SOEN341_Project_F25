@@ -33,6 +33,7 @@
     "express-session": "^1.18.2",
     "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "mongoose": "^8.19.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^7.0.9",

@@ -21,9 +21,18 @@ const jwtSecret =
  * Middleware to check authentication status
  * Attaches user to req.user if valid token exists
  * Does NOT require authentication - used globally
+ * Supports both cookie-based and Authorization header tokens
  */
 const checkAuth = (req, res, next) => {
-  const token = req.cookies.auth_token;
+  // Try to get token from cookie first, then from Authorization header
+  let token = req.cookies.auth_token;
+  
+  if (!token && req.headers.authorization) {
+    const authHeader = req.headers.authorization;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    }
+  }
 
   if (!token) {
     req.isLoggedIn = false;
@@ -38,14 +47,17 @@ const checkAuth = (req, res, next) => {
       _id: decoded.userId,
       username: decoded.username,
       email: decoded.email,
+      role: decoded.role, // Include role for easier access
     };
     return next();
   } catch (error) {
     console.error("JWT verification error:", error.message);
     req.isLoggedIn = false;
     req.user = null;
-    // Clear invalid token
-    res.clearCookie("auth_token");
+    // Clear invalid token cookie if it exists
+    if (req.cookies.auth_token) {
+      res.clearCookie("auth_token");
+    }
     return next();
   }
 };

@@ -28,10 +28,13 @@ try {
 // Models of DB
 const Administrator = require('../models/Administrators');
 const { User, USER_ROLE } = require('../models/User');
-const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
+const { Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY } = require('../models/Event');
 const { Organization, ORGANIZATION_STATUS }= require('../models/Organization');
 const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
+
+// Notification controller
+const { notifyEventModeration, notifyOrganizationStatus } = require('./notificationController');
 
 // QR Code setup (npm install qrcode)
 const qrcode = require('qrcode');
@@ -133,22 +136,21 @@ exports.approveOrganizer = async (req,res)=>{
         const { status, rejectionReason } = req.body;
 
         // Validate org_id
-        if (!org_id) {
-            return res.status(400).json({ error: 'Organization ID is required' });
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(org_id)) {
-            return res.status(400).json({ error: 'Invalid organization ID format' });
+        if (!org_id || !mongoose.Types.ObjectId.isValid(org_id)) {
+            return res.status(400).json({ error: 'Invalid organization ID' });
         }
 
         // Validate status
-        if (!status) {
-            return res.status(400).json({ error: 'Status is required' });
+        if (!status || !['approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ 
+                error: 'Status must be either "approved" or "rejected"' 
+            });
         }
 
-        if (!Object.values(ORGANIZATION_STATUS).includes(status)) {
+        // If rejected, rejectionReason should be provided
+        if (status === 'rejected' && !rejectionReason) {
             return res.status(400).json({ 
-                error: `Invalid status. Must be one of: ${Object.values(ORGANIZATION_STATUS).join(', ')}` 
+                error: 'Rejection reason is required when rejecting an organization' 
             });
         }
 
@@ -158,34 +160,37 @@ exports.approveOrganizer = async (req,res)=>{
             return res.status(404).json({ error: 'Organization not found' });
         }
 
-        // Update organization status
+        // Update status
         organization.status = status;
+        if (status === 'approved') {
+            organization.verified = true;
+        }
         await organization.save();
 
-        // Audit log
+        // Task #123: Send notification to organizer
+        await notifyOrganizationStatus(org_id, status, rejectionReason);
+
+        // Log admin action (Task #124 - audit logs)
         console.log(`[AUDIT] Admin ${req.user.email} ${status} organization ${organization.name} (ID: ${org_id})`);
-        if (status === ORGANIZATION_STATUS.REJECTED && rejectionReason) {
+        if (rejectionReason) {
             console.log(`[AUDIT] Rejection reason: ${rejectionReason}`);
         }
 
-        const response = {
+        return res.status(200).json({
             message: `Organization ${status} successfully`,
             organization: {
                 _id: organization._id,
                 name: organization.name,
-                status: organization.status
-            }
-        };
-
-        if (status === ORGANIZATION_STATUS.REJECTED && rejectionReason) {
-            response.rejectionReason = rejectionReason;
-        }
-
-        return res.status(200).json(response);
+                status: organization.status,
+                verified: organization.verified
+            },
+            rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+            notificationSent: true
+        });
 
     } catch (e) {
-        console.error('Error approving/rejecting organizer:', e);
-        return res.status(500).json({ error: 'Failed to approve/reject organizer' });
+        console.error('Error approving/rejecting organization:', e);
+        return res.status(500).json({ error: 'Failed to update organization status' });
     }
 }
 
@@ -533,7 +538,11 @@ exports.approveEvent = async (req,res) => {
 
         const event = await Event.findByIdAndUpdate(
             event_id,
-            { status: EVENT_STATUS.UPCOMING },
+            { 
+                moderationStatus: MODERATION_STATUS.APPROVED,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
             { new: true }
         );
 
@@ -541,12 +550,16 @@ exports.approveEvent = async (req,res) => {
             return res.status(404).json({ error: 'Event not found' });
         }
 
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.APPROVED);
+
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} approved event ${event.title} (ID: ${event_id})`);
 
         return res.status(200).json({
             message: 'Event approved successfully',
-            event
+            event,
+            notificationSent: true
         });
 
     } catch (e) {
@@ -571,7 +584,12 @@ exports.rejectEvent = async (req,res) => {
 
         const event = await Event.findByIdAndUpdate(
             event_id,
-            { status: EVENT_STATUS.CANCELLED },
+            { 
+                moderationStatus: MODERATION_STATUS.REJECTED,
+                moderationNotes: reason,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
             { new: true }
         );
 
@@ -579,22 +597,21 @@ exports.rejectEvent = async (req,res) => {
             return res.status(404).json({ error: 'Event not found' });
         }
 
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.REJECTED, reason);
+
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} rejected event ${event.title} (ID: ${event_id})`);
         if (reason) {
             console.log(`[AUDIT] Rejection reason: ${reason}`);
         }
 
-        const response = {
+        return res.status(200).json({
             message: 'Event rejected successfully',
-            event
-        };
-
-        if (reason) {
-            response.reason = reason;
-        }
-
-        return res.status(200).json(response);
+            event,
+            reason,
+            notificationSent: true
+        });
 
     } catch (e) {
         console.error('Error rejecting event:', e);
@@ -620,13 +637,25 @@ exports.flagEvent = async (req,res) => {
             return res.status(400).json({ error: 'Flag reason is required' });
         }
 
-        const event = await Event.findById(event_id);
+        const event = await Event.findByIdAndUpdate(
+            event_id,
+            {
+                moderationStatus: MODERATION_STATUS.FLAGGED,
+                moderationNotes: flagReason,
+                moderatedBy: req.user.email,
+                moderatedAt: new Date()
+            },
+            { new: true }
+        );
 
         if (!event) {
             return res.status(404).json({ error: 'Event not found' });
         }
 
-        // Audit log
+        // Task #117: Send notification to organizer
+        await notifyEventModeration(event_id, MODERATION_STATUS.FLAGGED, flagReason);
+
+        // Audit log (Task #115 - flagging system)
         console.log(`[AUDIT] Admin ${req.user.email} flagged event ${event.title} (ID: ${event_id})`);
         console.log(`[AUDIT] Flag reason: ${flagReason}`);
 
@@ -635,8 +664,11 @@ exports.flagEvent = async (req,res) => {
             event: {
                 _id: event._id,
                 title: event.title,
+                moderationStatus: event.moderationStatus,
+                moderationNotes: event.moderationNotes,
                 flagReason
-            }
+            },
+            notificationSent: true
         });
 
     } catch (e) {
@@ -919,7 +951,8 @@ exports.deleteUser = async (req,res) => {
         }
 
         // Prevent deleting administrators (optional safety check)
-        if (user.role === USER_ROLE.ADMINISTRATOR) {
+        const adminCheck = await Administrator.findOne({ email: user.email }).lean();
+        if (adminCheck) {
             return res.status(403).json({ error: 'Cannot delete an administrator account. Use a different method for administrator management.' });
         }
 
