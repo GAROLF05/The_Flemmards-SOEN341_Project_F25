@@ -15,6 +15,10 @@ export const adminApi = {
         return await axiosClient.delete(ENDPOINTS.ORGANIZATION_DELETE(id));
     },
 
+    async suspendOrganization(id) {
+        return await axiosClient.patch(`/admin/suspend-organization/${id}`);
+    },
+
     async addOrganizationMember(orgId, memberEmail) {
         return await axiosClient.post(ENDPOINTS.ORGANIZATION_ADD_MEMBER(orgId), { email: memberEmail });
     },

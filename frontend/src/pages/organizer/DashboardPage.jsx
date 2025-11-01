@@ -296,6 +296,12 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
         setIsExporting(true);
         try {
             const eventId = event.id || event._id;
+            console.log('Exporting CSV for event:', { eventId, fullEvent: event });
+            
+            if (!eventId) {
+                throw new Error('Event ID is missing');
+            }
+            
             const response = await exportAttendeesCSV(eventId);
             
             // Handle blob response from backend CSV export
@@ -333,7 +339,8 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
             showNotification('Successfully exported attendees CSV', 'success');
         } catch (error) {
             console.error('Error exporting attendees:', error);
-            const errorMessage = error.response?.data?.error || error.message || 'Failed to export attendees';
+            // Error message is already formatted in the exportAttendeesCSV function
+            const errorMessage = error.message || 'Failed to export attendees';
             showNotification(errorMessage, 'error');
         } finally {
             setIsExporting(false);
