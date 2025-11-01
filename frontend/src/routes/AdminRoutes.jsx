@@ -4,11 +4,16 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
 import EventModeration from "../pages/admin/EventModeration";
 import Organizations from "../pages/admin/Organizations";
+import ProtectedRoutes from "./ProtectedRoutes";
 
 const AdminRoutes = [
     {
         path: '/admin',
-        element: <MainLayout accountType="admin" />,
+        element: (
+            <ProtectedRoutes>
+                <MainLayout accountType="admin" />
+            </ProtectedRoutes>
+        ),
         children: [
             {
                 path: '',

@@ -46,4 +46,8 @@ router.get('/get/attendees/:event_id', requireAdmin, eventController.getAttendee
 router.get('/get/waitlist/:event_id', requireAdmin, eventController.getWaitlistedUsers);
 router.patch('/promote/:event_id', requireAdmin, eventController.promoteWaitlistedUser);
 
+// Get events by moderation status (Task #116)
+router.get('/moderation/status/:status', requireAdmin, eventController.getEventsByModerationStatus);
+router.get('/moderation/pending', requireAdmin, eventController.getPendingModerationEvents);
+
 module.exports = router;
