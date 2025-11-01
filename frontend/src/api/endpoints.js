@@ -10,6 +10,7 @@ const ENDPOINTS = {
 	LOGIN: "/users/login",
 	SIGNUP: "/users/register",
 	LOGOUT: "/users/logout",
+	USER_PROFILE: "/users/profile",
 
 	// Events
 	EVENTS_BROWSE: "/events/browse", // Public endpoint for students

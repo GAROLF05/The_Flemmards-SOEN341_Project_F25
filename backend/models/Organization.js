@@ -86,6 +86,13 @@ const organizationSchema = new mongoose.Schema({
         index: true
     },
 
+    // Reference to the User who is the organizer/owner of this organization (one organizer per organization)
+    organizer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: false,
+        index: true
+    },
 
 }, {
     collection: 'organizations',

@@ -164,7 +164,10 @@ exports.approveOrganizer = async (req,res)=>{
         organization.status = status;
         if (status === 'approved') {
             organization.verified = true;
+        } else if (status === 'rejected') {
+            organization.verified = false;
         }
+        
         await organization.save();
 
         // Task #123: Send notification to organizer
