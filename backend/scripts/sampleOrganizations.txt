@@ -9,7 +9,8 @@
       "socials": {}
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddbf"
   },
   {
     "name": "ACSiON Concordia",
@@ -24,7 +25,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc0"
   },
   {
     "name": "AIESEC",
@@ -38,7 +40,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc1"
   },
   {
     "name": "Alpha Epsilon Phi",
@@ -52,7 +55,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc2"
   },
   {
     "name": "Amana Club",
@@ -66,7 +70,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc3"
   },
   {
     "name": "Applied Human Sciences Student Association (AHSCSA)",
@@ -81,7 +86,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc4"
   },
   {
     "name": "Applied Human Sciences Graduate Student Association (AHSCGSA)",
@@ -95,7 +101,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc5"
   },
   {
     "name": "Arab Student Network",
@@ -109,7 +116,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc6"
   },
   {
     "name": "Art Matters",
@@ -123,7 +131,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc7"
   },
   {
     "name": "Arts and Science Federation of Associations",
@@ -137,7 +146,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc8"
   },
   {
     "name": "Ascend Concordia",
@@ -149,7 +159,8 @@
       "socials": {}
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddc9"
   },
   {
     "name": "Autodidacts Concordia Theatre",
@@ -164,7 +175,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddca"
   },
   {
     "name": "Bangladesh Students Concordia BSA",
@@ -179,7 +191,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddcb"
   },
   {
     "name": "Biology Student Association",
@@ -194,7 +207,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddcc"
   },
   {
     "name": "Black Students Career Development",
@@ -209,7 +223,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddcd"
   },
   {
     "name": "Brazilian Student Association (BRASA) Concordia",
@@ -223,7 +238,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddce"
   },
   {
     "name": "Business Law Committee",
@@ -237,7 +253,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddcf"
   },
   {
     "name": "CASA Cares",
@@ -252,7 +269,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd0"
   },
   {
     "name": "Canadian Refugee Initiative (The Refugee Centre)",
@@ -268,7 +286,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd1"
   },
   {
     "name": "The Concordian",
@@ -284,7 +303,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd2"
   },
   {
     "name": "The Filmmaking Club",
@@ -298,7 +318,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd3"
   },
   {
     "name": "The Garnet Key Society",
@@ -313,7 +334,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd4"
   },
   {
     "name": "The Link Publication Society Inc.",
@@ -327,7 +349,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd5"
   },
   {
     "name": "The Political Science Student Association of Concordia University",
@@ -343,7 +366,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd6"
   },
   {
     "name": "The StartUp Nation",
@@ -357,7 +381,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd7"
   },
   {
     "name": "Sustainability Action Fund",
@@ -372,7 +397,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd8"
   },
   {
     "name": "Sustainability and Diversity Students Association",
@@ -387,7 +413,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddd9"
   },
   {
     "name": "Sustainable Concordia",
@@ -403,7 +430,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddda"
   },
   {
     "name": "Sustainable Fashion and Thrift Club",
@@ -417,7 +445,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dddb"
   },
   {
     "name": "Swab the World Concordia",
@@ -431,7 +460,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dddc"
   },
   {
     "name": "Syrian Students Association",
@@ -446,7 +476,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dddd"
   },
   {
     "name": "Urban Planning Association",
@@ -460,7 +491,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41ddde"
   },
   {
     "name": "Vietnamese Concordia Association",
@@ -472,7 +504,8 @@
       "socials": {}
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dddf"
   },
   {
     "name": "Women In Engineering",
@@ -487,7 +520,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dde0"
   },
   {
     "name": "United for Literacy",
@@ -501,7 +535,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dde1"
   },
   {
     "name": "Undergraduate Students Association in Translation (USAT)",
@@ -516,7 +551,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dde2"
   },
   {
     "name": "Troitsky",
@@ -528,7 +564,8 @@
       "socials": {}
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dde2"
   },
   {
     "name": "Stronger Than Stigma Concordia",
@@ -542,7 +579,8 @@
       }
     },
     "verified": false,
-    "status": "approved"
+    "status": "approved",
+    "organizer": "69063161b3b6e22e0d41dde4"
   }
 ]
 

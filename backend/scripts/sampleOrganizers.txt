@@ -1,0 +1,319 @@
+// NOTE: This file contains sample organizers following the User model schema.
+// Passwords are hashed with bcrypt (10 rounds).
+// Original password was "Organizer123!" for all organizers.
+// Role is set to "Organizer" as required by the User model.
+// Use: const bcrypt = require('bcrypt'); const isValid = await bcrypt.compare('Organizer123!', hashedPassword);
+//
+// User model fields:
+// - name: String (required)
+// - username: String (optional, unique, sparse)
+// - email: String (required, unique, lowercase)
+// - password: String (required, hashed)
+// - role: String (required, enum: "Student" or "Organizer")
+// - organization: ObjectId (optional, unique, sparse - one organization per organizer)
+[
+  {
+    "name": "Sarah Johnson",
+    "username": "sjohnson",
+    "email": "sarah.johnson@evenko.ca",
+    "password": "$2b$10$vJLM.dCKglrr26beaS7XaOVbLd2p336141rjHZLOQnKopAoQZsMwy",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b0"
+  },
+  {
+    "name": "Michael Chen",
+    "username": "mchen",
+    "email": "michael.chen@mtlevents.com",
+    "password": "$2b$10$PzvjRw7rFfD6LT.NWsSFde1YxJTfpINiDzEFMpmWHyqHJuXM9Cm2u",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b1"
+  },
+  {
+    "name": "Emily Rodriguez",
+    "username": "erodriguez",
+    "email": "emily.rodriguez@startupfest.com",
+    "password": "$2b$10$He7nMdb0o7/CHD/.BUkd7eEmf/Q/CbY/JHrtosy7mN971.M3OqRra",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b2"
+  },
+  {
+    "name": "David Thompson",
+    "username": "dthompson",
+    "email": "david.thompson@concordia.ca",
+    "password": "$2b$10$jnfI/wqcSxzQ9Tyh4wQ7Q.NjcTaMo5H6.9N0UfMufbLBowVN0vODu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b3"
+  },
+  {
+    "name": "Lisa Anderson",
+    "username": "landerson",
+    "email": "lisa.anderson@mcgill.ca",
+    "password": "$2b$10$FTKvLjc3AwqNxbYra4I2r.T16BbufvaheFpS..yR5Ylxzk8CU4Pky",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b4"
+  },
+  {
+    "name": "James Wilson",
+    "username": "jwilson",
+    "email": "james.wilson@osheaga.co",
+    "password": "$2b$10$o9jan8QxZ3eFPXFqwX8RPO62NoM8Mih4yCDn8CNBDRWXAGgC9Erbm",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b5"
+  },
+  {
+    "name": "Maria Garcia",
+    "username": "mgarcia",
+    "email": "maria.garcia@cinemaduparc.com",
+    "password": "$2b$10$oTZOfAS.KZj1KCoqjX74Ie6o19qGbroN4VKDMULpXUuWXZFLzkAYu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b6"
+  },
+  {
+    "name": "Robert Martinez",
+    "username": "rmartinez",
+    "email": "robert.martinez@techsummit.ca",
+    "password": "$2b$10$gf4R5LAgzADpzPYHdURmduRmwMMwBjD.wvF5bTUT/yETvM7vW9sS6",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b7"
+  },
+  {
+    "name": "Jennifer Lee",
+    "username": "jlee",
+    "email": "jennifer.lee@montrealorg.ca",
+    "password": "$2b$10$JOrcYAIEI220Q/O49XRa4OAKle8R2tgLHzrNIgt/KLBG50LbNK8nK",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b8"
+  },
+  {
+    "name": "Christopher Brown",
+    "username": "cbrown",
+    "email": "christopher.brown@culturalmtl.com",
+    "password": "$2b$10$LEqGrL406.AznNtesLzR3uK.zp9qZS7Z9zTwYSLRqWdhtvs.29xMO",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1b9"
+  },
+  {
+    "name": "Alexandra Smith",
+    "username": "asmith",
+    "email": "alexandra.smith@ascendleadership.ca",
+    "password": "$2b$10$vJLM.dCKglrr26beaS7XaOVbLd2p336141rjHZLOQnKopAoQZsMwy",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1ba"
+  },
+  {
+    "name": "Daniel Williams",
+    "username": "dwilliams",
+    "email": "daniel.williams@autodidacts.ca",
+    "password": "$2b$10$PzvjRw7rFfD6LT.NWsSFde1YxJTfpINiDzEFMpmWHyqHJuXM9Cm2u",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1bb"
+  },
+  {
+    "name": "Fatima Rahman",
+    "username": "frahman",
+    "email": "fatima.rahman@bsaconcordia.ca",
+    "password": "$2b$10$He7nMdb0o7/CHD/.BUkd7eEmf/Q/CbY/JHrtosy7mN971.M3OqRra",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1bc"
+  },
+  {
+    "name": "Kevin Patel",
+    "username": "kpatel",
+    "email": "kevin.patel@biology.asfa.ca",
+    "password": "$2b$10$jnfI/wqcSxzQ9Tyh4wQ7Q.NjcTaMo5H6.9N0UfMufbLBowVN0vODu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1bd"
+  },
+  {
+    "name": "Nicole Taylor",
+    "username": "ntaylor",
+    "email": "nicole.taylor@bscd.ca",
+    "password": "$2b$10$FTKvLjc3AwqNxbYra4I2r.T16BbufvaheFpS..yR5Ylxzk8CU4Pky",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1be"
+  },
+  {
+    "name": "Carlos Silva",
+    "username": "csilva",
+    "email": "carlos.silva@brasa.concordia.ca",
+    "password": "$2b$10$o9jan8QxZ3eFPXFqwX8RPO62NoM8Mih4yCDn8CNBDRWXAGgC9Erbm",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1bf"
+  },
+  {
+    "name": "Rachel Kim",
+    "username": "rkim",
+    "email": "rachel.kim@businesslaw.ca",
+    "password": "$2b$10$oTZOfAS.KZj1KCoqjX74Ie6o19qGbroN4VKDMULpXUuWXZFLzkAYu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c0"
+  },
+  {
+    "name": "Thomas Anderson",
+    "username": "tanderson",
+    "email": "thomas.anderson@casacares.com",
+    "password": "$2b$10$gf4R5LAgzADpzPYHdURmduRmwMMwBjD.wvF5bTUT/yETvM7vW9sS6",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c1"
+  },
+  {
+    "name": "Amina Hassan",
+    "username": "ahassan",
+    "email": "amina.hassan@refugeecentre.org",
+    "password": "$2b$10$JOrcYAIEI220Q/O49XRa4OAKle8R2tgLHzrNIgt/KLBG50LbNK8nK",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c2"
+  },
+  {
+    "name": "Jonathan Miller",
+    "username": "jmiller",
+    "email": "jonathan.miller@theconcordian.com",
+    "password": "$2b$10$LEqGrL406.AznNtesLzR3uK.zp9qZS7Z9zTwYSLRqWdhtvs.29xMO",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c3"
+  },
+  {
+    "name": "Sofia Martinez",
+    "username": "smartinez",
+    "email": "sofia.martinez@filmmaking.csu.qc.ca",
+    "password": "$2b$10$vJLM.dCKglrr26beaS7XaOVbLd2p336141rjHZLOQnKopAoQZsMwy",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c4"
+  },
+  {
+    "name": "Benjamin Clarke",
+    "username": "bclarke",
+    "email": "benjamin.clarke@garnetkey.concordia.ca",
+    "password": "$2b$10$PzvjRw7rFfD6LT.NWsSFde1YxJTfpINiDzEFMpmWHyqHJuXM9Cm2u",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c5"
+  },
+  {
+    "name": "Isabella Davis",
+    "username": "idavis",
+    "email": "isabella.davis@thelinknewspaper.ca",
+    "password": "$2b$10$He7nMdb0o7/CHD/.BUkd7eEmf/Q/CbY/JHrtosy7mN971.M3OqRra",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c6"
+  },
+  {
+    "name": "Ryan O'Brien",
+    "username": "robrien",
+    "email": "ryan.obrien@pssa.ca",
+    "password": "$2b$10$jnfI/wqcSxzQ9Tyh4wQ7Q.NjcTaMo5H6.9N0UfMufbLBowVN0vODu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c7"
+  },
+  {
+    "name": "Priya Singh",
+    "username": "psingh",
+    "email": "priya.singh@startupnation.csu.qc.ca",
+    "password": "$2b$10$FTKvLjc3AwqNxbYra4I2r.T16BbufvaheFpS..yR5Ylxzk8CU4Pky",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c8"
+  },
+  {
+    "name": "Marcus Johnson",
+    "username": "mjohnson",
+    "email": "marcus.johnson@safconcordia.ca",
+    "password": "$2b$10$o9jan8QxZ3eFPXFqwX8RPO62NoM8Mih4yCDn8CNBDRWXAGgC9Erbm",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1c9"
+  },
+  {
+    "name": "Olivia Chen",
+    "username": "ochen",
+    "email": "olivia.chen@sdsa.concordia.ca",
+    "password": "$2b$10$oTZOfAS.KZj1KCoqjX74Ie6o19qGbroN4VKDMULpXUuWXZFLzkAYu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1ca"
+  },
+  {
+    "name": "Nathan Wilson",
+    "username": "nwilson",
+    "email": "nathan.wilson@sustainableconcordia.ca",
+    "password": "$2b$10$gf4R5LAgzADpzPYHdURmduRmwMMwBjD.wvF5bTUT/yETvM7vW9sS6",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1cb"
+  },
+  {
+    "name": "Emma Thompson",
+    "username": "ethompson",
+    "email": "emma.thompson@thriftclub.csu.qc.ca",
+    "password": "$2b$10$JOrcYAIEI220Q/O49XRa4OAKle8R2tgLHzrNIgt/KLBG50LbNK8nK",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1cc"
+  },
+  {
+    "name": "Ahmed Ali",
+    "username": "aali",
+    "email": "ahmed.ali@swabtheworld.concordia.ca",
+    "password": "$2b$10$LEqGrL406.AznNtesLzR3uK.zp9qZS7Z9zTwYSLRqWdhtvs.29xMO",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1cd"
+  },
+  {
+    "name": "Jessica Park",
+    "username": "jpark",
+    "email": "jessica.park@ssa.concordia.ca",
+    "password": "$2b$10$vJLM.dCKglrr26beaS7XaOVbLd2p336141rjHZLOQnKopAoQZsMwy",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1ce"
+  },
+  {
+    "name": "David Liu",
+    "username": "dliu",
+    "email": "david.liu@upa.asfa.ca",
+    "password": "$2b$10$PzvjRw7rFfD6LT.NWsSFde1YxJTfpINiDzEFMpmWHyqHJuXM9Cm2u",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1cf"
+  },
+  {
+    "name": "Maya Nguyen",
+    "username": "mnguyen",
+    "email": "maya.nguyen@vca.csu.qc.ca",
+    "password": "$2b$10$He7nMdb0o7/CHD/.BUkd7eEmf/Q/CbY/JHrtosy7mN971.M3OqRra",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d0"
+  },
+  {
+    "name": "James Mitchell",
+    "username": "jmitchell",
+    "email": "james.mitchell@wie.ecaconcordia.ca",
+    "password": "$2b$10$jnfI/wqcSxzQ9Tyh4wQ7Q.NjcTaMo5H6.9N0UfMufbLBowVN0vODu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d1"
+  },
+  {
+    "name": "Samantha Ross",
+    "username": "sross",
+    "email": "samantha.ross@unitedforliteracy.csu.qc.ca",
+    "password": "$2b$10$FTKvLjc3AwqNxbYra4I2r.T16BbufvaheFpS..yR5Ylxzk8CU4Pky",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d2"
+  },
+  {
+    "name": "Alex Rivera",
+    "username": "arivera",
+    "email": "alex.rivera@usat.asfa.ca",
+    "password": "$2b$10$o9jan8QxZ3eFPXFqwX8RPO62NoM8Mih4yCDn8CNBDRWXAGgC9Erbm",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d3"
+  },
+  {
+    "name": "Victoria Zhang",
+    "username": "vzhang",
+    "email": "victoria.zhang@troitsky.ecaconcordia.ca",
+    "password": "$2b$10$oTZOfAS.KZj1KCoqjX74Ie6o19qGbroN4VKDMULpXUuWXZFLzkAYu",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d4"
+  },
+  {
+    "name": "Michael Torres",
+    "username": "mtorres",
+    "email": "michael.torres@strongerthanstigma.csu.qc.ca",
+    "password": "$2b$10$gf4R5LAgzADpzPYHdURmduRmwMMwBjD.wvF5bTUT/yETvM7vW9sS6",
+    "role": "Organizer",
+    "organization": "69050a341c29e71476bae1d5"
+  }
+]

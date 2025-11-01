@@ -54,14 +54,41 @@ exports.createOrganization = async (req,res)=>{
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Create organization with pending status
+        // Check if user is authenticated and is an organizer
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Check if user already has an organization (one organizer = one organization)
+        if (user.organization) {
+            return res.status(409).json({ 
+                error: 'You already have an organization. One organizer can only have one organization.' 
+            });
+        }
+
+        // Check if user is an organizer
+        if (user.role !== 'Organizer') {
+            return res.status(403).json({ error: 'Only organizers can create organizations' });
+        }
+
+        // Create organization with pending status and link to organizer
         const organization = await Organization.create({
             name,
             description,
             website,
             contact,
-            status: ORGANIZATION_STATUS.PENDING
+            status: ORGANIZATION_STATUS.PENDING,
+            organizer: user._id
         });
+
+        // Link organization to user (bidirectional relationship)
+        user.organization = organization._id;
+        await user.save();
 
         return res.status(201).json({
             message: 'Organization created successfully. Awaiting admin approval.',
@@ -253,11 +280,22 @@ exports.deleteOrganization = async (req,res)=>{
             });
         }
 
-        const organization = await Organization.findByIdAndDelete(org_id);
-
+        // Find organization to get organizer reference before deletion
+        const organization = await Organization.findById(org_id);
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
         }
+
+        // Remove organization reference from user if organizer exists
+        if (organization.organizer) {
+            const organizer = await User.findById(organization.organizer);
+            if (organizer && organizer.organization && organizer.organization.toString() === org_id) {
+                organizer.organization = null;
+                await organizer.save();
+            }
+        }
+
+        await Organization.findByIdAndDelete(org_id);
 
         return res.status(200).json({
             message: 'Organization deleted successfully',

@@ -8,6 +8,7 @@
     "end_at": "2025-11-01T15:00:00.000Z",
     "capacity": 50,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Tech Building Auditorium",
       "address": "123 University Ave, Montreal, QC H3A 2B4"
@@ -26,6 +27,7 @@
     "end_at": "2025-11-05T17:00:00.000Z",
     "capacity": 30,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Computer Science Lab",
       "address": "456 Tech Street, Montreal, QC H3B 3C5"
@@ -44,6 +46,7 @@
     "end_at": "2025-11-05T18:00:00.000Z",
     "capacity": 100,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Convention Center",
       "address": "789 Business Blvd, Montreal, QC H4C 4D6"
@@ -62,6 +65,7 @@
     "end_at": "2025-11-09T18:00:00.000Z",
     "capacity": 150,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Engineering Building",
       "address": "321 Innovation Drive, Montreal, QC H5D 5E7"
@@ -80,6 +84,7 @@
     "end_at": "2025-11-09T17:00:00.000Z",
     "capacity": 75,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Business School",
       "address": "654 Finance Road, Montreal, QC H6E 6F8"
@@ -98,6 +103,7 @@
     "end_at": "2025-11-11T22:00:00.000Z",
     "capacity": 80,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Student Center Hall",
       "address": "147 Student Plaza, Montreal, QC H7F 7G9"
@@ -116,6 +122,7 @@
     "end_at": "2025-11-13T23:00:00.000Z",
     "capacity": 500,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "University Field",
       "address": "258 Campus Way, Montreal, QC H8G 8H0"
@@ -134,6 +141,7 @@
     "end_at": "2025-11-15T21:00:00.000Z",
     "capacity": 60,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Coffee House",
       "address": "369 Main Street, Montreal, QC H9H 9I1"
@@ -152,6 +160,7 @@
     "end_at": "2025-11-17T21:00:00.000Z",
     "capacity": 200,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Concert Hall",
       "address": "741 Arts Avenue, Montreal, QC H0I 0J2"
@@ -170,6 +179,7 @@
     "end_at": "2025-11-19T23:00:00.000Z",
     "capacity": 300,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Sports Complex",
       "address": "852 Athletic Drive, Montreal, QC H1J 1K3"
@@ -188,6 +198,7 @@
     "end_at": "2025-11-21T21:00:00.000Z",
     "capacity": 800,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Main Gymnasium",
       "address": "963 Sports Lane, Montreal, QC H2K 2L4"
@@ -206,6 +217,7 @@
     "end_at": "2025-11-23T10:00:00.000Z",
     "capacity": 200,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Track & Field",
       "address": "159 Runner Road, Montreal, QC H3L 3M5"
@@ -224,6 +236,7 @@
     "end_at": "2025-11-25T16:00:00.000Z",
     "capacity": 150,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Soccer Field",
       "address": "357 Field Street, Montreal, QC H4M 4N6"
@@ -242,6 +255,7 @@
     "end_at": "2025-11-27T10:00:00.000Z",
     "capacity": 40,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Quad Lawn",
       "address": "741 Green Space, Montreal, QC H5N 5O7"
@@ -260,6 +274,7 @@
     "end_at": "2025-11-29T16:00:00.000Z",
     "capacity": 100,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Aquatic Center",
       "address": "852 Pool Avenue, Montreal, QC H6O 6P8"
@@ -278,6 +293,7 @@
     "end_at": "2025-12-01T16:00:00.000Z",
     "capacity": 25,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "English Department",
       "address": "147 Literature Lane, Montreal, QC H7P 7Q9"
@@ -296,6 +312,7 @@
     "end_at": "2025-12-03T17:00:00.000Z",
     "capacity": 20,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Arts Studio",
       "address": "258 Creative Drive, Montreal, QC H8Q 8R0"
@@ -314,6 +331,7 @@
     "end_at": "2025-12-05T20:00:00.000Z",
     "capacity": 30,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Culinary Lab",
       "address": "369 Food Court, Montreal, QC H9R 9S1"
@@ -332,6 +350,7 @@
     "end_at": "2025-12-07T18:00:00.000Z",
     "capacity": 15,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Art Studio",
       "address": "741 Craft Street, Montreal, QC H0S 0T2"
@@ -350,6 +369,7 @@
     "end_at": "2025-12-09T13:00:00.000Z",
     "capacity": 35,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Communication Center",
       "address": "852 Speaking Blvd, Montreal, QC H1T 1U3"
@@ -368,6 +388,7 @@
     "end_at": "2025-12-11T20:00:00.000Z",
     "capacity": 100,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Business School Atrium",
       "address": "963 Network Drive, Montreal, QC H2U 2V4"
@@ -386,6 +407,7 @@
     "end_at": "2025-12-13T22:00:00.000Z",
     "capacity": 120,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Banquet Hall",
       "address": "159 Dinner Avenue, Montreal, QC H3V 3W5"
@@ -404,6 +426,7 @@
     "end_at": "2025-12-15T22:00:00.000Z",
     "capacity": 80,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Innovation Hub",
       "address": "357 Startup Lane, Montreal, QC H4W 4X6"
@@ -422,6 +445,7 @@
     "end_at": "2025-12-17T17:00:00.000Z",
     "capacity": 50,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Career Center",
       "address": "741 Career Road, Montreal, QC H5X 5Y7"
@@ -440,6 +464,7 @@
     "end_at": "2025-12-19T20:00:00.000Z",
     "capacity": 60,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Student Lounge",
       "address": "852 Mentor Street, Montreal, QC H6Y 6Z8"
@@ -458,6 +483,7 @@
     "end_at": "2025-12-21T14:00:00.000Z",
     "capacity": 200,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Main Entrance",
       "address": "147 Welcome Way, Montreal, QC H7Z 7A9"
@@ -476,6 +502,7 @@
     "end_at": "2025-12-24T00:00:00.000Z",
     "capacity": 150,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Grand Ballroom",
       "address": "258 Gala Drive, Montreal, QC H8A 8B0"
@@ -494,6 +521,7 @@
     "end_at": "2025-12-25T15:00:00.000Z",
     "capacity": 300,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Library Entrance",
       "address": "369 Book Lane, Montreal, QC H9B 9C1"
@@ -512,6 +540,7 @@
     "end_at": "2025-12-27T12:00:00.000Z",
     "capacity": 250,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Campus Green",
       "address": "741 Wellness Path, Montreal, QC H0C 0D2"
@@ -530,6 +559,7 @@
     "end_at": "2025-12-29T22:00:00.000Z",
     "capacity": 400,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Outdoor Stage",
       "address": "852 Concert Plaza, Montreal, QC H1D 1E3"
@@ -548,6 +578,7 @@
     "end_at": "2025-12-31T17:00:00.000Z",
     "capacity": 70,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Academic Success Center",
       "address": "963 Study Street, Montreal, QC H2E 2F4"
@@ -566,6 +597,7 @@
     "end_at": "2026-01-02T17:00:00.000Z",
     "capacity": 150,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Conference Center",
       "address": "159 Research Blvd, Montreal, QC H3F 3G5"
@@ -584,6 +616,7 @@
     "end_at": "2026-01-04T18:00:00.000Z",
     "capacity": 45,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Language Center",
       "address": "357 Language Lane, Montreal, QC H4G 4H6"
@@ -602,6 +635,7 @@
     "end_at": "2026-01-06T16:00:00.000Z",
     "capacity": 200,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Lecture Hall A",
       "address": "741 Science Drive, Montreal, QC H5H 5I7"
@@ -620,6 +654,7 @@
     "end_at": "2026-01-08T15:00:00.000Z",
     "capacity": 60,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Finance Building",
       "address": "852 Money Avenue, Montreal, QC H6I 6J8"
@@ -638,6 +673,7 @@
     "end_at": "2026-01-10T22:00:00.000Z",
     "capacity": 200,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Outdoor Amphitheater",
       "address": "147 Cinema Lane, Montreal, QC H7J 7K9"
@@ -656,6 +692,7 @@
     "end_at": "2026-01-12T22:00:00.000Z",
     "capacity": 120,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Theater",
       "address": "258 Comedy Street, Montreal, QC H8K 8L0"
@@ -674,6 +711,7 @@
     "end_at": "2026-01-14T18:00:00.000Z",
     "capacity": 80,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Game Room",
       "address": "369 Play Drive, Montreal, QC H9L 9M1"
@@ -692,6 +730,7 @@
     "end_at": "2026-01-16T23:00:00.000Z",
     "capacity": 100,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Student Pub",
       "address": "741 Fun Street, Montreal, QC H0M 0N2"
@@ -710,6 +749,7 @@
     "end_at": "2026-01-18T20:00:00.000Z",
     "capacity": 50,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Activity Center",
       "address": "852 Puzzle Lane, Montreal, QC H1N 1O3"
@@ -728,6 +768,7 @@
     "end_at": "2026-01-20T19:00:00.000Z",
     "capacity": 1000,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Main Quad",
       "address": "963 Festival Plaza, Montreal, QC H2O 2P4"
@@ -746,6 +787,7 @@
     "end_at": "2026-01-22T21:00:00.000Z",
     "capacity": 90,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Art Gallery",
       "address": "159 Gallery Street, Montreal, QC H3P 3Q5"
@@ -764,6 +806,7 @@
     "end_at": "2026-01-24T17:00:00.000Z",
     "capacity": 500,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Exhibition Hall",
       "address": "357 Career Way, Montreal, QC H4Q 4R6"
@@ -782,6 +825,7 @@
     "end_at": "2026-01-26T18:00:00.000Z",
     "capacity": 600,
     "status": "completed",
+    "moderationStatus": "approved",
     "location": {
       "name": "Cultural Center",
       "address": "741 Diversity Avenue, Montreal, QC H5R 5S7"
@@ -800,6 +844,7 @@
     "end_at": "2026-01-28T18:00:00.000Z",
     "capacity": 800,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Graduation Plaza",
       "address": "852 Celebration Drive, Montreal, QC H6S 6T8"
@@ -818,6 +863,7 @@
     "end_at": "2026-01-30T15:00:00.000Z",
     "capacity": 150,
     "status": "upcoming",
+    "moderationStatus": "approved",
     "location": {
       "name": "Community Center",
       "address": "963 Volunteer Lane, Montreal, QC H7T 7U9"

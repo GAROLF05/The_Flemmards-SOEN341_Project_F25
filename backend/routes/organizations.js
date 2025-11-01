@@ -15,8 +15,8 @@ const organizationController = require('../controllers/orgController');
 // Middlewares
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
 
-// Create organization (public - anyone can register as organizer)
-router.post('/create', organizationController.createOrganization);
+// Create organization (requires authentication - organizer only)
+router.post('/create', requireAuth, organizationController.createOrganization);
 
 // Read
 router.get('/all', requireAdmin, organizationController.getAllOrganizations);

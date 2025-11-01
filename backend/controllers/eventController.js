@@ -176,7 +176,7 @@ exports.browseEvents = async (req, res) => {
 // API Endpoint to get all Events (Admin only)
 exports.getAllEvents = async (req,res) => {
     try{
-        // Only administrators can fetch all registrations
+        // Only administrators can fetch all events
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
