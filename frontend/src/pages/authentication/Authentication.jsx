@@ -43,6 +43,7 @@ export default function Authentication() {
 		const data = {
 			usernameEmail: loginForm.email.trim(),
 			password: loginForm.password,
+			role: loginForm.role, // Send selected role to backend
 		};
 
 		console.log('Attempting login with:', { email: data.usernameEmail });
