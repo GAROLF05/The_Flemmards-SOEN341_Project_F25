@@ -1,14 +1,43 @@
+import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import Admin from "../pages/admin/Admin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
+import EventModeration from "../pages/admin/EventModeration";
+import Organizations from "../pages/admin/Organizations";
+import ProtectedRoutes from "./ProtectedRoutes";
 
 const AdminRoutes = [
     {
         path: '/admin',
-        element: <MainLayout accountType="admin" />,
+        element: (
+            <ProtectedRoutes>
+                <MainLayout accountType="admin" />
+            </ProtectedRoutes>
+        ),
         children: [
             {
                 path: '',
-                element: <Admin />
+                element: <AdminDashboard />
+            },
+            {
+                path: 'home',
+                element: <Navigate to="/admin" />
+            },
+            {
+                path: 'dashboard',
+                element: <Navigate to="/admin" />
+            },
+            {
+                path: 'approveOrganizers',
+                element: <ApproveOrganizers />
+            },
+            {
+                path: 'eventModeration',
+                element: <EventModeration />
+            },
+            {
+                path: 'organizations',
+                element: <Organizations />
             }
         ]
     }

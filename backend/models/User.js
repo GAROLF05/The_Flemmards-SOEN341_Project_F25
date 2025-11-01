@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+// User role enum
+const USER_ROLE = {
+  STUDENT: 'Student',
+  ORGANIZER: 'Organizer',
+  ADMINISTRATOR: 'Administrator'
+};
+
 // Database that will contain all the users of the website
 const userSchema = new mongoose.Schema(
   {
@@ -34,8 +41,16 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["Student", "Manager", "Admin"],
+      enum: Object.values(USER_ROLE),
       required: true,
+    },
+
+    organizations: {
+      type: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Organization'
+      }],
+      default: [],
     },
   },
   {
@@ -70,4 +85,4 @@ userSchema.virtual("registrations", {
 });
 
 const User = mongoose.model("User", userSchema);
-module.exports = User;
+module.exports = { User, USER_ROLE };

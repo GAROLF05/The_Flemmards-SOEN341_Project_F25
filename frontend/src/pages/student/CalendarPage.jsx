@@ -1,10 +1,9 @@
-import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, TicketIcon } from '@heroicons/react/24/outline';
-import { useState, useMemo } from 'react';
-import { eventsMockData } from '../../utils/mockData';
+import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, TicketIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import Modal from '../../components/modal/Modal';
-
-const eventsData = eventsMockData; // --- MOCK DATA ---
+import { browseEvents } from '../../api/eventApi';
+import { transformEventsForFrontend } from '../../utils/eventTransform';
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
     const { translate } = useLanguage();
@@ -12,14 +11,21 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     if (!event)
         return null;
 
-    const eventDate = new Date(event.date);
+    const eventDate = new Date(event.date || event.start_at);
     const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} width="medium">
             <>
-                <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
+                <img 
+                    src={event.imageUrl} 
+                    alt={event.title} 
+                    className="w-full h-64 object-cover rounded-t-xl"
+                    onError={(e) => {
+                        e.target.src = '/uploads/events/default-event-image.svg';
+                    }}
+                />
                 <div className="p-8">
                     <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
@@ -28,18 +34,28 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                             <CalendarDateRangeIcon className="w-5 h-5 flex-shrink-0"/>
                             <span>{formattedDate} at {formattedTime}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{event.location}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{event.organization}</span>
-                        </div>
+                        {event.location && (
                             <div className="flex items-center gap-3">
+                                <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>{event.location}</span>
+                            </div>
+                        )}
+                        {event.organization && (
+                            <div className="flex items-center gap-3">
+                                <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>{event.organization}</span>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-3">
                             <TicketIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price || 'Free'}</span>
                         </div>
+                        {event.capacity && (
+                            <div className="flex items-center gap-3">
+                                <UsersIcon className="w-5 h-5 flex-shrink-0"/>
+                                <span>Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
+                            </div>
+                        )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
                     <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
@@ -54,10 +70,48 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 const CalendarPage = () => {
     const [currentDate, setCurrentDate] = useState(new Date('2025-10-11T12:00:00'));
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [eventsData, setEventsData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const { translate, currentLanguage } = useLanguage();
 
     const openEventModal = (event) => setSelectedEvent(event);
     const closeEventModal = () => setSelectedEvent(null);
+
+    // Fetch events from API
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await browseEvents({ limit: 200 }); // Get up to 200 events for calendar
+                console.log('Calendar API Response:', response);
+                
+                // Handle different response formats
+                const events = response.events || response || [];
+                
+                if (!Array.isArray(events)) {
+                    console.error('Events is not an array:', events);
+                    setError('Invalid response format from server');
+                    setEventsData([]);
+                    return;
+                }
+                
+                // Transform events to frontend format
+                const transformedEvents = transformEventsForFrontend(events);
+                console.log('Calendar Events transformed:', transformedEvents.length);
+                setEventsData(transformedEvents);
+            } catch (err) {
+                console.error('Error fetching events for calendar:', err);
+                setError(err.message || 'Failed to load events');
+                setEventsData([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEvents();
+    }, []);
 
     const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
         .map(day => translate(day))
@@ -86,14 +140,17 @@ const CalendarPage = () => {
 
     const eventsByDate = useMemo(() => {
         return eventsData.reduce((acc, event) => {
-            const dateKey = new Date(event.date).toDateString();
+            const eventDate = event.date || event.start_at;
+            if (!eventDate) return acc;
+            
+            const dateKey = new Date(eventDate).toDateString();
             if (!acc[dateKey]) {
                 acc[dateKey] = [];
             }
             acc[dateKey].push(event);
             return acc;
         }, {});
-    }, []);
+    }, [eventsData]);
 
     const handlePrevMonth = () => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -104,6 +161,22 @@ const CalendarPage = () => {
     };
 
     const today = new Date();
+
+    if (loading) {
+        return (
+            <div className="flex-grow flex items-center justify-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <p className="text-gray-600 dark:text-gray-400">Loading events...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex-grow flex items-center justify-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <p className="text-red-600 dark:text-red-400">Error: {error}</p>
+            </div>
+        );
+    }
 
     return (
         <>

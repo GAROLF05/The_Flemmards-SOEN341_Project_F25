@@ -3,6 +3,7 @@ import { ArrowRightStartOnRectangleIcon, Bars3Icon, GlobeAltIcon, MoonIcon, SunI
 import { useTheme } from "../../hooks/useTheme";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
+import { decodeToken } from "../../utils/jwt";
 
 const Header = ({ accountType, onMenuClick }) => {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -12,6 +13,8 @@ const Header = ({ accountType, onMenuClick }) => {
     const {theme, toggleTheme} = useTheme();
     const { translate, changeLanguage, currentLanguage, availableLanguages } = useLanguage();
     const navigate = useNavigate();
+    const user = decodeToken();
+    const username = user.username.split(' ')[0];
 
     const useOutsideAlerter = (ref, setOpenState) => {
         useEffect(() => {
@@ -33,6 +36,11 @@ const Header = ({ accountType, onMenuClick }) => {
         setIsLangMenuOpen(false);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem("auth-token");
+        navigate("/login");
+    }
+
     useOutsideAlerter(userDropdownRef, setIsUserMenuOpen);
     useOutsideAlerter(langDropdownRef, setIsLangMenuOpen);
 
@@ -41,7 +49,7 @@ const Header = ({ accountType, onMenuClick }) => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-16">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center gap-4">
-                        <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
+                        <button onClick={onMenuClick} className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors duration-300">
                             <Bars3Icon className="h-6 w-6"/>
                         </button>
                         <span className="text-2xl font-bold text-indigo-600 cursor-pointer" onClick={() => navigate(`/${accountType}`)}>{translate("appTitle")}</span>
@@ -78,7 +86,7 @@ const Header = ({ accountType, onMenuClick }) => {
                         <div className="relative" ref={userDropdownRef}>
                             <button onClick={() => setIsUserMenuOpen(prev => !prev)} className="flex items-center gap-2 cursor-pointer rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-300 py-2 pl-2 pr-4">
                                 <UserCircleIcon className="h-8 w-8 text-gray-600 dark:text-gray-300 transition-colors duration-300"/>
-                                <span className="hidden sm:block font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">Curtis</span>
+                                <span className="hidden sm:block font-medium text-gray-700 dark:text-gray-200 transition-colors duration-300">{username}</span>
                             </button>
 
                             {isUserMenuOpen && (
@@ -88,7 +96,7 @@ const Header = ({ accountType, onMenuClick }) => {
                                         {translate("profile")}
                                     </li>
 
-                                    <li onClick={() =>navigate("/login")} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
+                                    <li onClick={handleLogout} className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-300" role="menuitem">
                                         <ArrowRightStartOnRectangleIcon className="w-5 h-5 mr-3 text-gray-500 dark:text-gray-400"/>
                                         {translate("logout")}
                                     </li>

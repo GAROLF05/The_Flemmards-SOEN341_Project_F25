@@ -26,7 +26,7 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
+const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
 const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
@@ -235,39 +235,6 @@ exports.registerToEvent = async (req, res) => {
     }
 };
 
-exports.getAllRegistrations = async (req, res) => {
-    try {
-        // Only administrators can fetch all registrations
-        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
-        const reg = await Registration.find()
-            .populate({
-                path: 'user',
-                select: 'name student_id email'
-            })
-            .populate({
-                path: 'event',
-                select: 'organization title start_at end_at',
-                populate: {
-                    path: 'organization',
-                    select: 'name website',
-                }
-            })
-            .populate({
-                path: 'ticketIds',
-                model: 'Ticket',
-                select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
-            }).lean().exec();
-
-        return res.status(200).json({
-            count: reg.length,
-            reg,
-        });
-
-    } catch (e) {
-        console.error(e);
-        return res.status(500).json({ error: "Failed to fetch all registrations" });
-    }
-};
 
 exports.getRegistrationById = async (req, res) => {
     try {
@@ -282,7 +249,7 @@ exports.getRegistrationById = async (req, res) => {
         const reg = await Registration.findById(reg_id)
             .populate({
                 path: 'user',
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event',
@@ -322,7 +289,7 @@ exports.getRegistrationByRegId = async (req, res) => {
         const reg = await Registration.findOne({ registrationId: registrationId })
             .populate({
                 path: 'user',
-                select: 'name student_id email'
+                select: 'name email'
             })
             .populate({
                 path: 'event',
@@ -366,7 +333,7 @@ exports.getRegistrationByUser = async (req, res) => {
     const reg = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
             select: 'organization title start_at end_at',
@@ -390,43 +357,66 @@ exports.getRegistrationByUser = async (req, res) => {
     }
 }
 
+// API endpoint to get registrations by event (organizer or admin)
 exports.getRegistrationByEvent = async (req, res) => {
     try {
         const { event_id } = req.params;
 
-        // registrationId validity
-        if (!event_id)
+        // Validate event_id
+        if (!event_id) {
             return res.status(400).json({ error: "event_id is required" });
-        if (!mongoose.Types.ObjectId.isValid(event_id))
-            return res.status(400).json({error: "Invalid event_id format"});
-        
-    // Only administrators can fetch registrations by event
-    try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+        }
 
-    const reg = await Registration.find({event: event_id})
-        .populate({
-            path: 'user', 
-            select: 'name student_id email'})
-        .populate({
-            path: 'event', 
-            select: 'organization title start_at end_at',
-            populate:{
-            path: 'organization',
-            select: 'name website',
-        }})
-        .populate({
-            path: 'ticketIds',
-            model: 'Ticket', 
-            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
-        }).lean().exec();
+        if (!mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ error: "Invalid event_id format" });
+        }
 
-        if (!reg || reg.length === 0) return res.status(404).json({error: "Registration not found"});
+        // Check if user is admin or organizer of the event
+        const { ensureAdminOrEventOrganizer } = require('../utils/authHelpers');
+        try { 
+            await ensureAdminOrEventOrganizer(req, event_id); 
+        } catch (e) { 
+            return res.status(e.status || 401).json({ 
+                code: e.code || 'UNAUTHORIZED', 
+                message: e.message 
+            }); 
+        }
 
-        return res.status(200).json({ count: reg.length, reg });
+        const registrations = await Registration.find({ event: event_id })
+            .populate({
+                path: 'user', 
+                select: 'name email'
+            })
+            .populate({
+                path: 'event', 
+                select: 'organization title start_at end_at',
+                populate:{
+                    path: 'organization',
+                    select: 'name website',
+                }
+            })
+            .populate({
+                path: 'ticketIds',
+                model: 'Ticket', 
+                select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+            })
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
+
+        if (!registrations || registrations.length === 0) {
+            return res.status(404).json({ error: "No registrations found for this event" });
+        }
+
+        return res.status(200).json({
+            message: 'Registrations for event fetched successfully',
+            total: registrations.length,
+            registrations
+        });
 
     } catch (e) {
         console.error(e);
-        return res.status(400).json({ error: "Failed to fetch registration" });
+        return res.status(500).json({ error: "Failed to fetch registrations" });
     }
 }
 

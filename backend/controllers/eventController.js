@@ -45,23 +45,150 @@ const mongoose = require('mongoose');
 const { error } = require('console');
 const { notifyEventModeration } = require('./notificationController');
 
-// API Endpoint to get all Events
+// Helper function to ensure events have a default image if none is provided
+const DEFAULT_EVENT_IMAGE = '/uploads/events/default-event-image.svg';
+const normalizeEventImage = (event) => {
+    // Handle null, undefined, empty string, or whitespace-only strings
+    if (!event.image || (typeof event.image === 'string' && !event.image.trim())) {
+        event.image = DEFAULT_EVENT_IMAGE;
+    }
+    return event;
+};
+
+// Helper function to normalize image field for an array of events
+const normalizeEventsImages = (events) => {
+    if (Array.isArray(events)) {
+        return events.map(normalizeEventImage);
+    }
+    return events;
+};
+
+// Public API Endpoint for students to browse events (no authentication required)
+exports.browseEvents = async (req, res) => {
+    try {
+        // Get query parameters for filtering
+        const { 
+            q, // search query
+            category, 
+            startDate, 
+            endDate,
+            minCapacity,
+            maxCapacity,
+            minDuration,
+            maxDuration,
+            page = 1,
+            limit = 50,
+            sortBy = 'start_at',
+            sortOrder = 'asc'
+        } = req.query;
+
+        // Build query
+        let query = {};
+
+        // Filter by status - only show upcoming and active events to students
+        query.status = { $in: ['upcoming', 'active'] };
+
+        // Search in title and description
+        if (q) {
+            query.$or = [
+                { title: { $regex: q, $options: 'i' } },
+                { description: { $regex: q, $options: 'i' } }
+            ];
+        }
+
+        // Filter by category
+        if (category) {
+            query.category = category;
+        }
+
+        // Filter by date range
+        if (startDate || endDate) {
+            query.start_at = {};
+            if (startDate) {
+                query.start_at.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                const endDateObj = new Date(endDate);
+                endDateObj.setHours(23, 59, 59, 999);
+                query.start_at.$lte = endDateObj;
+            }
+        }
+
+        // Filter by capacity
+        if (minCapacity || maxCapacity) {
+            query.capacity = {};
+            if (minCapacity) query.capacity.$gte = parseInt(minCapacity);
+            if (maxCapacity) query.capacity.$lte = parseInt(maxCapacity);
+        }
+
+        // Build sort
+        const sort = {};
+        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+        // Calculate pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Fetch events
+        const events = await Event.find(query)
+            .select('organization title description category start_at end_at capacity status location image')
+            .populate({
+                path: 'organization',
+                select: 'name description website'
+            })
+            .sort(sort)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean()
+            .exec();
+
+        // Get total count for pagination
+        const total = await Event.countDocuments(query);
+
+        // Filter by duration if specified (post-query filtering since it's calculated)
+        let filteredEvents = events;
+        if (minDuration || maxDuration) {
+            filteredEvents = events.filter(event => {
+                if (!event.start_at || !event.end_at) return false;
+                const durationHours = (new Date(event.end_at) - new Date(event.start_at)) / (1000 * 60 * 60);
+                if (minDuration && durationHours < parseFloat(minDuration)) return false;
+                if (maxDuration && durationHours > parseFloat(maxDuration)) return false;
+                return true;
+            });
+        }
+
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(filteredEvents);
+
+        return res.status(200).json({
+            message: 'Events fetched successfully',
+            total: normalizedEvents.length,
+            totalPages: Math.ceil(total / parseInt(limit)),
+            currentPage: parseInt(page),
+            events: normalizedEvents
+        });
+
+    } catch (e) {
+        console.error(e);
+        return res.status(500).json({ error: "Failed to fetch events" });
+    }
+};
+
+// API Endpoint to get all Events (Admin only)
 exports.getAllEvents = async (req,res) => {
     try{
         // Only administrators can fetch all registrations
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find()
-            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .select('organization title description start_at end_at capacity status registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -75,10 +202,13 @@ exports.getAllEvents = async (req,res) => {
             .lean()
             .exec();
 
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
+
         return res.status(200).json({
             message: 'All events fetched successfully',
-            total: events.length,
-            events,
+            total: normalizedEvents.length,
+            events: normalizedEvents,
         });
 
         
@@ -92,9 +222,8 @@ exports.getAllEvents = async (req,res) => {
 exports.getEventById = async (req,res) => {
     try{
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const {event_id} =  req.params;
         if (!event_id)
@@ -103,14 +232,14 @@ exports.getEventById = async (req,res) => {
             return res.status(400).json({error: "Invalid event id format"});
 
         const event = await Event.findById(event_id)
-            .select('organization title description start_at end_at capacity status registered_users waitlist')
+            .select('organization title description start_at end_at capacity status registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
             })
             .populate({
                 path: 'registered_users',
-                select: 'name email student_id'
+                select: 'name email'
             })
             .populate({
                 path: 'waitlist',
@@ -125,10 +254,12 @@ exports.getEventById = async (req,res) => {
 
         if (!event) return res.status(404).json({error: "Event not found"});
     
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
 
         return res.status(200).json({
             message: 'Event fetched successfully',
-            event
+            event: normalizedEvent
         });
 
         
@@ -150,14 +281,14 @@ exports.getEventByOrganization = async (req,res) =>{
         }
 
         const events = await Event.find({organization: org_id})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -174,10 +305,12 @@ exports.getEventByOrganization = async (req,res) =>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -194,14 +327,14 @@ exports.getEventsByStatus = async (req,res) =>{
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find({status: status})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -218,10 +351,12 @@ exports.getEventsByStatus = async (req,res) =>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -243,14 +378,14 @@ exports.getEventsByCategory = async (req,res)=>{
         }
 
         const events = await Event.find({category: category})
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -267,10 +402,12 @@ exports.getEventsByCategory = async (req,res)=>{
         if (!events) 
             return res.status(404).json({error: "Events not found"});
     
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
 
         return res.status(200).json({
             message: 'Events fetched successfully',
-            events
+            events: normalizedEvents
         });
 
     } catch(e){
@@ -307,14 +444,14 @@ exports.getEventsByDateRange = async (req, res) => {
             { end_at: { $gte: startDate, $lte: endDate } }
         ]
         })
-        .select('organization title description category start_at end_at capacity status location registered_users waitlist')
+        .select('organization title description category start_at end_at capacity status location registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -330,10 +467,13 @@ exports.getEventsByDateRange = async (req, res) => {
         if (!events)
             return res.status(404).json({ error: "No events found within the specified date range." });
 
+        // Apply default image to events
+        const normalizedEvents = normalizeEventsImages(events);
+
         return res.status(200).json({
             message: `Events between ${start} and ${end} fetched successfully.`,
-            total: events.length,
-            events
+            total: normalizedEvents.length,
+            events: normalizedEvents
         });
 
     } catch (e) {
@@ -355,10 +495,10 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         const regs = await Registration.find({user: user_id})
         .populate({
             path: 'user', 
-            select: 'name student_id email'})
+            select: 'name email'})
         .populate({
             path: 'event', 
-            select: 'organization title start_at end_at',
+            select: 'organization title start_at end_at image',
             populate:{
             path: 'organization',
             select: 'name website',
@@ -375,13 +515,16 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         if (regs.length === 0)
             return res.status(404).json({error: "No registration found for this user"});
 
-        const events = regs.map(r => ({
-            event: r.event,
-            status: r.status,
-            quantity: r.quantity,
-            ticketsIssued: r.ticketsIssued,
-            registeredAt: r.createdAt,
-        }));
+        const events = regs.map(r => {
+            const eventObj = r.event ? normalizeEventImage({ ...r.event }) : null;
+            return {
+                event: eventObj,
+                status: r.status,
+                quantity: r.quantity,
+                ticketsIssued: r.ticketsIssued,
+                registeredAt: r.createdAt,
+            };
+        });
 
         if (!events) 
             return res.status(404).json({error: "Events not found"});
@@ -404,23 +547,46 @@ exports.createEvent = async (req,res)=>{
     try {
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
-        // const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        // if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
-        // Handle both JSON and text/plain content types
+        // Handle both JSON and multipart/form-data (file upload)
         let requestBody = req.body;
+        
+        // If Content-Type is text/plain, try to parse as JSON
         if (typeof req.body === 'string' && req.get('Content-Type') === 'text/plain') {
             try {
                 requestBody = JSON.parse(req.body);
             } catch (e) {
                 return res.status(400).json({error: 'Invalid JSON in request body'});
             }
-        }        
+        }
 
-        const { organization, title, description, start_at, end_at, capacity = 0, category, location } = requestBody || {};
+        // Handle location if it's sent as nested form fields (location[name], location[address])
+        // or as a JSON string
+        let location = requestBody.location;
+        if (typeof location === 'string') {
+            try {
+                location = JSON.parse(location);
+            } catch (e) {
+                // If not JSON, might be in form field format - handle separately
+            }
+        }
+        // If location is sent as separate fields (location[name], location[address])
+        if (!location || !location.name) {
+            const locationName = requestBody['location[name]'] || requestBody.locationName;
+            const locationAddress = requestBody['location[address]'] || requestBody.locationAddress;
+            if (locationName && locationAddress) {
+                location = { name: locationName, address: locationAddress };
+            }
+        }
+
+        const { organization, title, description, start_at, end_at, capacity = 0, category } = requestBody;
 
         if (!organization || !title || !start_at || !end_at) {
             return res.status(400).json({ error: 'organization, title, start_at and end_at are required' });
+        }
+
+        if (!location || !location.name || !location.address) {
+            return res.status(400).json({ error: 'location.name and location.address are required' });
         }
 
         if (!mongoose.Types.ObjectId.isValid(organization)) {
@@ -441,6 +607,17 @@ exports.createEvent = async (req,res)=>{
             });
         }
 
+        // Handle image: prioritize file upload (req.file) over URL input
+        let imageUrl = null;
+        if (req.file) {
+            // File uploaded via multer - construct URL
+            imageUrl = `/uploads/events/${req.file.filename}`;
+            console.log(`[AUDIT] Image uploaded: ${req.file.filename} for event: ${title}`);
+        } else if (requestBody.image && requestBody.image.trim()) {
+            // Image URL or base64 provided in request body (fallback option)
+            imageUrl = requestBody.image.trim();
+        }
+
         const eventDoc = await Event.create({
             organization,
             title,
@@ -452,11 +629,32 @@ exports.createEvent = async (req,res)=>{
             location,
             status: EVENT_STATUS.UPCOMING,
             moderationStatus: MODERATION_STATUS.PENDING_APPROVAL,
+            image: imageUrl,
         });
 
-        return res.status(201).json({ message: 'Event created successfully', event: eventDoc });
+        // Convert to plain object and apply default image if needed
+        const eventObj = eventDoc.toObject();
+        const normalizedEvent = normalizeEventImage(eventObj);
+
+        return res.status(201).json({ 
+            message: 'Event created successfully', 
+            event: normalizedEvent 
+        });
     } catch (e) {
-        console.error(e);
+        console.error('Error creating event:', e);
+        // If file was uploaded but event creation failed, clean up the file
+        if (req.file) {
+            const fs = require('fs');
+            const path = require('path');
+            const filePath = path.join(__dirname, '..', 'uploads', 'events', req.file.filename);
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch (cleanupError) {
+                console.error('Error cleaning up uploaded file:', cleanupError);
+            }
+        }
         return res.status(500).json({ error: 'Failed to create event' });
     }
 
@@ -478,6 +676,59 @@ exports.updateEvent = async (req,res) => {
         const updates = {};
         const allowed = ['title','description','start_at','end_at','capacity','status','location','category'];
         for (const k of allowed) if (req.body[k] !== undefined) updates[k] = req.body[k];
+
+        // Handle location if it's sent as nested form fields or JSON string
+        if (req.body.location) {
+            let location = req.body.location;
+            if (typeof location === 'string') {
+                try {
+                    location = JSON.parse(location);
+                } catch (e) {
+                    // If not JSON, might be in form field format
+                }
+            }
+            // If location is sent as separate fields
+            if (!location.name || !location.address) {
+                const locationName = req.body['location[name]'] || req.body.locationName;
+                const locationAddress = req.body['location[address]'] || req.body.locationAddress;
+                if (locationName && locationAddress) {
+                    location = { name: locationName, address: locationAddress };
+                }
+            }
+            if (location && location.name && location.address) {
+                updates.location = location;
+            }
+        }
+
+        // Handle image: prioritize file upload (req.file) over URL input
+        if (req.file) {
+            // File uploaded via multer - construct URL
+            updates.image = `/uploads/events/${req.file.filename}`;
+            console.log(`[AUDIT] Image updated: ${req.file.filename} for event: ${event_id}`);
+            
+            // Optionally delete old image file if it exists
+            const event = await Event.findById(event_id).select('image').lean();
+            if (event && event.image && event.image.startsWith('/uploads/events/')) {
+                const fs = require('fs');
+                const path = require('path');
+                const oldFilePath = path.join(__dirname, '..', event.image);
+                try {
+                    if (fs.existsSync(oldFilePath)) {
+                        fs.unlinkSync(oldFilePath);
+                    }
+                } catch (cleanupError) {
+                    console.error('Error cleaning up old image file:', cleanupError);
+                }
+            }
+        } else if (req.body.image !== undefined) {
+            // Image URL provided in request body or image removal
+            // If image is null/empty string, allow removing the image
+            if (req.body.image && req.body.image.trim()) {
+                updates.image = req.body.image.trim();
+            } else {
+                updates.image = null;
+            }
+        }
 
         // Use a session when capacity change might affect waitlist/promotions
         const session = await mongoose.startSession();
@@ -508,7 +759,11 @@ exports.updateEvent = async (req,res) => {
                 console.log('Promotion after update failed (non-critical):', promErr.message);
             }
 
-            return res.status(200).json({ message: 'Event updated', event: updated });
+            // Convert to plain object and apply default image if needed
+            const updatedObj = updated.toObject();
+            const normalizedEvent = normalizeEventImage(updatedObj);
+
+            return res.status(200).json({ message: 'Event updated', event: normalizedEvent });
         } catch (e) {
             await session.abortTransaction();
             session.endSession();
@@ -530,9 +785,8 @@ exports.cancelEvent = async (req,res) => {
         if (!mongoose.Types.ObjectId.isValid(event_id)) return res.status(400).json({ error: 'Invalid event_id format' });
 
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         // Transactionally mark event cancelled, cancel registrations and delete tickets
         const session = await mongoose.startSession();
@@ -585,9 +839,8 @@ exports.deleteEvent = async (req,res) => {
         if (!mongoose.Types.ObjectId.isValid(event_id))
             return res.status(400).json({error: "Invalid event_id format"})
         // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const event = await Event.findById(event_id).lean();
         if (!event)
@@ -652,14 +905,14 @@ exports.getAttendees = async (req,res) => {
             return res.status(400).json({error: "Invalid event_id format"});
 
         const event = await Event.findById(event_id)
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -676,26 +929,29 @@ exports.getAttendees = async (req,res) => {
         if (!event) 
             return res.status(404).json({error: "Events not found"});
 
-        if (!event.registered_users || event.registered_users.length === 0)
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
+
+        if (!normalizedEvent.registered_users || normalizedEvent.registered_users.length === 0)
             return res.status(404).json({ error: "No confirmed attendees found for this event" });
     
-        const attendees = event.registered_users.map(user => ({
+        const attendees = normalizedEvent.registered_users.map(user => ({
             _id: user._id,
             name: user.name,
             username: user.username,
-            email: user.email,
-            student_id: user.student_id
+            email: user.email
         }));
 
         return res.status(200).json({
-            message: `Confirmed attendees for event '${event.title}' fetched successfully`,
+            message: `Confirmed attendees for event '${normalizedEvent.title}' fetched successfully`,
             event: {
-                _id: event._id,
-                title: event.title,
-                start_at: event.start_at,
-                end_at: event.end_at,
-                capacity: event.capacity,
-                organization: event.organization
+                _id: normalizedEvent._id,
+                title: normalizedEvent.title,
+                start_at: normalizedEvent.start_at,
+                end_at: normalizedEvent.end_at,
+                capacity: normalizedEvent.capacity,
+                organization: normalizedEvent.organization,
+                image: normalizedEvent.image
             },
             total_attendees: attendees.length,
             attendees
@@ -717,14 +973,14 @@ exports.getWaitlistedUsers = async (req,res) =>{
             return res.status(400).json({error: "Invalid event_id format"});
 
         const event = await Event.findById(event_id)
-        .select('organization title description start_at end_at capacity status registered_users waitlist')
+        .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
         })
         .populate({
             path: 'registered_users',
-            select: 'name email student_id'
+            select: 'name email'
         })
         .populate({
             path: 'waitlist',
@@ -741,10 +997,13 @@ exports.getWaitlistedUsers = async (req,res) =>{
         if (!event) 
             return res.status(404).json({error: "Events not found"});
 
-        if (!event.waitlist || event.waitlist.length === 0)
+        // Apply default image to event
+        const normalizedEvent = normalizeEventImage(event);
+
+        if (!normalizedEvent.waitlist || normalizedEvent.waitlist.length === 0)
             return res.status(404).json({ error: "No waitlisted users/registration found for this event" });
     
-        const waitlisted = event.waitlist.map(reg => ({
+        const waitlisted = normalizedEvent.waitlist.map(reg => ({
             registrationId: reg.registrationId,
             status: reg.status,
             quantity: reg.quantity,
@@ -752,22 +1011,21 @@ exports.getWaitlistedUsers = async (req,res) =>{
             user: reg.user
                 ? {
                     _id: reg.user._id,
-                    first_name: reg.user.first_name,
-                    last_name: reg.user.last_name,
-                    email: reg.user.email,
-                    student_id: reg.user.student_id
+                    name: reg.user.name,
+                    email: reg.user.email
                 }
                 : null
         }));
         return res.status(200).json({
-            message: `Confirmed waitlisted users for event '${event.title}' fetched successfully`,
+            message: `Confirmed waitlisted users for event '${normalizedEvent.title}' fetched successfully`,
             event: {
-                _id: event._id,
-                title: event.title,
-                start_at: event.start_at,
-                end_at: event.end_at,
-                capacity: event.capacity,
-                organization: event.organization
+                _id: normalizedEvent._id,
+                title: normalizedEvent.title,
+                start_at: normalizedEvent.start_at,
+                end_at: normalizedEvent.end_at,
+                capacity: normalizedEvent.capacity,
+                organization: normalizedEvent.organization,
+                image: normalizedEvent.image
             },
             total_waitlisted: waitlisted.length,
             waitlisted
@@ -899,153 +1157,19 @@ async function promoteWaitlistForEvent(eventId) {
 }
 
 // Task #114: Admin functionality to moderate event listings
-exports.approveEvent = async (req, res) => {
+
+const { addComment } = require('../utility/comment_analysis');
+
+exports.postComment = async (req, res) => {
+    const { eventId } = req.params; 
+    const { commentText } = req.body;
+
     try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { event_id } = req.params;
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        const event = await Event.findByIdAndUpdate(
-            event_id,
-            { 
-                moderationStatus: MODERATION_STATUS.APPROVED,
-                moderatedBy: req.user.email,
-                moderatedAt: new Date()
-            },
-            { new: true }
-        );
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Task #117: Send notification to organizer
-        await notifyEventModeration(event_id, MODERATION_STATUS.APPROVED);
-
-        // Audit log
-        console.log(`[AUDIT] Admin ${req.user.email} approved event ${event.title} (ID: ${event_id})`);
-
-        return res.status(200).json({
-            message: 'Event approved successfully',
-            event,
-            notificationSent: true
-        });
-    } catch (e) {
-        console.error('Error approving event:', e);
-        return res.status(500).json({ error: 'Failed to approve event' });
-    }
-};
-
-exports.rejectEvent = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { event_id } = req.params;
-        const { reason } = req.body;
-
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        const event = await Event.findByIdAndUpdate(
-            event_id,
-            { 
-                moderationStatus: MODERATION_STATUS.REJECTED,
-                moderationNotes: reason,
-                moderatedBy: req.user.email,
-                moderatedAt: new Date()
-            },
-            { new: true }
-        );
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Task #117: Send notification to organizer
-        await notifyEventModeration(event_id, MODERATION_STATUS.REJECTED, reason);
-
-        // Audit log
-        console.log(`[AUDIT] Admin ${req.user.email} rejected event ${event.title} (ID: ${event_id})`);
-        if (reason) {
-            console.log(`[AUDIT] Rejection reason: ${reason}`);
-        }
-
-        return res.status(200).json({
-            message: 'Event rejected successfully',
-            event,
-            reason,
-            notificationSent: true
-        });
-    } catch (e) {
-        console.error('Error rejecting event:', e);
-        return res.status(500).json({ error: 'Failed to reject event' });
-    }
-};
-
-exports.flagEvent = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { event_id } = req.params;
-        const { flagReason } = req.body;
-
-        if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ error: 'Invalid event ID' });
-        }
-
-        if (!flagReason) {
-            return res.status(400).json({ error: 'Flag reason is required' });
-        }
-
-        const event = await Event.findByIdAndUpdate(
-            event_id,
-            {
-                moderationStatus: MODERATION_STATUS.FLAGGED,
-                moderationNotes: flagReason,
-                moderatedBy: req.user.email,
-                moderatedAt: new Date()
-            },
-            { new: true }
-        );
-
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
-
-        // Task #117: Send notification to organizer
-        await notifyEventModeration(event_id, MODERATION_STATUS.FLAGGED, flagReason);
-
-        // Audit log (Task #115 - flagging system)
-        console.log(`[AUDIT] Admin ${req.user.email} flagged event ${event.title} (ID: ${event_id})`);
-        console.log(`[AUDIT] Flag reason: ${flagReason}`);
-
-        return res.status(200).json({
-            message: 'Event flagged successfully',
-            event: {
-                _id: event._id,
-                title: event.title,
-                moderationStatus: event.moderationStatus,
-                moderationNotes: event.moderationNotes,
-                flagReason
-            },
-            notificationSent: true
-        });
-    } catch (e) {
-        console.error('Error flagging event:', e);
-        return res.status(500).json({ error: 'Failed to flag event' });
+        await addComment(eventId, commentText);
+        res.status(200).json({ message: "Comment added successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to add comment" });
     }
 };
 
