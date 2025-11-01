@@ -34,18 +34,18 @@ const getReturnValues = (countDown) => {
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const { translate } = useLanguage();
 
+    const eventDate = event?.start_at || event?.date;
+    const [days, hours, minutes, seconds] = useCountdown(eventDate || new Date().toISOString());
+
     if (!event) {
         console.error('FeaturedEventSlide: event is missing');
         return null;
     }
 
-    const eventDate = event.start_at || event.date;
     if (!eventDate) {
         console.error('FeaturedEventSlide: event date is missing', event);
         return null;
     }
-
-    const [days, hours, minutes, seconds] = useCountdown(eventDate);
 
     return (
         <div className="relative w-full h-96 flex-shrink-0">
@@ -225,7 +225,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
-const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clearFilters, maxPrice }) => {
+const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clearFilters, maxPrice, categories, uniqueLocations, uniqueOrganizations }) => {
     const { translate } = useLanguage();
 
     if (!isOpen)
@@ -421,7 +421,7 @@ const HomePage = () => {
     const [activeFilters, setActiveFilters] = useState(initialFilters);
     const [modalFilters, setModalFilters] = useState(initialFilters);
 
-    const openEventModal = (event) => setSelectedEvent(event);
+    const openEventModal = useCallback((event) => setSelectedEvent(event), []);
     const closeEventModal = () => setSelectedEvent(null);
 
     const eventsPerPage = 9;
@@ -504,8 +504,8 @@ const HomePage = () => {
     const featuredEvents = useMemo(() => {
         console.log('Calculating featured events from:', eventsData.length, 'events');
         const now = new Date();
-        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        // const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        // const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
         
         // Filter upcoming events
         const upcoming = eventsData.filter(e => {
@@ -701,7 +701,7 @@ const HomePage = () => {
         }
 
         return events;
-    }, [searchTerm, activeCategories, activeFilters, maxPrice, eventsData, featuredEvents]);
+    }, [searchTerm, activeCategories, activeFilters, eventsData, featuredEvents]);
 
     // Prepare carousel data from featured events
     const carouselData = useMemo(() => {
@@ -830,6 +830,9 @@ const HomePage = () => {
                 applyFilters={handleApplyFilters}
                 clearFilters={handleClearFilters}
                 maxPrice={maxPrice}
+                categories={categories}
+                uniqueLocations={uniqueLocations}
+                uniqueOrganizations={uniqueOrganizations}
             />
 
             <EventDetailModal

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMyRegistrations } from "../api/registrationApi"; 
+// import { getMyRegistrations } from "../api/registrationApi"; 
 import { Link } from "react-router-dom";
 
 export default function MyEvents() {
