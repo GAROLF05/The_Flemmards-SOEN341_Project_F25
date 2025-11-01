@@ -25,7 +25,7 @@ const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
             {/* Modal Content */}
             <div className={
                 classNames(
-                    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4",
+                    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 max-h-[90vh]",
                     width === "small" && "w-lg",
                     width === "medium" && "w-xl",
                     width === "large" && "w-2xl",
@@ -36,11 +36,11 @@ const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
                 )}
             >
                 <div
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out"
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out max-h-full flex flex-col"
                     style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}
                 >
-                    <div className="relative">
-                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-900 dark:text-white rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div className="relative flex flex-col max-h-full">
+                        <button onClick={onClose} className="absolute top-4 right-4 z-10 text-gray-900 dark:text-white rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                             <XMarkIcon className="h-6 w-6"/>
                         </button>
                         {children}
