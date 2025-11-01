@@ -1,46 +1,50 @@
 import { BuildingOfficeIcon, CalendarDaysIcon, MapPinIcon, QrCodeIcon, TicketIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import { generateRandomTicketNumber } from '../../utils/mockData';
 import { useNotification } from '../../hooks/useNotification';
+import { getEventsByUser } from '../../api/eventApi';
+import LoadingPage from '../../layouts/LoadingPage';
+import { useLanguage } from '../../hooks/useLanguage';
+import { decodeToken } from '../../utils/jwt';
 
 // --- MOCK DATA ---
 // A smaller list representing events the student has reserved
-const myReservedEventsData = [
-  {
-    id: 3,
-    title: 'Startup Pitch Night',
-    category: 'Business',
-    date: '2025-11-05T19:00:00',
-    location: 'Innovation Hub, Montreal',
-    organization: 'Startup Montreal',
-    description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
-    imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
-    price: 15,
-  },
-  {
-    id: 4,
-    title: 'Advanced React Workshop',
-    category: 'Technology',
-    date: '2025-11-18T10:00:00',
-    location: 'Online',
-    organization: 'Concordia Continuing Education',
-    description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
-    imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
-    price: 250,
-  },
-  {
-    id: 17,
-    title: 'Stand-up Comedy Night',
-    category: 'Arts & Culture',
-    date: '2025-12-12T20:00:00',
-    location: 'The Comedy Nest, Montreal',
-    organization: 'The Comedy Nest',
-    description: 'A night of laughs with some of Montreal\'s best up-and-coming comedians.',
-    imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
-    price: 20,
-  },
-];
+// const myReservedEventsData = [
+//     {
+//         id: 3,
+//         title: 'Startup Pitch Night',
+//         category: 'Business',
+//         date: '2025-11-05T19:00:00',
+//         location: 'Innovation Hub, Montreal',
+//         organization: 'Startup Montreal',
+//         description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
+//         imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
+//         price: 15,
+//     },
+//     {
+//         id: 4,
+//         title: 'Advanced React Workshop',
+//         category: 'Technology',
+//         date: '2025-11-18T10:00:00',
+//         location: 'Online',
+//         organization: 'Concordia Continuing Education',
+//         description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
+//         imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
+//         price: 250,
+//     },
+//     {
+//         id: 17,
+//         title: 'Stand-up Comedy Night',
+//         category: 'Arts & Culture',
+//         date: '2025-12-12T20:00:00',
+//         location: 'The Comedy Nest, Montreal',
+//         organization: 'The Comedy Nest',
+//         description: 'A night of laughs with some of Montreal\'s best up-and-coming comedians.',
+//         imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
+//         price: 20,
+//     },
+// ];
 
 const EventCard = ({ event, onViewDetails }) => {
     return (
@@ -63,15 +67,15 @@ const EventCard = ({ event, onViewDetails }) => {
                     <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 transition-colors duration-300">{event.description}</p>
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
-                            <CalendarDaysIcon className="w-4 h-4"/>
+                            <CalendarDaysIcon className="w-4 h-4" />
                             <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <MapPinIcon className="w-4 h-4"/>
+                            <MapPinIcon className="w-4 h-4" />
                             <span>{event.location}</span>
                         </div>
-                         <div className="flex items-center gap-2">
-                            <BuildingOfficeIcon className="w-4 h-4"/>
+                        <div className="flex items-center gap-2">
+                            <BuildingOfficeIcon className="w-4 h-4" />
                             <span>{event.organization}</span>
                         </div>
                     </div>
@@ -88,7 +92,7 @@ const EventCard = ({ event, onViewDetails }) => {
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
     const { showNotification } = useNotification();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingQRGeneration, setIsLoadingQRGeneration] = useState(false);
 
     if (!event)
         return null;
@@ -104,7 +108,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
         const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(ticketNumber)}`;
 
         try {
-            setIsLoading(true);
+            setIsLoadingQRGeneration(true);
 
             // Fetch the image data from the API URL
             const response = await fetch(apiUrl);
@@ -136,32 +140,32 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
             console.error('Error downloading QR code:', error);
             showNotification("Download failed", "error");
         } finally {
-            setIsLoading(false);
+            setIsLoadingQRGeneration(false);
         }
     };
 
     return (
         <Modal isOpen={isOpen} onClose={onClose}>
-            <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl"/>
+            <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl" />
 
             <div className="p-8">
                 <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
                 <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                 <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                     <div className="flex items-center gap-3">
-                        <CalendarDaysIcon className="w-5 h-5 flex-shrink-0"/>
+                        <CalendarDaysIcon className="w-5 h-5 flex-shrink-0" />
                         <span>{formattedDate} at {formattedTime}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                        <MapPinIcon className="w-5 h-5 flex-shrink-0" />
                         <span>{event.location}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                        <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0" />
                         <span>{event.organization}</span>
                     </div>
-                        <div className="flex items-center gap-3">
-                        <TicketIcon className="w-5 h-5 flex-shrink-0"/>
+                    <div className="flex items-center gap-3">
+                        <TicketIcon className="w-5 h-5 flex-shrink-0" />
                         <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
                     </div>
                 </div>
@@ -170,12 +174,12 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 
                 <button
                     onClick={handleDownloadQRCode}
-                    disabled={isLoading}
+                    disabled={isLoadingQRGeneration}
                     className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
                 >
                     <QrCodeIcon className="w-6 h-6" />
                     Download Ticket QR Code
-                    {isLoading && (
+                    {isLoadingQRGeneration && (
                         <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
                     )}
                 </button>
@@ -185,11 +189,43 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 };
 
 export default function MyEventsPage() {
-    const myEvents = myReservedEventsData;
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [myEvents, setMyEvents] = useState([]);
+    const { translate } = useLanguage();
+    const { showNotification } = useNotification();
 
     const openEventModal = (event) => setSelectedEvent(event);
     const closeEventModal = () => setSelectedEvent(null);
+
+    const fetchMyEvents = useCallback(() => {
+        const user = decodeToken();
+        const userId = user.userId;
+
+        setIsLoading(true);
+        getEventsByUser(userId)
+            .then(response => {
+                console.log('the response', response)
+                setMyEvents(response.data);
+            })
+            .catch(error => {
+                if (error.response.status !== 404) {
+                    console.error("Error fetching user's events:", error);
+                    showNotification(translate("anErrorHasOccured"), "error");
+                }
+            })
+            .finally(() => setIsLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        fetchMyEvents();
+    }, [fetchMyEvents])
+
+    if (isLoading)
+        return (
+            <LoadingPage text="Loading my events..." />
+        )
 
     return (
         <>

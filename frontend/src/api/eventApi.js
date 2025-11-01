@@ -4,7 +4,7 @@ import ENDPOINTS from "./endpoints";
 // Browse events (Public - for students)
 export const browseEvents = (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     if (filters.q) params.append('q', filters.q);
     if (filters.category) params.append('category', filters.category);
     if (filters.startDate) params.append('startDate', filters.startDate);
@@ -17,7 +17,7 @@ export const browseEvents = (filters = {}) => {
     if (filters.limit) params.append('limit', filters.limit);
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-    
+
     const queryString = params.toString();
     return api.get(`${ENDPOINTS.EVENTS_BROWSE}${queryString ? '?' + queryString : ''}`);
 };
@@ -38,7 +38,7 @@ export const getEventsByStatus = (status) => api.get(ENDPOINTS.EVENTS_BY_STATUS(
 export const getEventsByCategory = (category) => api.get(ENDPOINTS.EVENTS_BY_CATEGORY(category));
 
 // Get events by date range
-export const getEventsByDateRange = (start, end) => 
+export const getEventsByDateRange = (start, end) =>
     api.get(ENDPOINTS.EVENTS_BY_DATERANGE, { params: { start, end } });
 
 // Get events by user registrations
@@ -57,7 +57,7 @@ export const createEvent = (eventData, imageFile = null) => {
             }
         });
         formData.append('image', imageFile);
-        
+
         return api.post(ENDPOINTS.EVENT_CREATE, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -82,7 +82,7 @@ export const updateEvent = (eventId, eventData, imageFile = null) => {
             }
         });
         formData.append('image', imageFile);
-        
+
         return api.put(ENDPOINTS.EVENT_UPDATE(eventId), formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
