@@ -1,4 +1,5 @@
 {
+    "accountCreated": "Account created successfully",
     "actions": "Actions",
     "addNewOrganization": "Add New Organization",
     "addOrganization": "Add Organization",
@@ -6,6 +7,7 @@
     "all": "All",
     "allRightsReserved": "{{date}} Flemmards. All rights reserved.",
     "alreadyMember": "Already a member?",
+    "anErrorHasOccured": "An error has occured.",
     "applyFilters": "Apply Filters",
     "approve": "Approve",
     "approveNewOrganizerAccounts": "Approve New Organizer Accounts.",
@@ -54,6 +56,7 @@
     "goBack": "Go back",
     "home": "Home",
     "hours": "Hours",
+    "invalidCredentials": "Invalid email or password",
     "january": "January",
     "july": "July",
     "june": "June",

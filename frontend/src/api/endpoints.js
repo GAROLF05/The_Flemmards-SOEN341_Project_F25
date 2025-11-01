@@ -7,6 +7,9 @@ const ENDPOINTS = {
 	ORGANIZATION_REMOVE_MEMBER: (orgId, memberId) => `/organizations/${orgId}/members/${memberId}`,
 	EVENT_STATUS: (id) => `/events/${id}/status`,
 	SEND_NOTIFICATION: "/notifications/send",
+	LOGIN: "/users/login",
+	SIGNUP: "/users/register",
+
 	// Events
 	EVENTS_BROWSE: "/events/browse", // Public endpoint for students
 	EVENTS_ALL: "/events/get/all", // Admin only
