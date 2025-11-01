@@ -1,11 +1,16 @@
 import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import DashboardPage from "../pages/organizer/DashboardPage";
+import ProtectedRoutes from "./ProtectedRoutes";
 
 const OrganizerRoutes = [
     {
         path: '/organizer',
-        element: <MainLayout accountType="organizer" />,
+        element: (
+            <ProtectedRoutes>
+                <MainLayout accountType="organizer" />
+            </ProtectedRoutes>
+        ),
         children: [
             {
                 path: '',

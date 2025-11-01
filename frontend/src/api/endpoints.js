@@ -1,4 +1,7 @@
 const ENDPOINTS = {
+	LOGIN: "/users/login",
+	SIGNUP: "/users/register",
+
 	// Events
 	EVENTS_BROWSE: "/events/browse", // Public endpoint for students
 	EVENTS_ALL: "/events/get/all", // Admin only
@@ -15,15 +18,15 @@ const ENDPOINTS = {
 	EVENT_ATTENDEES: (id) => `/events/get/attendees/${id}`,
 	EVENT_WAITLIST: (id) => `/events/get/waitlist/${id}`,
 	EVENT_PROMOTE_WAITLIST: (id) => `/events/promote/${id}`,
-	
+
 	// Legacy/Simplified endpoints for compatibility
 	EVENTS: "/events/get/all",
 	EVENT: (id) => `/events/get/${id}`,
-	
+
 	// Registrations
 	REGISTRATION: "/registrations",
 	MYREGISTRATIONS: "/registrations/me",
-	
+
 	// Tickets
 	TICKETS: (registrationId) => `/tickets/${registrationId}`,
 };
