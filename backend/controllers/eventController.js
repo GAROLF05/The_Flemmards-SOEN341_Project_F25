@@ -176,7 +176,7 @@ exports.browseEvents = async (req, res) => {
 // API Endpoint to get all Events (Admin only)
 exports.getAllEvents = async (req,res) => {
     try{
-        // Only administrators can fetch all registrations
+        // Only administrators can fetch all events
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
@@ -232,7 +232,7 @@ exports.getEventById = async (req,res) => {
             return res.status(400).json({error: "Invalid event id format"});
 
         const event = await Event.findById(event_id)
-            .select('organization title description start_at end_at capacity status registered_users waitlist image')
+            .select('organization title description start_at end_at capacity status moderationStatus registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
@@ -1190,7 +1190,7 @@ exports.getEventsByModerationStatus = async (req, res) => {
         }
 
         const events = await Event.find({ moderationStatus: status })
-            .populate('organization', 'name email status')
+            .populate('organization', 'name status organizer contact')
             .select('title description start_at category moderationStatus moderationNotes moderatedBy moderatedAt')
             .sort({ createdAt: -1 })
             .lean();
@@ -1216,7 +1216,7 @@ exports.getPendingModerationEvents = async (req, res) => {
         if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
 
         const events = await Event.find({ moderationStatus: MODERATION_STATUS.PENDING_APPROVAL })
-            .populate('organization', 'name email status')
+            .populate('organization', 'name status organizer contact')
             .select('title description start_at category')
             .sort({ createdAt: 1 })
             .lean();

@@ -44,12 +44,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    organizations: {
-      type: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
-      }],
-      default: [],
+    organization: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: false,
+      sparse: true,
+      unique: true,
     },
   },
   {
