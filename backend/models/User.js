@@ -44,14 +44,6 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(USER_ROLE),
       required: true,
     },
-
-    organizations: {
-      type: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Organization'
-      }],
-      default: [],
-    },
   },
   {
     collection: "users",

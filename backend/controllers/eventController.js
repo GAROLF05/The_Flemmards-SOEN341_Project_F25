@@ -26,10 +26,10 @@ try {
 */
 // Models of DB
 const Administrator = require('../models/Administrators');
-const User = require('../models/User');
-const { Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY } = require('../models/Event');
-const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
-const {Registration, REGISTRATION_STATUS} = require('../models/Registrations');
+const { User } = require('../models/User');
+const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
+const { Organization, ORGANIZATION_STATUS }= require('../models/Organization');
+const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
 // QR Code setup (npm install qrcode)
@@ -43,7 +43,6 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 // MongoDB setup
 const mongoose = require('mongoose');
 const { error } = require('console');
-const { notifyEventModeration } = require('./notificationController');
 
 // Helper function to ensure events have a default image if none is provided
 const DEFAULT_EVENT_IMAGE = '/uploads/events/default-event-image.svg';
@@ -628,7 +627,6 @@ exports.createEvent = async (req,res)=>{
             category,
             location,
             status: EVENT_STATUS.UPCOMING,
-            moderationStatus: MODERATION_STATUS.PENDING_APPROVAL,
             image: imageUrl,
         });
 
@@ -1170,65 +1168,5 @@ exports.postComment = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Failed to add comment" });
-    }
-};
-
-// Get events by moderation status (for admin dashboard)
-exports.getEventsByModerationStatus = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const { status } = req.params;
-
-        if (!status || !Object.values(MODERATION_STATUS).includes(status)) {
-            return res.status(400).json({ 
-                error: `Invalid moderation status. Must be one of: ${Object.values(MODERATION_STATUS).join(', ')}` 
-            });
-        }
-
-        const events = await Event.find({ moderationStatus: status })
-            .populate('organization', 'name email status')
-            .select('title description start_at category moderationStatus moderationNotes moderatedBy moderatedAt')
-            .sort({ createdAt: -1 })
-            .lean();
-
-        return res.status(200).json({
-            message: `Events with moderation status '${status}' fetched successfully`,
-            total: events.length,
-            events
-        });
-
-    } catch (e) {
-        console.error('Error fetching events by moderation status:', e);
-        return res.status(500).json({ error: 'Failed to fetch events' });
-    }
-};
-
-// Get pending moderation events
-exports.getPendingModerationEvents = async (req, res) => {
-    try {
-        // Admin only
-        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
-        const admin = await Administrator.findOne({ email: req.user.email }).lean();
-        if (!admin) return res.status(403).json({ code: 'FORBIDDEN', message: 'Admin access required' });
-
-        const events = await Event.find({ moderationStatus: MODERATION_STATUS.PENDING_APPROVAL })
-            .populate('organization', 'name email status')
-            .select('title description start_at category')
-            .sort({ createdAt: 1 })
-            .lean();
-
-        return res.status(200).json({
-            message: 'Pending moderation events fetched successfully',
-            total: events.length,
-            events
-        });
-
-    } catch (e) {
-        console.error('Error fetching pending moderation events:', e);
-        return res.status(500).json({ error: 'Failed to fetch pending events' });
     }
 };

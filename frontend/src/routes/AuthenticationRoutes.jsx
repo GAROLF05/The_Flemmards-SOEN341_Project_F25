@@ -1,21 +1,13 @@
 import Authentication from "../pages/authentication/Authentication";
-import PublicRoutes from "./PublicRoutes";
 
 const AuthenticationRoutes = [
     {
         path: '/login',
-        element: (
-            <PublicRoutes>
-                <Authentication />
-            </PublicRoutes>
-        ),
+        element: <Authentication />,
     },
     {
         path: '/signup',
-        element:
-            <PublicRoutes>
-                <Authentication />
-            </PublicRoutes>,
+        element: <Authentication />,
     },
 ];
 

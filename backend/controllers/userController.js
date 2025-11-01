@@ -58,7 +58,7 @@ exports.registerUser = async (req, res) => {
 
     // Create user
     const newUser = new User({
-      name: name ? name.trim() : null,
+      name: name? name.trim() : null,
       username: username ? username.trim() : null,
       email: email.toLowerCase().trim(),
       password: hashedPassword,

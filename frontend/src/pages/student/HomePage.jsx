@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { AdjustmentsHorizontalIcon, BuildingOfficeIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, TicketIcon, UsersIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { AdjustmentsHorizontalIcon, BuildingOfficeIcon, CalendarDaysIcon, ChevronLeftIcon, ChevronRightIcon, HeartIcon, MapPinIcon, MagnifyingGlassIcon, TagIcon, TicketIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as FilledHeartIcon } from "@heroicons/react/24/solid";
 import Modal from '../../components/modal/Modal';
 import Carousel from '../../components/carousel/Carousel';
@@ -387,8 +387,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         </div>
                         {event.capacity && (
                             <div className="flex items-center gap-3">
-                                <UsersIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
+                                <span className="text-sm">Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
                             </div>
                         )}
                     </div>
