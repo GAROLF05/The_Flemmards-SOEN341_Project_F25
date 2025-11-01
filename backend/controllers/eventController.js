@@ -498,7 +498,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
             select: 'name email'})
         .populate({
             path: 'event', 
-            select: 'organization title start_at end_at image',
+            select: 'organization title description start_at end_at location image',
             populate:{
             path: 'organization',
             select: 'name website',
@@ -506,7 +506,7 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
         .populate({
             path: 'ticketIds',
             model: 'Ticket', 
-            select: 'code qrDataUrl qr_expires_at status scannedAt scannedBy',
+            select: 'ticketId code status scannedAt scannedBy',
         })
         .sort({createdAt: -1})
         .lean()
@@ -517,12 +517,25 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
 
         const events = regs.map(r => {
             const eventObj = r.event ? normalizeEventImage({ ...r.event }) : null;
+            const tickets = Array.isArray(r.ticketIds) ? r.ticketIds : [];
+            
+            // Get ticket numbers (codes or ticketIds) if confirmed
+            const ticketNumbers = r.status === REGISTRATION_STATUS.CONFIRMED && tickets.length > 0
+                ? tickets.map(t => t.code || t.ticketId).filter(Boolean)
+                : [];
+            
             return {
-                event: eventObj,
+                event: eventObj ? {
+                    ...eventObj,
+                    location: eventObj.location || { name: '', address: '' },
+                    price: eventObj.price || null,
+                    description: eventObj.description || '',
+                } : null,
                 status: r.status,
                 quantity: r.quantity,
                 ticketsIssued: r.ticketsIssued,
                 registeredAt: r.createdAt,
+                ticketNumbers: ticketNumbers,
             };
         });
 
