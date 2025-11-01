@@ -669,3 +669,51 @@ exports.getTicketsByUser = async (req,res)=>{
     }
 }
 
+//US.09 - Task.2 - remaining capacity and attendance rate
+exports.getEventMetrics = async (req, res) => {
+    try {
+        // Require authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+
+        const { event_id } = req.params;
+        if (!event_id) 
+            return res.status(400).json({ error: "event_id required" });
+
+        if (!mongoose.Types.ObjectId.isValid(event_id)) 
+            return res.status(400).json({ error: "Invalid event_id format" });
+
+        //Fetch event capacity
+        const event = await Event.findById(event_id).select('capacity').lean();
+
+        if (!event) 
+            return res.status(404).json({ error: 'Event not found' });
+
+        // Compute issued and used counts
+        const issuedCount = await Ticket.countDocuments({ event: event_id });
+        const usedCount = await Ticket.countDocuments({ event: event_id, status: 'used' }); //event attended
+
+        let capacity;
+        if (typeof event.capacity === 'number') {
+            capacity = event.capacity
+        } else {
+            capacity = null;
+        }
+
+        const remainingCapacity = capacity !== null ? Math.max(0, capacity - issuedCount) : null;
+
+        const attendanceRate = issuedCount > 0 ? (usedCount / issuedCount) * 100 : 0; //percent
+
+        return res.status(200).json({
+            eventId: event_id,
+            capacity,
+            issuedCount,
+            usedCount,
+            remainingCapacity,
+            attendanceRate: Number(attendanceRate.toFixed(2)) // percent
+        });
+
+    } catch (e) {
+        console.error('Failed to compute event metrics', e);
+        return res.status(500).json({ error: 'Failed to compute event metrics' });
+    }
+};
