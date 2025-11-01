@@ -28,7 +28,7 @@ try {
 const Administrator = require('../models/Administrators');
 const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
-const Organization = require('../models/Organization');
+const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
 const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
@@ -94,9 +94,17 @@ exports.registerToEvent = async (req, res) => {
         let event;
         try {
             // Fetch event to check its capacity and status
-            event = await Event.findById(eventId);
+            event = await Event.findById(eventId).populate('organization');
             if (!event)
                 return res.status(404).json({ code: 'EVENT_NOT_FOUND', message: 'Event not found' });
+
+            // Check if organization is suspended - freeze registrations
+            if (event.organization && event.organization.status === ORGANIZATION_STATUS.SUSPENDED) {
+                return res.status(403).json({ 
+                    code: 'ORGANIZATION_SUSPENDED', 
+                    message: 'This event\'s organization has been suspended. Registration is currently unavailable.' 
+                });
+            }
 
             // Check event status
             if (event.status !== EVENT_STATUS.UPCOMING)

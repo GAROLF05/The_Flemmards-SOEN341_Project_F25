@@ -58,9 +58,23 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                        {translate("reserveNow")}
-                    </button>
+                    {event.organizationStatus === 'suspended' ? (
+                        <div className="w-full">
+                            <button 
+                                disabled 
+                                className="w-full bg-gray-400 dark:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60 text-lg"
+                            >
+                                Registration Unavailable
+                            </button>
+                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                This event's organization has been suspended. Registration is currently unavailable.
+                            </p>
+                        </div>
+                    ) : (
+                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                            {translate("reserveNow")}
+                        </button>
+                    )}
                 </div>
             </>
         </Modal>

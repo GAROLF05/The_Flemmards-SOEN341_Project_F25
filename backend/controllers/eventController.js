@@ -133,7 +133,7 @@ exports.browseEvents = async (req, res) => {
             .select('organization title description category start_at end_at capacity status location image')
             .populate({
                 path: 'organization',
-                select: 'name description website'
+                select: 'name description website status'
             })
             .sort(sort)
             .skip(skip)
