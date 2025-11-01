@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon, CalendarDaysIcon, MapPinIcon, UsersIcon, ClockIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -264,7 +264,7 @@ const initialEventsData = [
 
 const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
 
-const EventCard = ({ event, onViewAnalytics }) => {
+const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
     const { translate } = useLanguage();
 
     // Calculate analytics from backend data
@@ -309,9 +309,15 @@ const EventCard = ({ event, onViewAnalytics }) => {
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
-                        {translate("eventAnalytics")}
-                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={() => onViewDetails(event)} className="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 capitalize cursor-pointer flex items-center justify-center gap-2">
+                            <InformationCircleIcon className="w-5 h-5" />
+                            Details
+                        </button>
+                        <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
+                            {translate("eventAnalytics")}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -374,6 +380,165 @@ const AnalyticsModal = ({ event, isOpen, onClose }) => {
                                 <div className="text-center"> <p className="text-5xl font-bold text-gray-900 dark:text-white">{remainingCapacity}</p> <p className="text-md text-gray-500 dark:text-gray-400 mt-1 capitalize">{translate("remainingCapacity")}</p> </div>
                                 <div className="text-center"> <p className="text-5xl font-bold text-gray-900 dark:text-white">{event.attendees}</p> <p className="text-md text-gray-500 dark:text-gray-400 mt-1 capitalize">{translate("totalAttendees")}</p> </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const EventDetailsModal = ({ event, isOpen, onClose }) => {
+    const { translate } = useLanguage();
+
+    if (!event)
+        return null;
+
+    const startDate = event.start_at || event.date;
+    const endDate = event.end_at;
+    const eventStart = startDate ? new Date(startDate) : null;
+    const eventEnd = endDate ? new Date(endDate) : null;
+
+    const formatDateTime = (date) => {
+        if (!date) return 'Not specified';
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatTime = (date) => {
+        if (!date) return '';
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    return (
+        <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
+            <div className="fixed inset-0 bg-black/70 transition-opacity duration-300" onClick={onClose} style={{ opacity: isOpen ? 1 : 0 }}></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl p-4 max-h-[90vh] overflow-y-auto">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}>
+                    <div className="p-8">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">
+                            <XMarkIcon className="h-6 w-6"/>
+                        </button>
+
+                        {/* Event Image */}
+                        {event.imageUrl && (
+                            <div className="mb-6 rounded-lg overflow-hidden">
+                                <img 
+                                    src={event.imageUrl} 
+                                    alt={event.title}
+                                    className="w-full h-64 object-cover"
+                                    onError={(e) => {
+                                        e.target.src = '/uploads/events/default-event-image.svg';
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Event Title */}
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h2>
+                        
+                        {/* Category Badge */}
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-6">
+                            {event.category}
+                        </span>
+
+                        {/* Event Details Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            {/* Date & Time */}
+                            <div className="flex items-start gap-3">
+                                <CalendarDaysIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Date & Time</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {formatDateTime(eventStart)}
+                                    </p>
+                                    {eventEnd && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            Ends: {formatDateTime(eventEnd)}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Location */}
+                            <div className="flex items-start gap-3">
+                                <MapPinIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Location</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {event.location || 'Not specified'}
+                                    </p>
+                                    {event.address && event.address !== event.location && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {event.address}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Capacity */}
+                            <div className="flex items-start gap-3">
+                                <UsersIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Capacity</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {event.registeredUsers || 0} / {event.capacity || 0} registered
+                                    </p>
+                                    {event.capacity && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {event.capacity - (event.registeredUsers || 0)} spots remaining
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Price */}
+                            <div className="flex items-start gap-3">
+                                <ClockIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Price</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        {event.description && (
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h3>
+                                <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                    {event.description}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Organization */}
+                        {event.organization && (
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Organization</h3>
+                                <p className="text-gray-600 dark:text-gray-300">{event.organization}</p>
+                            </div>
+                        )}
+
+                        {/* Status */}
+                        <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                event.status === 'upcoming' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                event.status === 'ongoing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                                event.status === 'completed' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                            }`}>
+                                {event.status ? event.status.charAt(0).toUpperCase() + event.status.slice(1) : 'Unknown'}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -645,6 +810,7 @@ const DashboardPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const { translate } = useLanguage();
     const [isInitialMount,setIsInitialMount] = useState(true);
@@ -725,6 +891,17 @@ const DashboardPage = () => {
                 
                 const transformedEvents = transformEventsForFrontend(eventsArray);
                 console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
+                
+                // Debug: Check location data in transformed events
+                if (transformedEvents.length > 0) {
+                    console.log('First event location check:', {
+                        original: eventsArray[0]?.location,
+                        transformed: transformedEvents[0]?.location,
+                        address: transformedEvents[0]?.address,
+                        fullEvent: transformedEvents[0]
+                    });
+                }
+                
                 setEvents(transformedEvents);
             } catch (err) {
                 console.error('Error fetching events:', err);
@@ -819,7 +996,12 @@ const DashboardPage = () => {
             {currentEvents.length > 0 ? (
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {currentEvents.map(event => (
-                        <EventCard key={event.id} event={event} onViewAnalytics={setSelectedEvent} />
+                        <EventCard 
+                            key={event.id} 
+                            event={event} 
+                            onViewAnalytics={setSelectedEvent}
+                            onViewDetails={setSelectedEventDetails}
+                        />
                     ))}
                 </div>
             ) : (
@@ -835,6 +1017,12 @@ const DashboardPage = () => {
                 isOpen={!!selectedEvent}
                 onClose={() => setSelectedEvent(null)}
                 event={selectedEvent}
+            />
+
+            <EventDetailsModal
+                isOpen={!!selectedEventDetails}
+                onClose={() => setSelectedEventDetails(null)}
+                event={selectedEventDetails}
             />
 
             <CreateEventModal

@@ -181,7 +181,7 @@ exports.getAllEvents = async (req,res) => {
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find()
-            .select('organization title description start_at end_at capacity status registered_users waitlist image')
+            .select('organization title description category start_at end_at capacity status location registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
@@ -232,7 +232,7 @@ exports.getEventById = async (req,res) => {
             return res.status(400).json({error: "Invalid event id format"});
 
         const event = await Event.findById(event_id)
-            .select('organization title description start_at end_at capacity status moderationStatus registered_users waitlist image')
+            .select('organization title description category start_at end_at capacity status moderationStatus location registered_users waitlist image')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
@@ -281,7 +281,7 @@ exports.getEventByOrganization = async (req,res) =>{
         }
 
         const events = await Event.find({organization: org_id})
-        .select('organization title description start_at end_at capacity status registered_users waitlist image')
+        .select('organization title description category start_at end_at capacity status location registered_users waitlist image')
         .populate({
             path: 'organization',
             select: 'name description website contact.email contact.phone contact.socials'
