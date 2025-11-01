@@ -5,6 +5,7 @@ import { useNotification } from '../../hooks/useNotification';
 import Select from '../../components/select/Select';
 import Signup from './Signup';
 import Login from './Login';
+import { login, signup } from '../../api/authenticationApi';
 
 export default function Authentication() {
 	const [loginForm, setLoginForm] = useState({
@@ -32,19 +33,53 @@ export default function Authentication() {
 	const handleLogin = (e) => {
 		e.preventDefault();
 
-		if (loginForm.role === "student")
-			navigate("/student");
-		else if (loginForm.role === "organizer")
-			navigate("/organizer");
-		else if (loginForm.role === "admin")
-			navigate("/admin");
+		const data = {
+			usernameEmail: loginForm.email,
+			password: loginForm.password,
+			role: loginForm.role,
+			rememberMe: loginForm.rememberMe,
+		}
+
+		login(data)
+			.then(response => {
+				localStorage.setItem("auth-token", response.data.token);
+
+				const role = response.data.user.role.toLowerCase();
+
+				if (role === "student")
+					navigate("/student");
+				else if (role === "organizer")
+					navigate("/organizer");
+				else if (role === "admin")
+					navigate("/admin");
+			})
+			.catch(error => {
+				if (error.status === 401)
+					showNotification(translate("invalidCredentials"), 'error');
+				else
+					showNotification(translate("anErrorHasOccured"), 'error');
+			});
 	};
 
 	const handleSignUp = (e) => {
 		e.preventDefault();
-		showNotification('This is just a test for notifications.', 'error');
 
-		// todo: handle signup call here
+		const data = {
+			name: signUpForm.fullName,
+			username: signUpForm.fullName,
+			email: signUpForm.email,
+			password: signUpForm.password,
+			role: "Student"
+		}
+
+		signup(data)
+			.then(() => {
+				showNotification(translate("accountCreated"), 'success');
+				navigate("/login");
+			})
+			.catch(() => {
+				showNotification(translate("anErrorHasOccured"), 'error');
+			});
 	};
 
 	return (

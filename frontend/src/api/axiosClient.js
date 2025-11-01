@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Use /api since Vite proxy is configured to forward to backend
 const axiosClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL,
     headers: {
         "Content-Type": "application/json",
     },
@@ -28,15 +28,8 @@ axiosClient.interceptors.request.use(config => {
 axiosClient.interceptors.response.use(response =>
     response.data, error => {
         console.error("API Error:", error);
-        // Preserve the full error object with response data
-        const errorResponse = {
-            message: error.message,
-            response: error.response,
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data
-        };
-        return Promise.reject(errorResponse);
+
+        return Promise.reject(error);
     }
 );
 

@@ -1,4 +1,5 @@
 {
+    "accountCreated": "Compte créé avec succès",
     "actions": "Actions",
     "addNewOrganization": "Ajouter une nouvelle organisation",
     "addOrganization": "Ajouter une organisation",
@@ -6,6 +7,7 @@
     "all": "Tout",
     "allRightsReserved": "{{date}} Flemmards. Tous droits réservés.",
     "alreadyMember": "Déjà membre?",
+    "anErrorHasOccured": "Une erreur s'est produite.",
     "applyFilters": "Appliquer les filtres",
     "approve": "Approuver",
     "approveNewOrganizerAccounts": "Approuver les nouveaux comptes organisateurs.",
@@ -54,6 +56,7 @@
     "goBack": "Retourner",
     "home": "Accueil",
     "hours": "Heures",
+    "invalidCredentials": "E-mail ou mot de passe invalide",
     "invalidTicket": "Billet invalide",
     "invalidTicketDescription": "Ce billet n'est pas valide ou a déjà été utilisé.",
     "january": "Janvier",
