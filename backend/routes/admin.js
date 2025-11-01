@@ -10,7 +10,6 @@ const express = require('express');
 const router = express.Router();
 const Administrator = require('../models/Administrators');
 const { Organization, ORGANIZATION_STATUS } = require('../models/Organization');
-const { requireAdmin } = require('../middlewares/auth');
 const { notifyOrganizationStatus, getAllNotifications, getNotificationById } = require('../controllers/notificationController');
 
 // Controller
