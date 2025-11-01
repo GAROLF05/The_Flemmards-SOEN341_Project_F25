@@ -1,54 +1,54 @@
-// NOTE: Passwords must be hashed with bcrypt before inserting into the database.
-// All passwords are set to "Admin123!" for easy testing.
-// Use: const bcrypt = require('bcrypt'); const hashedPassword = await bcrypt.hash('Admin123!', 10);
+// NOTE: Passwords are hashed with bcrypt (10 rounds).
+// Original password was "Admin123!" for all administrators.
+// Use: const bcrypt = require('bcrypt'); const isValid = await bcrypt.compare('Admin123!', hashedPassword);
 [
   {
     "name": "Nameer Hanif",
-    "username": "GAROLF05",
+    "username": "nhanif",
     "email": "nameerhm@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$daf5jBj0RyMAz5Ks9DEdC.BS2JfS3u/Zu6PLk5z5W49JhgD755r3S"
   },
   {
     "name": "Bijoy Sengupta",
     "username": "bsengupta",
     "email": "senguptabijoy7879@gmail.com",
-    "password": "Admin123!"
-  },
-  {
-    "name": "Charts User",
-    "username": "chartsuser",
-    "email": "charts+68e151cff7fe47272d58826c@mongodb.com",
-    "password": "Admin123!"
+    "password": "$2b$10$2A.j92Cb99hqOU86ORQR9OcYngFxUh2UnNW5wkiVpBPnXqY9ux1r6"
   },
   {
     "name": "Nihit Patel",
     "username": "nihitpatel",
     "email": "nihitpatel2005@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$BCS60uquTRnhJHFpiqmyp.QxNOYA3uT925NWQxKl48If.7hajcNwy"
   },
   {
     "name": "Curtis Moxebo",
     "username": "cmoxebo",
     "email": "cmoxebo@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$LJzncBjcTF6culghNIni.efwi1iUzqUO8/tn/cvWep8ywoIapvOSy"
   },
   {
     "name": "Hesham Rabie",
-    "username": "heshamrabie",
+    "username": "hrabie",
     "email": "heshamrabie05@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$AI5lC8qkqeunpc0d80LWqeuommiDuUDmzkpJh8WabpU0dQrilQ1Fe"
   },
   {
     "name": "Elliot Boismartel",
     "username": "eboismartel",
     "email": "elliot.boismartel@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$wyzqZs7gKDhclRkW1llA2OyXJGW7cyVyp7lrkvEUK8dz7ANLH7tE2"
   },
   {
     "name": "Omar Dbaa",
     "username": "odbaa",
     "email": "omardbaa257@gmail.com",
-    "password": "Admin123!"
+    "password": "$2b$10$C2CRABXSoXfUKDNIKB61Suf6WIYfZkWwvHbmzv0Ax/9dUZJ/4Yg/W"
+  },
+  {
+    "name": "Mostafa Maraie",
+    "username": "mmaraie",
+    "email": "mostafa.maraiee@gmail.com",
+    "password": "$2b$10$Fa67sXHQi1LF4rOiZPRtgeHhSH01jmXMzHjanKOObOW24tSoZkRpW"
   }
 ]
 

@@ -9,6 +9,7 @@ const ENDPOINTS = {
 	SEND_NOTIFICATION: "/notifications/send",
 	LOGIN: "/users/login",
 	SIGNUP: "/users/register",
+	LOGOUT: "/users/logout",
 
 	// Events
 	EVENTS_BROWSE: "/events/browse", // Public endpoint for students

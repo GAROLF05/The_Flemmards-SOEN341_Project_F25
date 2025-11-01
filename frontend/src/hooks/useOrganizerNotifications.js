@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useNotification } from '../../hooks/useNotification';
-import { useLanguage } from '../../hooks/useLanguage';
+import { useNotification } from './useNotification';
+import { useLanguage } from './useLanguage';
 
 // Mock function to simulate email sending - replace with actual API call
 const mockSendEmail = async (recipientEmail, subject, message) => {
