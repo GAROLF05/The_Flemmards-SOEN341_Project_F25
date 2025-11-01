@@ -46,17 +46,21 @@ export const getEventsByUser = (userId) => api.get(ENDPOINTS.EVENTS_BY_USER(user
 
 // Create event (Admin only, supports multipart/form-data for image upload)
 export const createEvent = (eventData, imageFile = null) => {
-    if (imageFile) {
-        // Use FormData for file upload
+    if (imageFile || (eventData.location && typeof eventData.location === 'object')) {
+        // Use FormData for file upload or when location is an object
         const formData = new FormData();
         Object.keys(eventData).forEach(key => {
             if (key === 'location' && typeof eventData[key] === 'object') {
-                formData.append(key, JSON.stringify(eventData[key]));
+                // Backend expects location[name] and location[address] form fields
+                formData.append('location[name]', eventData[key].name || '');
+                formData.append('location[address]', eventData[key].address || '');
             } else {
                 formData.append(key, eventData[key]);
             }
         });
-        formData.append('image', imageFile);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
         
         return api.post(ENDPOINTS.EVENT_CREATE, formData, {
             headers: {

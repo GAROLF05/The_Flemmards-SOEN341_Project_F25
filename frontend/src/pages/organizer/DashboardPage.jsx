@@ -1,10 +1,10 @@
-import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon, CalendarDaysIcon, MapPinIcon, UsersIcon, ClockIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getUserProfile } from '../../api/authenticationApi';
-import { getEventsByOrganization } from '../../api/eventApi';
-import { transformEventsForFrontend } from '../../utils/eventTransform';
+import { getEventsByOrganization, createEvent } from '../../api/eventApi';
+import { transformEventsForFrontend, transformEventForFrontend } from '../../utils/eventTransform';
 
 // --- MOCK DATA (fallback) ---
 const initialEventsData = [
@@ -264,7 +264,7 @@ const initialEventsData = [
 
 const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
 
-const EventCard = ({ event, onViewAnalytics }) => {
+const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
     const { translate } = useLanguage();
 
     // Calculate analytics from backend data
@@ -309,9 +309,15 @@ const EventCard = ({ event, onViewAnalytics }) => {
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="w-full bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
-                        {translate("eventAnalytics")}
-                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={() => onViewDetails(event)} className="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 capitalize cursor-pointer flex items-center justify-center gap-2">
+                            <InformationCircleIcon className="w-5 h-5" />
+                            Details
+                        </button>
+                        <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
+                            {translate("eventAnalytics")}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -382,8 +388,168 @@ const AnalyticsModal = ({ event, isOpen, onClose }) => {
     );
 };
 
-const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: organizations, categories }) => {
-    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', date: '', location: '', organization: organizations[0] || '', description: '', price: 0, capacity: 0 });
+const EventDetailsModal = ({ event, isOpen, onClose }) => {
+    const { translate } = useLanguage();
+
+    if (!event)
+        return null;
+
+    const startDate = event.start_at || event.date;
+    const endDate = event.end_at;
+    const eventStart = startDate ? new Date(startDate) : null;
+    const eventEnd = endDate ? new Date(endDate) : null;
+
+    const formatDateTime = (date) => {
+        if (!date) return 'Not specified';
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'long',
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatTime = (date) => {
+        if (!date) return '';
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    };
+
+    return (
+        <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
+            <div className="fixed inset-0 bg-black/70 transition-opacity duration-300" onClick={onClose} style={{ opacity: isOpen ? 1 : 0 }}></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl p-4 max-h-[90vh] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}>
+                    <div className="p-8">
+                        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">
+                            <XMarkIcon className="h-6 w-6"/>
+                        </button>
+
+                        {/* Event Image */}
+                        {event.imageUrl && (
+                            <div className="mb-6 rounded-lg overflow-hidden">
+                                <img 
+                                    src={event.imageUrl} 
+                                    alt={event.title}
+                                    className="w-full h-64 object-cover"
+                                    onError={(e) => {
+                                        e.target.src = '/uploads/events/default-event-image.svg';
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Event Title */}
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h2>
+                        
+                        {/* Category Badge */}
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-6">
+                            {event.category}
+                        </span>
+
+                        {/* Event Details Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            {/* Date & Time */}
+                            <div className="flex items-start gap-3">
+                                <CalendarDaysIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Date & Time</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {formatDateTime(eventStart)}
+                                    </p>
+                                    {eventEnd && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            Ends: {formatDateTime(eventEnd)}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Location */}
+                            <div className="flex items-start gap-3">
+                                <MapPinIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Location</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {event.location || 'Not specified'}
+                                    </p>
+                                    {event.address && event.address !== event.location && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {event.address}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Capacity */}
+                            <div className="flex items-start gap-3">
+                                <UsersIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Capacity</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {event.registeredUsers || 0} / {event.capacity || 0} registered
+                                    </p>
+                                    {event.capacity && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                            {event.capacity - (event.registeredUsers || 0)} spots remaining
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Price */}
+                            <div className="flex items-start gap-3">
+                                <ClockIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
+                                <div>
+                                    <p className="font-semibold text-gray-900 dark:text-white">Price</p>
+                                    <p className="text-gray-600 dark:text-gray-300">
+                                        {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        {event.description && (
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h3>
+                                <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                    {event.description}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Organization */}
+                        {event.organization && (
+                            <div className="mb-6">
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Organization</h3>
+                                <p className="text-gray-600 dark:text-gray-300">{event.organization.toString()}</p>
+                            </div>
+                        )}
+
+                        {/* Status */}
+                        <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                event.status === 'upcoming' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                event.status === 'ongoing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                                event.status === 'completed' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
+                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                            }`}>
+                                {event.status ? event.status.charAt(0).toUpperCase() + event.status.slice(1) : 'Unknown'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categories }) => {
+    const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -443,100 +609,113 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: or
     const handleSubmit = async (e) => { 
         e.preventDefault();
         
-        // Validate required fields
-        if (!newEvent.title || !newEvent.date || !newEvent.location || !newEvent.organization) {
-            alert('Please fill in all required fields');
+        // Check for missing organization ID first (this is a system issue, not user input)
+        if (!organizationId) {
+            alert('Unable to create event: Your organization information is not available. Please refresh the page or contact support.');
+            return;
+        }
+        
+        // Validate required fields with specific messages
+        const missingFields = [];
+        if (!newEvent.title || !newEvent.title.trim()) missingFields.push('Event Title');
+        if (!newEvent.startAt) missingFields.push('Starts At');
+        if (!newEvent.endAt) missingFields.push('Ends At');
+        if (!newEvent.location || !newEvent.location.trim()) missingFields.push('Location Name');
+        if (!newEvent.locationAddress || !newEvent.locationAddress.trim()) missingFields.push('Location Address');
+        if (!newEvent.description || !newEvent.description.trim()) missingFields.push('Description');
+        if (!newEvent.capacity || newEvent.capacity <= 0) missingFields.push('Capacity (must be greater than 0)');
+        
+        if (missingFields.length > 0) {
+            alert(`Please fill in the following required fields:\n- ${missingFields.join('\n- ')}`);
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-            // Parse date and time
-            const dateTime = new Date(newEvent.date);
-            if (isNaN(dateTime.getTime())) {
-                alert('Please enter a valid date and time');
+            // Parse start and end dates
+            const startDateTime = new Date(newEvent.startAt);
+            const endDateTime = new Date(newEvent.endAt);
+            
+            if (isNaN(startDateTime.getTime())) {
+                alert('Please enter a valid start date and time');
+                setIsSubmitting(false);
+                return;
+            }
+            
+            if (isNaN(endDateTime.getTime())) {
+                alert('Please enter a valid end date and time');
+                setIsSubmitting(false);
+                return;
+            }
+            
+            if (endDateTime <= startDateTime) {
+                alert('End date and time must be after start date and time');
                 setIsSubmitting(false);
                 return;
             }
 
-            // Create FormData for multipart/form-data
-            const formData = new FormData();
-            formData.append('title', newEvent.title);
-            formData.append('category', newEvent.category);
-            formData.append('start_at', dateTime.toISOString());
-            formData.append('end_at', new Date(dateTime.getTime() + 2 * 60 * 60 * 1000).toISOString()); // Default 2 hours duration
-            formData.append('capacity', newEvent.capacity.toString());
-            formData.append('description', newEvent.description || '');
-            
-            // Handle location - split if it's a string, or use as is
-            const locationObj = typeof newEvent.location === 'string' 
-                ? { name: newEvent.location, address: newEvent.location }
-                : newEvent.location;
-            formData.append('location[name]', locationObj.name || newEvent.location);
-            formData.append('location[address]', locationObj.address || newEvent.location);
-
-            // Add organization ID (assuming organizations array contains IDs)
-            // If it contains names, you'll need to fetch the ID first
-            formData.append('organization', newEvent.organization);
-
-            // Add image file if selected
-            if (imageFile) {
-                formData.append('image', imageFile);
-            }
-
-            // Get auth token
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please log in to create an event');
-                setIsSubmitting(false);
-                return;
-            }
-
-            // Make API call
-            const response = await fetch('/api/events/create', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                    // Don't set Content-Type - browser will set it automatically with boundary for FormData
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Failed to create event' }));
-                throw new Error(errorData.error || 'Failed to create event');
-            }
-
-            const result = await response.json();
-            
-            // Call the callback with the new event (mocked for now if API structure differs)
-            const createdEvent = {
-                id: result.event?._id || Date.now(),
-                title: result.event?.title || newEvent.title,
-                category: result.event?.category || newEvent.category,
-                date: result.event?.start_at || newEvent.date,
-                location: result.event?.location?.name || newEvent.location,
-                organization: result.event?.organization?.name || newEvent.organization,
-                description: result.event?.description || newEvent.description,
-                imageUrl: result.event?.image || imagePreview || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
-                price: newEvent.price,
-                capacity: result.event?.capacity || newEvent.capacity,
-                ticketsIssued: 0,
-                attendees: 0
+            // Prepare event data for API
+            const eventData = {
+                organization: organizationId,
+                title: newEvent.title,
+                category: newEvent.category,
+                start_at: startDateTime.toISOString(),
+                end_at: endDateTime.toISOString(),
+                capacity: newEvent.capacity || 0,
+                description: newEvent.description || '',
+                location: {
+                    name: newEvent.location.trim(),
+                    address: newEvent.locationAddress.trim()
+                }
             };
 
-            onAddEvent(createdEvent);
+            // Use the API function with image file if provided
+            const response = await createEvent(eventData, imageFile);
+            
+            // Transform the backend response to frontend format
+            const backendEvent = response.event || response;
+            const transformedEvent = transformEventForFrontend(backendEvent);
+
+            // Call the callback with the transformed event
+            onAddEvent(transformedEvent);
             
             // Reset form
-            setNewEvent({ title: '', category: 'Music', date: '', location: '', organization: organizations[0] || '', description: '', price: 0, capacity: 0 });
+            setNewEvent({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
             setImageFile(null);
             setImagePreview(null);
             setIsSubmitting(false);
             onClose();
         } catch (error) {
             console.error('Error creating event:', error);
-            alert(error.message || 'Failed to create event. Please try again.');
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            
+            // Extract error message from response
+            let errorMessage = 'Failed to create event. Please try again.';
+            
+            // Try multiple ways to extract error message
+            const errorData = error.response?.data;
+            if (errorData) {
+                if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                } else if (errorData.error) {
+                    errorMessage = errorData.error;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.details) {
+                    errorMessage = `${errorData.error || 'Error'}: ${errorData.details}`;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            // Show detailed error in development
+            if (import.meta.env.DEV && error.response?.data) {
+                console.error('Full error details:', JSON.stringify(error.response.data, null, 2));
+            }
+            
+            alert(errorMessage);
             setIsSubmitting(false);
         }
     };
@@ -544,7 +723,8 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: or
     return (
         <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
             <div className="fixed inset-0 bg-black/70 transition-opacity duration-300" onClick={onClose} style={{ opacity: isOpen ? 1 : 0 }}></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4 max-h-[90vh] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}>
                     <form onSubmit={handleSubmit} className="p-8">
                         <button type="button" onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"> <XMarkIcon className="h-6 w-6"/> </button>
@@ -552,14 +732,10 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, uniqueOrganizations: or
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                             <div> <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Title</label> <input id="title" name="title" value={newEvent.title} onChange={handleChange} placeholder="e.g., Summer Music Fest" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div> <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label> <select id="category" name="category" value={newEvent.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200"> {categories.filter(c => c !== 'All' && c !== 'Featured').map(cat => <option key={cat} value={cat}>{cat}</option>)} </select> </div>
-                            <div> <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date and Time</label> <input id="date" name="date" type="datetime-local" value={newEvent.date} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label> <input id="location" name="location" value={newEvent.location} onChange={handleChange} placeholder="e.g., Montreal" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div className="md:col-span-2">
-                                <label htmlFor="organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
-                                <select id="organization" name="organization" value={newEvent.organization} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required>
-                                    {organizations.map(org => <option key={org} value={org}>{org}</option>)}
-                                </select>
-                            </div>
+                            <div> <label htmlFor="startAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Starts At</label> <input id="startAt" name="startAt" type="datetime-local" value={newEvent.startAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="endAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ends At</label> <input id="endAt" name="endAt" type="datetime-local" value={newEvent.endAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Name</label> <input id="location" name="location" value={newEvent.location} onChange={handleChange} placeholder="e.g., Place des Arts" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="locationAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Address</label> <input id="locationAddress" name="locationAddress" value={newEvent.locationAddress} onChange={handleChange} placeholder="e.g., 175 Sainte-Catherine St W, Montreal, QC" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Image</label>
                                 {imagePreview ? (
@@ -645,7 +821,9 @@ const DashboardPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [organizationId, setOrganizationId] = useState(null);
     const { translate } = useLanguage();
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
@@ -706,6 +884,9 @@ const DashboardPage = () => {
                     return;
                 }
 
+                // Store organization ID for event creation
+                setOrganizationId(orgId);
+
                 const response = await getEventsByOrganization(orgId);
                 console.log('API Response (raw):', response); // Debug log
                 
@@ -725,6 +906,17 @@ const DashboardPage = () => {
                 
                 const transformedEvents = transformEventsForFrontend(eventsArray);
                 console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
+                
+                // Debug: Check location data in transformed events
+                if (transformedEvents.length > 0) {
+                    console.log('First event location check:', {
+                        original: eventsArray[0]?.location,
+                        transformed: transformedEvents[0]?.location,
+                        address: transformedEvents[0]?.address,
+                        fullEvent: transformedEvents[0]
+                    });
+                }
+                
                 setEvents(transformedEvents);
             } catch (err) {
                 console.error('Error fetching events:', err);
@@ -763,7 +955,10 @@ const DashboardPage = () => {
     };
 
     const handleAddEvent = (newEvent) => {
+        // Add the new event to the beginning of the events list
         setEvents(prevEvents => [newEvent, ...prevEvents]);
+        // Optionally refresh the events list to ensure consistency with backend
+        // This could be useful if the backend adds additional data
     };
 
     const filteredEvents = useMemo(() => {
@@ -819,7 +1014,12 @@ const DashboardPage = () => {
             {currentEvents.length > 0 ? (
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {currentEvents.map(event => (
-                        <EventCard key={event.id} event={event} onViewAnalytics={setSelectedEvent} />
+                        <EventCard 
+                            key={event.id} 
+                            event={event} 
+                            onViewAnalytics={setSelectedEvent}
+                            onViewDetails={setSelectedEventDetails}
+                        />
                     ))}
                 </div>
             ) : (
@@ -837,11 +1037,17 @@ const DashboardPage = () => {
                 event={selectedEvent}
             />
 
+            <EventDetailsModal
+                isOpen={!!selectedEventDetails}
+                onClose={() => setSelectedEventDetails(null)}
+                event={selectedEventDetails}
+            />
+
             <CreateEventModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
                 onAddEvent={handleAddEvent}
-                uniqueOrganizations={uniqueOrganizations}
+                organizationId={organizationId}
                 categories={categories}
             />
         </>

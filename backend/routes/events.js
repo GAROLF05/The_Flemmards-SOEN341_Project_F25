@@ -23,7 +23,8 @@ const handleUploadError = require('../middlewares/uploadErrorHandler');
 router.get('/browse', eventController.browseEvents);
 
 // Create (with optional image upload - accepts multipart/form-data or JSON)
-router.post('/create', requireAdmin, upload.single('image'), handleUploadError, eventController.createEvent);
+// Organizers can create events for their own organization, admins can create for any
+router.post('/create', requireAuth, upload.single('image'), handleUploadError, eventController.createEvent);
 
 // Read
 router.get('/get/all', requireAdmin, eventController.getAllEvents);
