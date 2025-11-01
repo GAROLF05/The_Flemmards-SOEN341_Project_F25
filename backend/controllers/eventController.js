@@ -979,6 +979,43 @@ exports.getAttendees = async (req,res) => {
         if (!mongoose.Types.ObjectId.isValid(event_id))
             return res.status(400).json({error: "Invalid event_id format"});
 
+        // Check authentication and authorization (admin or event organizer)
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        }
+
+        const { ensureAdmin, isAdmin } = require('../utils/authHelpers');
+        
+        const userIsAdmin = await isAdmin(req);
+        
+        // If not admin, check if organizer owns this event's organization
+        if (!userIsAdmin) {
+            const userRole = req.user.role || '';
+            const userIsOrganizer = userRole === USER_ROLE.ORGANIZER || 
+                                 userRole.toLowerCase() === USER_ROLE.ORGANIZER.toLowerCase();
+            
+            if (userIsOrganizer) {
+                // Fetch full user to get organization reference
+                const user = await User.findById(req.user._id).select('organization').lean();
+                if (!user) {
+                    return res.status(404).json({ error: 'User not found' });
+                }
+                
+                // Check if user has an organization
+                if (!user.organization) {
+                    return res.status(403).json({ 
+                        code: 'FORBIDDEN',
+                        error: 'Organizers must be associated with an organization to view attendees'
+                    });
+                }
+            } else {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Admin or organizer access required'
+                });
+            }
+        }
+
         const event = await Event.findById(event_id)
         .select('organization title description start_at end_at capacity status registered_users waitlist image')
         .populate({
@@ -987,7 +1024,7 @@ exports.getAttendees = async (req,res) => {
         })
         .populate({
             path: 'registered_users',
-            select: 'name email'
+            select: 'name email username'
         })
         .populate({
             path: 'waitlist',
@@ -1004,6 +1041,20 @@ exports.getAttendees = async (req,res) => {
         if (!event) 
             return res.status(404).json({error: "Events not found"});
 
+        // If organizer, verify they own this event's organization
+        if (!userIsAdmin) {
+            const user = await User.findById(req.user._id).select('organization').lean();
+            const userOrgId = user.organization ? user.organization.toString() : null;
+            const eventOrgId = event.organization ? (event.organization._id ? event.organization._id.toString() : String(event.organization)) : null;
+            
+            if (!userOrgId || userOrgId !== eventOrgId) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Organizers can only view attendees for their own organization\'s events'
+                });
+            }
+        }
+
         // Apply default image to event
         const normalizedEvent = normalizeEventImage(event);
 
@@ -1012,9 +1063,9 @@ exports.getAttendees = async (req,res) => {
     
         const attendees = normalizedEvent.registered_users.map(user => ({
             _id: user._id,
-            name: user.name,
-            username: user.username,
-            email: user.email
+            name: user.name || '',
+            username: user.username || '',
+            email: user.email || ''
         }));
 
         return res.status(200).json({
@@ -1230,6 +1281,199 @@ async function promoteWaitlistForEvent(eventId) {
         throw e;
     }
 }
+
+
+exports.exportAttendeesCSV = async (req, res) => {
+    try {
+        const { event_id } = req.params;
+
+        // Validate event ID format
+        if (!event_id) {
+            return res.status(400).json({ 
+                error: 'Event ID is required',
+                code: 'INVALID_INPUT'
+            });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(event_id)) {
+            return res.status(400).json({ 
+                error: 'Invalid event ID format',
+                code: 'INVALID_FORMAT'
+            });
+        }
+
+        // Check authentication - must be admin or organizer
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+        }
+
+        const { isAdmin } = require('../utils/authHelpers');
+        const userIsAdmin = await isAdmin(req);
+        
+        // If not admin, must be an organizer
+        if (!userIsAdmin) {
+            const userRole = req.user.role || '';
+            const userIsOrganizer = userRole === USER_ROLE.ORGANIZER || 
+                                 userRole.toLowerCase() === USER_ROLE.ORGANIZER.toLowerCase();
+            
+            if (!userIsOrganizer) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Only administrators and organizers can export attendee lists'
+                });
+            }
+            
+            // Verify organizer is associated with an organization
+            const user = await User.findById(req.user._id).select('organization').lean();
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            if (!user.organization) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Organizers must be associated with an organization to export attendees'
+                });
+            }
+        }
+
+        // Check if event exists and verify organizer ownership if needed
+        const event = await Event.findById(event_id)
+            .populate({
+                path: 'organization',
+                select: '_id'
+            })
+            .lean();
+
+        if (!event) {
+            return res.status(404).json({ 
+                error: 'Event not found',
+                code: 'EVENT_NOT_FOUND'
+            });
+        }
+
+        // If organizer, verify they own this event's organization
+        if (!userIsAdmin) {
+            const user = await User.findById(req.user._id).select('organization').lean();
+            const userOrgId = user.organization ? user.organization.toString() : null;
+            const eventOrgId = event.organization ? (event.organization._id ? event.organization._id.toString() : String(event.organization)) : null;
+            
+            if (!userOrgId || userOrgId !== eventOrgId) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Organizers can only export attendees for their own organization\'s events'
+                });
+            }
+        }
+
+        // Get all registrations for this event
+        const registrations = await Registration.find({ event: event_id })
+            .populate({
+                path: 'user',
+                select: 'name email username'
+            })
+            .populate({
+                path: 'ticketIds',
+                select: 'ticketId status scannedAt'
+            })
+            .lean();
+
+        // Handle empty list
+        if (!registrations || registrations.length === 0) {
+            return res.status(404).json({ 
+                error: 'No attendees found for this event',
+                code: 'EMPTY_LIST',
+                message: 'The attendee list is empty'
+            });
+        }
+
+        // Build CSV content with UTF-8 BOM for Excel compatibility
+        const csvRows = [];
+        
+        // CSV Header
+        csvRows.push([
+            'Registration ID',
+            'Name',
+            'Email',
+            'Username',
+            'Quantity',
+            'Status',
+            'Registered At',
+            'Tickets Issued',
+            'Ticket IDs',
+            'Check-in Status'
+        ].join(','));
+
+        // CSV Data rows
+        for (const reg of registrations) {
+            // Handle invalid data gracefully
+            const name = reg.user?.name || 'Unknown';
+            const email = reg.user?.email || 'N/A';
+            const username = reg.user?.username || 'N/A';
+            const quantity = reg.quantity || 0;
+            const status = reg.status || 'unknown';
+            const registeredAt = reg.createdAt ? new Date(reg.createdAt).toISOString() : 'N/A';
+            const ticketsIssued = reg.ticketsIssued || 0;
+            
+            // Get ticket IDs
+            const ticketIds = Array.isArray(reg.ticketIds) 
+                ? reg.ticketIds.map(t => t.ticketId || t._id).join('; ')
+                : 'None';
+
+            // Check-in status (how many tickets were scanned)
+            const scannedTickets = Array.isArray(reg.ticketIds)
+                ? reg.ticketIds.filter(t => t.status === 'used').length
+                : 0;
+            const checkinStatus = `${scannedTickets}/${ticketsIssued}`;
+
+            // Escape CSV values properly
+            const escapeCSV = (value) => {
+                const str = String(value);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            };
+
+            csvRows.push([
+                reg.registrationId || reg._id,
+                escapeCSV(name),
+                email,
+                username,
+                quantity,
+                status,
+                registeredAt,
+                ticketsIssued,
+                escapeCSV(ticketIds),
+                checkinStatus
+            ].join(','));
+        }
+
+        const csvContent = csvRows.join('\n');
+        const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+
+        // Set response headers for CSV download
+        const sanitizedTitle = event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const dateStr = event.start_at ? new Date(event.start_at).toISOString().split('T')[0] : '';
+        const filename = `attendees_${sanitizedTitle}${dateStr ? '_' + dateStr : ''}.csv`;
+        
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        // Log export action
+        const userType = userIsAdmin ? 'Admin' : 'Organizer';
+        console.log(`CSV export: ${userType} ${req.user.email} exported ${registrations.length} attendees for event ${event.title}`);
+
+        return res.status(200).send(BOM + csvContent);
+
+    } catch (e) {
+        console.error('Error exporting attendees CSV:', e);
+        return res.status(500).json({ 
+            error: 'Failed to export attendee list',
+            code: 'EXPORT_FAILED'
+        });
+    }
+};
 
 // Task #114: Admin functionality to moderate event listings
 

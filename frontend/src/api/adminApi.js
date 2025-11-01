@@ -39,5 +39,10 @@ export const adminApi = {
             subject,
             message
         });
+    },
+
+    // Dashboard Stats
+    async getDashboardStats() {
+        return await axiosClient.get('/admin/dashboard/stats');
     }
 };

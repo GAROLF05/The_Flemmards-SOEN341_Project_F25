@@ -1,10 +1,11 @@
-import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon, CalendarDaysIcon, MapPinIcon, UsersIcon, ClockIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, PlusCircleIcon, XMarkIcon, CalendarDaysIcon, MapPinIcon, UsersIcon, ClockIcon, InformationCircleIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, PolarAngleAxis } from 'recharts';
 import { useLanguage } from '../../hooks/useLanguage';
 import { getUserProfile } from '../../api/authenticationApi';
-import { getEventsByOrganization, createEvent } from '../../api/eventApi';
+import { getEventsByOrganization, createEvent, getEventAttendees, exportAttendeesCSV } from '../../api/eventApi';
 import { transformEventsForFrontend, transformEventForFrontend } from '../../utils/eventTransform';
+import { useNotification } from '../../hooks/useNotification';
 
 // --- MOCK DATA (fallback) ---
 const initialEventsData = [
@@ -266,6 +267,8 @@ const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sport
 
 const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
     const { translate } = useLanguage();
+    const { showNotification } = useNotification();
+    const [isExporting, setIsExporting] = useState(false);
 
     // Calculate analytics from backend data
     const ticketsIssued = event.registeredUsers || 0;
@@ -282,6 +285,59 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
 
     const eventDate = new Date(event.start_at || event.date);
     const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    const handleExportAttendees = async () => {
+        if (!event.id && !event._id) {
+            showNotification('Cannot export: Event ID is missing', 'error');
+            return;
+        }
+
+        setIsExporting(true);
+        try {
+            const eventId = event.id || event._id;
+            const response = await exportAttendeesCSV(eventId);
+            
+            // Handle blob response from backend CSV export
+            const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Get filename from Content-Disposition header or use default
+            // Headers may be in different case, so check both
+            const headers = response.headers || {};
+            const contentDisposition = headers['content-disposition'] || headers['Content-Disposition'] || '';
+            let filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`;
+            
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1].replace(/['"]/g, '');
+                }
+            } else {
+                // Generate filename from event data if header not available
+                const dateStr = event.start_at || event.date 
+                    ? new Date(event.start_at || event.date).toISOString().split('T')[0] 
+                    : '';
+                filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${dateStr ? '_' + dateStr : ''}.csv`;
+            }
+            
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Successfully exported attendees CSV', 'success');
+        } catch (error) {
+            console.error('Error exporting attendees:', error);
+            const errorMessage = error.response?.data?.error || error.message || 'Failed to export attendees';
+            showNotification(errorMessage, 'error');
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
@@ -309,13 +365,23 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                     </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex gap-2">
-                        <button onClick={() => onViewDetails(event)} className="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 capitalize cursor-pointer flex items-center justify-center gap-2">
-                            <InformationCircleIcon className="w-5 h-5" />
-                            Details
-                        </button>
-                        <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
-                            {translate("eventAnalytics")}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <button onClick={() => onViewDetails(event)} className="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 capitalize cursor-pointer flex items-center justify-center gap-2">
+                                <InformationCircleIcon className="w-5 h-5" />
+                                Details
+                            </button>
+                            <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
+                                {translate("eventAnalytics")}
+                            </button>
+                        </div>
+                        <button 
+                            onClick={handleExportAttendees}
+                            disabled={isExporting}
+                            className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ArrowDownTrayIcon className="w-5 h-5" />
+                            {isExporting ? 'Exporting...' : 'Export Attendees CSV'}
                         </button>
                     </div>
                 </div>
