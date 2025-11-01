@@ -3,6 +3,7 @@ import MainLayout from "../layouts/MainLayout";
 import HomePage from "../pages/student/HomePage";
 import CalendarPage from "../pages/student/CalendarPage";
 import ProtectedRoutes from "./ProtectedRoutes";
+import MyEventsPage from "../pages/student/MyEventsPage";
 
 const StudentRoutes = [
     {
@@ -27,7 +28,7 @@ const StudentRoutes = [
             },
             {
                 path: 'events',
-                element: <div>Events</div>
+                element: <MyEventsPage />
             }
         ]
     }
