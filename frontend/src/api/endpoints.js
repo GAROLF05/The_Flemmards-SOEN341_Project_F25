@@ -34,8 +34,7 @@ const ENDPOINTS = {
 	EVENT: (id) => `/events/get/${id}`,
 
 	// Registrations
-	REGISTRATION: "/registrations",
-	MYREGISTRATIONS: "/registrations/me",
+	EVENT_REGISTRATION: "/registrations/register",
 
 	// Tickets
 	TICKETS: (registrationId) => `/tickets/${registrationId}`,

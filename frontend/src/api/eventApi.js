@@ -111,3 +111,5 @@ export const promoteWaitlistedUsers = (eventId) => api.patch(ENDPOINTS.EVENT_PRO
 
 // Legacy functions for backward compatibility
 export const getEvents = getAllEvents;
+
+export const registerToEvent = (eventId, quantity = 1) => api.post(ENDPOINTS.EVENT_REGISTRATION, { eventId, quantity });

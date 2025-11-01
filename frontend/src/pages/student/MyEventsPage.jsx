@@ -206,7 +206,19 @@ export default function MyEventsPage() {
         getEventsByUser(userId)
             .then(response => {
                 console.log('the response', response)
-                setMyEvents(response.data);
+                let data = response.events.map(x => ({
+                    id: x.event._id,
+                    title: x.event.title,
+                    category: x.category,
+                    date: x.event.start_at,
+                    location: x.event.location,
+                    organization: x.event.organization.name,
+                    description: x.event.description,
+                    imageUrl: x.event.image,
+                    price: "Free",
+                }));
+
+                setMyEvents(data);
             })
             .catch(error => {
                 if (error.response.status !== 404) {
