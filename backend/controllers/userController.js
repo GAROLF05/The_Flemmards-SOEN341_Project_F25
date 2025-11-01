@@ -16,6 +16,7 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../middlewares/auth");
+const { isAdmin } = require("../utils/authHelpers");
 
 // API endpoint to Register a new user (signup)
 exports.registerUser = async (req, res) => {
@@ -210,9 +211,9 @@ exports.getUserById = async (req, res) => {
 
     // Owner or admin may view
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
+    const adminCheck = await isAdmin(req);
 
-    if (!isOwner && !isAdmin)
+    if (!isOwner && !adminCheck)
       return res
         .status(403)
         .json({ code: "FORBIDDEN", message: "Access denied" });
@@ -241,9 +242,9 @@ exports.getUserByEmail = async (req, res) => {
 
     // Owner or admin may view
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
+    const adminCheck = await isAdmin(req);
 
-    if (!isOwner && !isAdmin)
+    if (!isOwner && !adminCheck)
       return res
         .status(403)
         .json({ code: "FORBIDDEN", message: "Access denied" });
@@ -290,9 +291,9 @@ exports.updateUser = async (req, res) => {
 
     // Only owner or admin can update
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
+    const adminCheck = await isAdmin(req);
 
-    if (!isOwner && !isAdmin)
+    if (!isOwner && !adminCheck)
       return res
         .status(403)
         .json({ code: "FORBIDDEN", message: "Access denied" });
@@ -330,7 +331,7 @@ exports.updateUser = async (req, res) => {
         return res.status(400).json({
           error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(", ")}`,
         });
-      if (isAdmin) user.role = role;
+      if (adminCheck) user.role = role;
       else
         return res.status(403).json({
           error: "Only admins can update user roles",
@@ -376,9 +377,9 @@ exports.deleteUser = async (req, res) => {
 
     // Only owner or admin can delete
     const isOwner = user._id.toString() === req.user._id.toString();
-    const isAdmin = req.user.role === USER_ROLE.ADMINISTRATOR;
+    const adminCheck = await isAdmin(req);
 
-    if (!isOwner && !isAdmin)
+    if (!isOwner && !adminCheck)
       return res
         .status(403)
         .json({ code: "FORBIDDEN", message: "Access denied" });

@@ -1,0 +1,54 @@
+// NOTE: Passwords must be hashed with bcrypt before inserting into the database.
+// All passwords are set to "Admin123!" for easy testing.
+// Use: const bcrypt = require('bcrypt'); const hashedPassword = await bcrypt.hash('Admin123!', 10);
+[
+  {
+    "name": "Nameer Hanif",
+    "username": "GAROLF05",
+    "email": "nameerhm@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Bijoy Sengupta",
+    "username": "bsengupta",
+    "email": "senguptabijoy7879@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Charts User",
+    "username": "chartsuser",
+    "email": "charts+68e151cff7fe47272d58826c@mongodb.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Nihit Patel",
+    "username": "nihitpatel",
+    "email": "nihitpatel2005@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Curtis Moxebo",
+    "username": "cmoxebo",
+    "email": "cmoxebo@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Hesham Rabie",
+    "username": "heshamrabie",
+    "email": "heshamrabie05@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Elliot Boismartel",
+    "username": "eboismartel",
+    "email": "elliot.boismartel@gmail.com",
+    "password": "Admin123!"
+  },
+  {
+    "name": "Omar Dbaa",
+    "username": "odbaa",
+    "email": "omardbaa257@gmail.com",
+    "password": "Admin123!"
+  }
+]
+

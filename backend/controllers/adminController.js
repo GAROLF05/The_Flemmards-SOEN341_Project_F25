@@ -951,7 +951,8 @@ exports.deleteUser = async (req,res) => {
         }
 
         // Prevent deleting administrators (optional safety check)
-        if (user.role === USER_ROLE.ADMINISTRATOR) {
+        const adminCheck = await Administrator.findOne({ email: user.email }).lean();
+        if (adminCheck) {
             return res.status(403).json({ error: 'Cannot delete an administrator account. Use a different method for administrator management.' });
         }
 
