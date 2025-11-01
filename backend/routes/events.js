@@ -48,7 +48,7 @@ router.get('/export-csv/:event_id', requireAuth, eventController.exportAttendees
 router.get('/get/waitlist/:event_id', requireAdmin, eventController.getWaitlistedUsers);
 router.patch('/promote/:event_id', requireAdmin, eventController.promoteWaitlistedUser);
 
-// Get events by moderation status (Task #116)
+// Get events by moderation status
 router.get('/moderation/status/:status', requireAdmin, eventController.getEventsByModerationStatus);
 router.get('/moderation/pending', requireAdmin, eventController.getPendingModerationEvents);
 
