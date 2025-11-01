@@ -1,12 +1,18 @@
 const ENDPOINTS = {
 	// Admin & Organization Management
-	ORGANIZATIONS_ALL: "/organizations/all",
-	ORGANIZATION_STATUS: (id) => `/organizations/${id}/status`,
-	ORGANIZATION_DELETE: (id) => `/organizations/${id}`,
-	ORGANIZATION_ADD_MEMBER: (orgId) => `/organizations/${orgId}/members`,
-	ORGANIZATION_REMOVE_MEMBER: (orgId, memberId) => `/organizations/${orgId}/members/${memberId}`,
-	EVENT_STATUS: (id) => `/events/${id}/status`,
+	ORGANIZATION_CREATE: "/org/create",
+	ORGANIZATION_ADMIN_CREATE: "/org/admin/create",
+	ORGANIZATIONS_ALL: "/org/all",
+	ORGANIZATION_BY_ID: (id) => `/org/${id}`,
+	ORGANIZATION_STATUS: (status) => `/org/status/${status}`,
+	ORGANIZATION_PENDING_LIST: "/org/pending/list",
+	ORGANIZATION_STATS: (id) => `/org/stats/${id}`,
+	ORGANIZATION_UPDATE: (id) => `/org/update/${id}`,
+	ORGANIZATION_DELETE: (id) => `/org/delete/${id}`,
+	
 	SEND_NOTIFICATION: "/notifications/send",
+
+	// User Management
 	LOGIN: "/users/login",
 	SIGNUP: "/users/register",
 	LOGOUT: "/users/logout",
