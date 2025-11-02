@@ -54,6 +54,13 @@ const userSchema = new mongoose.Schema(
       index: true,
     },
 
+    // Rejection timestamp for organizers (set when admin rejects organizer account)
+    rejectedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+
     organization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',

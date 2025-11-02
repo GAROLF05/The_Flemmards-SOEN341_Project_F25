@@ -191,7 +191,7 @@ exports.getDashboardStats = async (req,res) => {
     }
 }
 
-// API Endpoint to get pending organizer users (users with role Organizer who are not approved)
+// API Endpoint to get pending organizer users (users with role Organizer who are not approved and not rejected)
 exports.getPendingOrganizers = async (req,res)=>{
     try {
         // Admin only
@@ -200,7 +200,8 @@ exports.getPendingOrganizers = async (req,res)=>{
 
         const organizers = await User.find({ 
             role: USER_ROLE.ORGANIZER,
-            approved: false 
+            approved: false,
+            rejectedAt: null // Not rejected
         })
             .select('-password')
             .sort({ createdAt: -1 })
@@ -214,6 +215,33 @@ exports.getPendingOrganizers = async (req,res)=>{
     } catch (e) {
         console.error('Error fetching pending organizers:', e);
         return res.status(500).json({ error: 'Failed to fetch pending organizers' });
+    }
+}
+
+// API Endpoint to get rejected organizer users
+exports.getRejectedOrganizers = async (req,res)=>{
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        const organizers = await User.find({ 
+            role: USER_ROLE.ORGANIZER,
+            approved: false,
+            rejectedAt: { $ne: null } // Has been rejected
+        })
+            .select('-password')
+            .sort({ rejectedAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Rejected organizers fetched successfully',
+            total: organizers.length,
+            organizers
+        });
+    } catch (e) {
+        console.error('Error fetching rejected organizers:', e);
+        return res.status(500).json({ error: 'Failed to fetch rejected organizers' });
     }
 }
 
@@ -252,6 +280,13 @@ exports.approveOrganizer = async (req,res)=>{
 
         // Update approval status
         user.approved = approved === true;
+        if (approved) {
+            // Clear rejection timestamp if approving
+            user.rejectedAt = null;
+        } else {
+            // Set rejection timestamp if rejecting
+            user.rejectedAt = new Date();
+        }
         await user.save();
 
         // Log admin action

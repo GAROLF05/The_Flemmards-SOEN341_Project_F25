@@ -24,6 +24,7 @@ router.get('/analytics', requireAdmin, adminController.getSystemAnalytics);
 
 // Organizer user account management
 router.get('/pending-organizers', requireAdmin, adminController.getPendingOrganizers);
+router.get('/rejected-organizers', requireAdmin, adminController.getRejectedOrganizers);
 router.patch('/approve-organizer/:user_id', requireAdmin, adminController.approveOrganizer);
 router.patch('/suspend-organization/:org_id', requireAdmin, adminController.suspendOrganization);
 router.delete('/organizations/:org_id', requireAdmin, adminController.deleteOrganization);

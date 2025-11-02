@@ -55,6 +55,10 @@ export const adminApi = {
         return await axiosClient.get('/admin/pending-organizers');
     },
 
+    async getRejectedOrganizers() {
+        return await axiosClient.get('/admin/rejected-organizers');
+    },
+
     async approveOrganizer(userId, rejectionReason = '') {
         return await axiosClient.patch(`/admin/approve-organizer/${userId}`, {
             approved: true,

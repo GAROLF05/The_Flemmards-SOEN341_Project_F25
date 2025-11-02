@@ -3,9 +3,12 @@ import { useState, useEffect } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
+import ButtonGroup from '../../components/button/ButtonGroup';
 
 export default function ApproveOrganizers() {
+    const [activeTab, setActiveTab] = useState('pending');
     const [pendingOrganizers, setPendingOrganizers] = useState([]);
+    const [rejectedOrganizers, setRejectedOrganizers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [rejectingId, setRejectingId] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
@@ -14,8 +17,12 @@ export default function ApproveOrganizers() {
     const { translate } = useLanguage();
 
     useEffect(() => {
-        fetchPendingOrganizers();
-    }, []);
+        if (activeTab === 'pending') {
+            fetchPendingOrganizers();
+        } else {
+            fetchRejectedOrganizers();
+        }
+    }, [activeTab]);
 
     const fetchPendingOrganizers = async () => {
         try {
@@ -32,12 +39,33 @@ export default function ApproveOrganizers() {
         }
     };
 
+    const fetchRejectedOrganizers = async () => {
+        try {
+            setLoading(true);
+            const response = await adminApi.getRejectedOrganizers();
+            if (response.data && response.data.organizers) {
+                setRejectedOrganizers(response.data.organizers);
+            }
+        } catch (error) {
+            console.error('Error fetching rejected organizers:', error);
+            showNotification('Failed to fetch rejected organizers', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleApprove = async (userId, userName) => {
         try {
             await adminApi.approveOrganizer(userId);
             showNotification(`Organizer "${userName}" has been approved successfully.`, 'success');
-            // Remove from list
-            setPendingOrganizers(prev => prev.filter(org => org._id !== userId));
+            // Remove from current list and refresh
+            if (activeTab === 'pending') {
+                setPendingOrganizers(prev => prev.filter(org => org._id !== userId));
+            } else {
+                // If approving from rejected tab, remove from rejected and refresh pending
+                setRejectedOrganizers(prev => prev.filter(org => org._id !== userId));
+                fetchPendingOrganizers();
+            }
         } catch (error) {
             console.error('Error approving organizer:', error);
             showNotification(error.response?.data?.error || 'Failed to approve organizer', 'error');
@@ -57,11 +85,17 @@ export default function ApproveOrganizers() {
         }
 
         try {
-            const organizer = pendingOrganizers.find(o => o._id === rejectingId);
+            const currentList = activeTab === 'pending' ? pendingOrganizers : rejectedOrganizers;
+            const organizer = currentList.find(o => o._id === rejectingId);
             await adminApi.rejectOrganizer(rejectingId, rejectionReason);
             showNotification(`Organizer "${organizer?.name || organizer?.email}" has been rejected.`, 'success');
-            // Remove from list
-            setPendingOrganizers(prev => prev.filter(org => org._id !== rejectingId));
+            // Remove from current list and refresh rejected list
+            if (activeTab === 'pending') {
+                setPendingOrganizers(prev => prev.filter(org => org._id !== rejectingId));
+                fetchRejectedOrganizers();
+            } else {
+                setRejectedOrganizers(prev => prev.filter(org => org._id !== rejectingId));
+            }
             setShowRejectModal(false);
             setRejectingId(null);
             setRejectionReason('');
@@ -77,11 +111,17 @@ export default function ApproveOrganizers() {
         setRejectionReason('');
     };
 
-    const getStatusBadge = (approved) => {
+    const getStatusBadge = (approved, rejectedAt) => {
         if (approved) {
             return (
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                     Approved
+                </span>
+            );
+        } else if (rejectedAt) {
+            return (
+                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                    Rejected
                 </span>
             );
         } else {
@@ -93,6 +133,13 @@ export default function ApproveOrganizers() {
         }
     };
 
+    const tabs = [
+        { value: 'pending', label: translate('pending') || 'Pending' },
+        { value: 'rejected', label: translate('rejected') || 'Rejected' }
+    ];
+
+    const currentOrganizers = activeTab === 'pending' ? pendingOrganizers : rejectedOrganizers;
+
     return (
         <>
             <div className="mb-8">
@@ -100,10 +147,21 @@ export default function ApproveOrganizers() {
                 <p className="mt-1 text-gray-600 dark:text-gray-400">{translate("approveNewOrganizerAccounts")}</p>
             </div>
 
+            <div className="mb-6">
+                <ButtonGroup
+                    options={tabs}
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    className="mb-6"
+                />
+            </div>
+
             {loading ? (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading pending organizations...</p>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">
+                        {activeTab === 'pending' ? 'Loading pending organizers...' : 'Loading rejected organizers...'}
+                    </p>
                 </div>
             ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-colors duration-300">
@@ -115,23 +173,24 @@ export default function ApproveOrganizers() {
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">{translate("email")}</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">{translate("username")}</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">{translate("status")}</th>
+                                    {activeTab === 'pending' && (
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">Registered Date</th>
+                                    )}
+                                    {activeTab === 'rejected' && (
+                                        <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">Rejected Date</th>
+                                    )}
                                     <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-300">{translate("actions")}</th>
                                 </tr>
                             </thead>
 
                             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-300">
-                                {pendingOrganizers.length > 0 ? (
-                                    pendingOrganizers.map(organizer => (
+                                {currentOrganizers.length > 0 ? (
+                                    currentOrganizers.map(organizer => (
                                         <tr key={organizer._id} className="transition-colors duration-300 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900 dark:text-white transition-colors duration-300">
                                                     {organizer.name || 'N/A'}
                                                 </div>
-                                                {organizer.createdAt && (
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                        Registered: {new Date(organizer.createdAt).toLocaleDateString()}
-                                                    </div>
-                                                )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm text-gray-900 dark:text-white transition-colors duration-300">
@@ -144,33 +203,64 @@ export default function ApproveOrganizers() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                {getStatusBadge(organizer.approved)}
+                                                {getStatusBadge(organizer.approved, organizer.rejectedAt)}
                                             </td>
+                                            {activeTab === 'pending' && (
+                                                <td className="px-6 py-4">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {organizer.createdAt ? new Date(organizer.createdAt).toLocaleDateString() : 'N/A'}
+                                                    </div>
+                                                </td>
+                                            )}
+                                            {activeTab === 'rejected' && (
+                                                <td className="px-6 py-4">
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {organizer.rejectedAt ? new Date(organizer.rejectedAt).toLocaleDateString() : 'N/A'}
+                                                    </div>
+                                                </td>
+                                            )}
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                <button 
-                                                    onClick={() => handleRejectClick(organizer._id)} 
-                                                    className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer transition-colors duration-300"
-                                                    title="Reject"
-                                                >
-                                                    <span className="sr-only">{translate("deny")}</span>
-                                                    <XCircleIcon className="w-6 h-6" />
-                                                </button>
-                                                
-                                                <button 
-                                                    onClick={() => handleApprove(organizer._id, organizer.name || organizer.email)} 
-                                                    className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all cursor-pointer transition-colors duration-300"
-                                                    title="Approve"
-                                                >
-                                                    <span className="sr-only">{translate("approve")}</span>
-                                                    <CheckCircleIcon className="w-6 h-6" />
-                                                </button>
+                                                {activeTab === 'pending' ? (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => handleRejectClick(organizer._id)} 
+                                                            className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer transition-colors duration-300"
+                                                            title="Reject"
+                                                        >
+                                                            <span className="sr-only">{translate("deny")}</span>
+                                                            <XCircleIcon className="w-6 h-6" />
+                                                        </button>
+                                                        
+                                                        <button 
+                                                            onClick={() => handleApprove(organizer._id, organizer.name || organizer.email)} 
+                                                            className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all cursor-pointer transition-colors duration-300"
+                                                            title="Approve"
+                                                        >
+                                                            <span className="sr-only">{translate("approve")}</span>
+                                                            <CheckCircleIcon className="w-6 h-6" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => handleApprove(organizer._id, organizer.name || organizer.email)} 
+                                                        className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all cursor-pointer transition-colors duration-300"
+                                                        title="Approve"
+                                                    >
+                                                        <span className="sr-only">{translate("approve")}</span>
+                                                        <CheckCircleIcon className="w-6 h-6" />
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5" className="px-6 py-12 text-center">
-                                            <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">{translate("noPendingApplications")}</p>
+                                        <td colSpan={activeTab === 'pending' ? 6 : 6} className="px-6 py-12 text-center">
+                                            <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                                                {activeTab === 'pending' 
+                                                    ? (translate("noPendingApplications") || "No pending organizers") 
+                                                    : (translate("noRejectedApplications") || "No rejected organizers")}
+                                            </p>
                                         </td>
                                     </tr>
                                 )}
@@ -185,10 +275,10 @@ export default function ApproveOrganizers() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                            {translate("rejectOrganization") || "Reject Organization"}
+                            {translate("rejectOrganizer") || "Reject Organizer"}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            {translate("provideRejectionReason") || "Please provide a reason for rejecting this organization:"}
+                            {translate("provideRejectionReason") || "Please provide a reason for rejecting this organizer:"}
                         </p>
                         <textarea
                             value={rejectionReason}
