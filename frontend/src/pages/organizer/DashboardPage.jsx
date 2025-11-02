@@ -6,6 +6,7 @@ import { getUserProfile } from '../../api/authenticationApi';
 import { getEventsByOrganization, createEvent, exportAttendeesCSV } from '../../api/eventApi';
 import { transformEventsForFrontend, transformEventForFrontend } from '../../utils/eventTransform';
 import { useNotification } from '../../hooks/useNotification';
+import LoadingPage from '../../layouts/LoadingPage';
 
 // --- MOCK DATA (fallback) ---
 // eslint-disable-next-line no-unused-vars
@@ -297,25 +298,25 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
         try {
             const eventId = event.id || event._id;
             console.log('Exporting CSV for event:', { eventId, fullEvent: event });
-            
+
             if (!eventId) {
                 throw new Error('Event ID is missing');
             }
-            
+
             const response = await exportAttendeesCSV(eventId);
-            
+
             // Handle blob response from backend CSV export
             const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            
+
             // Get filename from Content-Disposition header or use default
             // Headers may be in different case, so check both
             const headers = response.headers || {};
             const contentDisposition = headers['content-disposition'] || headers['Content-Disposition'] || '';
             let filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`;
-            
+
             if (contentDisposition) {
                 const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
                 if (filenameMatch) {
@@ -323,19 +324,19 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                 }
             } else {
                 // Generate filename from event data if header not available
-                const dateStr = event.start_at || event.date 
-                    ? new Date(event.start_at || event.date).toISOString().split('T')[0] 
+                const dateStr = event.start_at || event.date
+                    ? new Date(event.start_at || event.date).toISOString().split('T')[0]
                     : '';
                 filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}${dateStr ? '_' + dateStr : ''}.csv`;
             }
-            
+
             link.setAttribute('download', filename);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
+
             showNotification('Successfully exported attendees CSV', 'success');
         } catch (error) {
             console.error('Error exporting attendees:', error);
@@ -350,9 +351,9 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
             <div className="relative">
-                <img 
-                    className="h-48 w-full object-cover" 
-                    src={event.imageUrl} 
+                <img
+                    className="h-48 w-full object-cover"
+                    src={event.imageUrl}
                     alt={event.title}
                     onError={(e) => {
                         e.target.src = '/uploads/events/default-event-image.svg';
@@ -383,7 +384,7 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                                 {translate("eventAnalytics")}
                             </button>
                         </div>
-                        <button 
+                        <button
                             onClick={handleExportAttendees}
                             disabled={isExporting}
                             className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -475,10 +476,10 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
 
     const formatDateTime = (date) => {
         if (!date) return 'Not specified';
-        return date.toLocaleDateString('en-US', { 
+        return date.toLocaleDateString('en-US', {
             weekday: 'long',
-            year: 'numeric', 
-            month: 'long', 
+            year: 'numeric',
+            month: 'long',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -504,8 +505,8 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                         {/* Event Image */}
                         {event.imageUrl && (
                             <div className="mb-6 rounded-lg overflow-hidden">
-                                <img 
-                                    src={event.imageUrl} 
+                                <img
+                                    src={event.imageUrl}
                                     alt={event.title}
                                     className="w-full h-64 object-cover"
                                     onError={(e) => {
@@ -517,7 +518,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
 
                         {/* Event Title */}
                         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{event.title}</h2>
-                        
+
                         {/* Category Badge */}
                         <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-6">
                             {event.category}
@@ -630,9 +631,9 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef(null);
 
-    const handleChange = (e) => { 
-        const { name, value, type } = e.target; 
-        setNewEvent(prev => ({ ...prev, [name]: type === 'number' ? parseInt(value) : value })); 
+    const handleChange = (e) => {
+        const { name, value, type } = e.target;
+        setNewEvent(prev => ({ ...prev, [name]: type === 'number' ? parseInt(value) : value }));
     };
 
     const handleFileSelect = (file) => {
@@ -680,15 +681,15 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
         }
     };
 
-    const handleSubmit = async (e) => { 
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Check for missing organization ID first (this is a system issue, not user input)
         if (!organizationId) {
             alert('Unable to create event: Your organization information is not available. Please refresh the page or contact support.');
             return;
         }
-        
+
         // Validate required fields with specific messages
         const missingFields = [];
         if (!newEvent.title || !newEvent.title.trim()) missingFields.push('Event Title');
@@ -698,7 +699,7 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
         if (!newEvent.locationAddress || !newEvent.locationAddress.trim()) missingFields.push('Location Address');
         if (!newEvent.description || !newEvent.description.trim()) missingFields.push('Description');
         if (!newEvent.capacity || newEvent.capacity <= 0) missingFields.push('Capacity (must be greater than 0)');
-        
+
         if (missingFields.length > 0) {
             alert(`Please fill in the following required fields:\n- ${missingFields.join('\n- ')}`);
             return;
@@ -710,19 +711,19 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
             // Parse start and end dates
             const startDateTime = new Date(newEvent.startAt);
             const endDateTime = new Date(newEvent.endAt);
-            
+
             if (isNaN(startDateTime.getTime())) {
                 alert('Please enter a valid start date and time');
                 setIsSubmitting(false);
                 return;
             }
-            
+
             if (isNaN(endDateTime.getTime())) {
                 alert('Please enter a valid end date and time');
                 setIsSubmitting(false);
                 return;
             }
-            
+
             if (endDateTime <= startDateTime) {
                 alert('End date and time must be after start date and time');
                 setIsSubmitting(false);
@@ -746,14 +747,14 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
 
             // Use the API function with image file if provided
             const response = await createEvent(eventData, imageFile);
-            
+
             // Transform the backend response to frontend format
             const backendEvent = response.event || response;
             const transformedEvent = transformEventForFrontend(backendEvent);
 
             // Call the callback with the transformed event
             onAddEvent(transformedEvent);
-            
+
             // Reset form
             setNewEvent({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
             setImageFile(null);
@@ -764,10 +765,10 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
             console.error('Error creating event:', error);
             console.error('Error response:', error.response?.data);
             console.error('Error status:', error.response?.status);
-            
+
             // Extract error message from response
             let errorMessage = 'Failed to create event. Please try again.';
-            
+
             // Try multiple ways to extract error message
             const errorData = error.response?.data;
             if (errorData) {
@@ -783,12 +784,12 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             // Show detailed error in development
             if (import.meta.env.DEV && error.response?.data) {
                 console.error('Full error details:', JSON.stringify(error.response.data, null, 2));
             }
-            
+
             alert(errorMessage);
             setIsSubmitting(false);
         }
@@ -829,8 +830,8 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
                                         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                                            isDragging 
-                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                                            isDragging
+                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
                                                 : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
                                         }`}
                                     >
@@ -858,14 +859,14 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
                             <div> <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Capacity</label> <input id="capacity" name="capacity" type="number" value={newEvent.capacity} onChange={handleChange} placeholder="e.g., 500" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div className="md:col-span-2"> <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label> <textarea id="description" name="description" value={newEvent.description} onChange={handleChange} placeholder="Tell us more about the event..." className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" rows="3" required></textarea> </div>
                         </div>
-                        <div className="mt-8 flex justify-end"> 
-                            <button 
-                                type="submit" 
+                        <div className="mt-8 flex justify-end">
+                            <button
+                                type="submit"
                                 disabled={isSubmitting}
                                 className={`bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            > 
-                                {isSubmitting ? 'Creating...' : 'Create Event'} 
-                            </button> 
+                            >
+                                {isSubmitting ? 'Creating...' : 'Create Event'}
+                            </button>
                         </div>
                     </form>
                  </div>
@@ -910,14 +911,14 @@ const DashboardPage = () => {
 
                 const userProfileResponse = await getUserProfile();
                 console.log('User profile response:', userProfileResponse); // Debug
-                
+
                 // axios wraps the response in .data
                 const userProfile = userProfileResponse?.data || userProfileResponse;
                 const user = userProfile?.user || userProfile;
-                
+
                 console.log('User object:', user); // Debug
                 console.log('User organization:', user?.organization); // Debug
-                
+
                 if (!user) {
                     console.error('User not found in response');
                     setEvents([]);
@@ -947,10 +948,10 @@ const DashboardPage = () => {
                     // Try to extract _id or convert to string
                     orgId = user.organization._id || user.organization.toString();
                 }
-                
+
                 console.log('Extracted organization ID:', orgId); // Debug
                 console.log('Organization type:', typeof user.organization); // Debug
-                
+
                 if (!orgId) {
                     console.error('Organization ID not found. Organization value:', user.organization);
                     setEvents([]);
@@ -963,24 +964,24 @@ const DashboardPage = () => {
 
                 const response = await getEventsByOrganization(orgId);
                 console.log('API Response (raw):', response); // Debug log
-                
+
                 // axios wraps the response in .data
                 const responseData = response?.data || response;
                 console.log('API Response (unwrapped):', responseData); // Debug log
-                
+
                 // Handle different response formats
                 const eventsArray = responseData?.events || responseData || [];
                 console.log('Events extracted:', eventsArray.length, eventsArray); // Debug log
-                
+
                 if (!Array.isArray(eventsArray)) {
                     console.error('Events is not an array:', eventsArray);
                     setEvents([]);
                     return;
                 }
-                
+
                 const transformedEvents = transformEventsForFrontend(eventsArray);
                 console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
-                
+
                 // Debug: Check location data in transformed events
                 if (transformedEvents.length > 0) {
                     console.log('First event location check:', {
@@ -990,7 +991,7 @@ const DashboardPage = () => {
                         fullEvent: transformedEvents[0]
                     });
                 }
-                
+
                 setEvents(transformedEvents);
             } catch (err) {
                 console.error('Error fetching events:', err);
@@ -1000,7 +1001,7 @@ const DashboardPage = () => {
                     status: err.response?.status,
                     statusText: err.response?.statusText
                 });
-                
+
                 // Fallback to empty array on error
                 setEvents([]);
             } finally {
@@ -1051,12 +1052,7 @@ const DashboardPage = () => {
 
     if (loading) {
         return (
-            <div className="max-w-7xl mx-auto p-6">
-                <div className="text-center py-16">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading events...</p>
-                </div>
-            </div>
+            <LoadingPage title="Loading events..." />
         );
     }
 
@@ -1076,12 +1072,12 @@ const DashboardPage = () => {
                     <div className="relative flex-grow max-w-xs ml-4">
                         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
-                        type="text"
-                        placeholder={translate("searchEvents")}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+                            type="text"
+                            placeholder={translate("searchEvents")}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
                     </div>
                 </div>
             </div>
@@ -1089,9 +1085,9 @@ const DashboardPage = () => {
             {currentEvents.length > 0 ? (
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {currentEvents.map(event => (
-                        <EventCard 
-                            key={event.id} 
-                            event={event} 
+                        <EventCard
+                            key={event.id}
+                            event={event}
                             onViewAnalytics={setSelectedEvent}
                             onViewDetails={setSelectedEventDetails}
                         />
