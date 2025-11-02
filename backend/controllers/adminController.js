@@ -85,12 +85,56 @@ exports.getDashboardStats = async (req,res) => {
         const recentEvents = await Event.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
         const recentRegistrations = await Registration.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
 
+        // Get user breakdown by role
+        const studentUsers = await User.countDocuments({ role: USER_ROLE.STUDENT });
+        const organizerUsers = await User.countDocuments({ role: USER_ROLE.ORGANIZER });
+
+        // Get event moderation stats
+        const pendingEventModeration = await Event.countDocuments({ moderationStatus: MODERATION_STATUS.PENDING_APPROVAL });
+        const approvedEvents = await Event.countDocuments({ moderationStatus: MODERATION_STATUS.APPROVED });
+        const rejectedEvents = await Event.countDocuments({ moderationStatus: MODERATION_STATUS.REJECTED });
+        const flaggedEvents = await Event.countDocuments({ moderationStatus: MODERATION_STATUS.FLAGGED });
+
+        // Get waitlist stats
+        const waitlistedRegistrations = await Registration.countDocuments({ status: REGISTRATION_STATUS.WAITLISTED });
+        const confirmedRegistrations = await Registration.countDocuments({ status: REGISTRATION_STATUS.CONFIRMED });
+
+        // Calculate engagement metrics
+        // Get events with registrations to calculate attendance rate
+        const eventsWithRegistrations = await Event.find({
+            status: { $in: [EVENT_STATUS.COMPLETED, EVENT_STATUS.ONGOING] }
+        })
+        .select('capacity registered_users')
+        .lean();
+
+        let totalCapacity = 0;
+        let totalRegistered = 0;
+        let eventsWithData = 0;
+
+        eventsWithRegistrations.forEach(event => {
+            const capacity = event.capacity || 0;
+            const registered = Array.isArray(event.registered_users) ? event.registered_users.length : 0;
+            if (capacity > 0) {
+                totalCapacity += capacity;
+                totalRegistered += registered;
+                eventsWithData++;
+            }
+        });
+
+        const avgCapacityUtilization = totalCapacity > 0 && eventsWithData > 0 ? (totalRegistered / totalCapacity * 100).toFixed(1) : 0;
+        const totalWaitlistCount = waitlistedRegistrations;
+
+        // Get registration rate (recent registrations vs recent events)
+        const registrationRate = recentEvents > 0 ? ((recentRegistrations / recentEvents) * 100).toFixed(1) : 0;
+
         return res.status(200).json({
             message: 'Dashboard statistics fetched successfully',
             stats: {
                 users: {
                     total: totalUsers,
-                    recent: recentUsers
+                    recent: recentUsers,
+                    students: studentUsers,
+                    organizers: organizerUsers
                 },
                 organizations: {
                     total: totalOrganizations,
@@ -104,7 +148,13 @@ exports.getDashboardStats = async (req,res) => {
                     upcoming: upcomingEvents,
                     completed: completedEvents,
                     cancelled: cancelledEvents,
-                    recent: recentEvents
+                    recent: recentEvents,
+                    moderation: {
+                        pending: pendingEventModeration,
+                        approved: approvedEvents,
+                        rejected: rejectedEvents,
+                        flagged: flaggedEvents
+                    }
                 },
                 tickets: {
                     total: totalTickets,
@@ -114,7 +164,20 @@ exports.getDashboardStats = async (req,res) => {
                 },
                 registrations: {
                     total: totalRegistrations,
-                    recent: recentRegistrations
+                    recent: recentRegistrations,
+                    confirmed: confirmedRegistrations,
+                    waitlisted: waitlistedRegistrations
+                },
+                engagement: {
+                    avgCapacityUtilization: parseFloat(avgCapacityUtilization),
+                    registrationRate: parseFloat(registrationRate),
+                    totalWaitlistCount: totalWaitlistCount
+                },
+                moderation: {
+                    pendingOrganizations: pendingOrganizations,
+                    pendingEvents: pendingEventModeration,
+                    flaggedEvents: flaggedEvents,
+                    totalPending: pendingOrganizations + pendingEventModeration
                 }
             }
         });
@@ -205,7 +268,7 @@ exports.suspendOrganization = async (req,res) => {
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const { org_id } = req.params;
-        const { suspensionReason } = req.body;
+        const suspensionReason = req.body?.suspensionReason;
 
         // Validate org_id
         if (!org_id) {
@@ -216,15 +279,17 @@ exports.suspendOrganization = async (req,res) => {
             return res.status(400).json({ error: 'Invalid organization ID format' });
         }
 
-        // Find organization
-        const organization = await Organization.findById(org_id);
+        // Find and update organization status to suspended
+        // Using findByIdAndUpdate to avoid full document validation issues
+        const organization = await Organization.findByIdAndUpdate(
+            org_id,
+            { status: ORGANIZATION_STATUS.SUSPENDED },
+            { new: true, runValidators: false } // Only update status, skip full validation
+        );
+        
         if (!organization) {
             return res.status(404).json({ error: 'Organization not found' });
         }
-
-        // Update organization status to suspended
-        organization.status = ORGANIZATION_STATUS.SUSPENDED;
-        await organization.save();
 
         // Audit log
         console.log(`[AUDIT] Admin ${req.user.email} suspended organization ${organization.name} (ID: ${org_id})`);
@@ -249,7 +314,16 @@ exports.suspendOrganization = async (req,res) => {
 
     } catch (e) {
         console.error('Error suspending organization:', e);
-        return res.status(500).json({ error: 'Failed to suspend organization' });
+        console.error('Error stack:', e.stack);
+        console.error('Error details:', {
+            name: e.name,
+            message: e.message,
+            errors: e.errors
+        });
+        return res.status(500).json({ 
+            error: 'Failed to suspend organization',
+            details: e.message || 'Internal server error'
+        });
     }
 }
 

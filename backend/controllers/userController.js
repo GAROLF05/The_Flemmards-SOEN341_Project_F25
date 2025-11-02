@@ -98,7 +98,7 @@ exports.registerUser = async (req, res) => {
 // API endpoint to Login user and create JWT token
 exports.loginUser = async (req, res) => {
   try {
-    const { usernameEmail, password } = req.body;
+    const { usernameEmail, password, role: requestedRole } = req.body;
 
     // Validate required fields
     if (!usernameEmail || !usernameEmail.trim())
@@ -107,21 +107,17 @@ exports.loginUser = async (req, res) => {
     if (!password)
       return res.status(400).json({ error: "Password is required" });
 
-    // First, try to find user by email or username in User collection
-    let user = await User.findOne({
-      $or: [
-        { email: usernameEmail.toLowerCase().trim() },
-        { username: usernameEmail.trim() },
-      ],
-    })
-      .select("+password")
-      .lean()
-      .exec();
-
+    let user = null;
     let isAdmin = false;
 
-    // If not found in User collection, check Administrator collection
-    if (!user) {
+    // If admin role is requested, check Administrator collection first
+    // Otherwise, prioritize User collection but still check both
+    const checkAdminFirst = requestedRole && requestedRole.toLowerCase() === 'admin';
+    
+    console.log('Login attempt:', { email: usernameEmail, requestedRole, checkAdminFirst });
+
+    if (checkAdminFirst) {
+      // Check Administrator collection first for admin login
       const admin = await Administrator.findOne({
         $or: [
           { email: usernameEmail.toLowerCase().trim() },
@@ -136,30 +132,69 @@ exports.loginUser = async (req, res) => {
         // Verify password for administrator
         const isValidPassword = await bcrypt.compare(password, admin.password);
         if (!isValidPassword)
-      return res
-        .status(401)
-        .json({ error: "Invalid email/username or password" });
+          return res.status(401).json({ error: "Invalid email/username or password" });
 
         // Create admin user object for JWT
         user = {
           _id: admin._id,
           username: admin.username,
           email: admin.email,
-          role: "Admin", // Set role as Admin for administrators
+          role: "Admin",
         };
         isAdmin = true;
+        console.log('Admin login successful:', admin.email);
       } else {
-        return res
-          .status(401)
-          .json({ error: "Invalid email/username or password" });
+        return res.status(401).json({ error: "Invalid email/username or password for admin account" });
       }
     } else {
-      // Verify password for regular user
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword)
-      return res
-        .status(401)
-        .json({ error: "Invalid email/username or password" });
+      // Regular login: check User collection first
+      user = await User.findOne({
+        $or: [
+          { email: usernameEmail.toLowerCase().trim() },
+          { username: usernameEmail.trim() },
+        ],
+      })
+        .select("+password")
+        .lean()
+        .exec();
+
+      if (!user) {
+        // If not found in User collection, check Administrator collection
+        const admin = await Administrator.findOne({
+          $or: [
+            { email: usernameEmail.toLowerCase().trim() },
+            { username: usernameEmail.trim() },
+          ],
+        })
+          .select("+password")
+          .lean()
+          .exec();
+
+        if (admin) {
+          // Verify password for administrator
+          const isValidPassword = await bcrypt.compare(password, admin.password);
+          if (!isValidPassword)
+            return res.status(401).json({ error: "Invalid email/username or password" });
+
+          // Create admin user object for JWT
+          user = {
+            _id: admin._id,
+            username: admin.username,
+            email: admin.email,
+            role: "Admin",
+          };
+          isAdmin = true;
+          console.log('Admin login successful (fallback):', admin.email);
+        } else {
+          return res.status(401).json({ error: "Invalid email/username or password" });
+        }
+      } else {
+        // Verify password for regular user
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword)
+          return res.status(401).json({ error: "Invalid email/username or password" });
+        console.log('User login successful:', user.email, 'Role:', user.role);
+      }
     }
 
     // Create JWT token

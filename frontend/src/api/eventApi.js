@@ -1,4 +1,5 @@
 import api from "./axiosClient";
+import axios from "axios";
 import ENDPOINTS from "./endpoints";
 
 // Browse events (Public - for students)
@@ -116,6 +117,59 @@ export const deleteEvent = (eventId) => {
 
 // Get attendees for event (Admin only)
 export const getEventAttendees = (eventId) => api.get(ENDPOINTS.EVENT_ATTENDEES(eventId));
+
+// Export attendees as CSV (Admin or Organizer)
+export const exportAttendeesCSV = async (eventId) => {
+    console.log('Exporting attendees CSV for event:', eventId);
+    
+    // Validate eventId
+    if (!eventId) {
+        throw new Error('Event ID is required');
+    }
+    
+    // Use axios directly to bypass interceptor that returns only response.data
+    // We need full response with headers for blob downloads
+    const token = localStorage.getItem("auth-token");
+    const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+    
+    try {
+        const response = await axios.get(`${baseURL}/events/export-csv/${eventId}`, {
+            responseType: 'blob',
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+            },
+            validateStatus: (status) => status < 500, // Don't throw on 4xx errors
+        });
+        
+        // Check if response is an error blob (backend returns JSON error as blob)
+        if (response.status >= 400) {
+            const text = await response.data.text();
+            let errorMessage = 'Failed to export attendees';
+            try {
+                const errorData = JSON.parse(text);
+                errorMessage = errorData.error || errorData.message || errorMessage;
+            } catch {
+                errorMessage = text || errorMessage;
+            }
+            throw new Error(errorMessage);
+        }
+        
+        return response;
+    } catch (error) {
+        console.error('Error exporting attendees CSV:', error);
+        if (error.response?.status === 404) {
+            throw new Error('Event not found or no attendees available');
+        } else if (error.response?.status === 403) {
+            throw new Error('You do not have permission to export attendees for this event');
+        } else if (error.response?.status === 401) {
+            throw new Error('Authentication required. Please log in again.');
+        } else if (error.message) {
+            throw error;
+        } else {
+            throw new Error('Failed to export attendees. Please try again.');
+        }
+    }
+};
 
 // Get waitlist for event (Admin only)
 export const getEventWaitlist = (eventId) => api.get(ENDPOINTS.EVENT_WAITLIST(eventId));

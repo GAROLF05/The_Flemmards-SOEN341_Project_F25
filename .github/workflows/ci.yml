@@ -1,0 +1,41 @@
+name: CI
+
+# Run on every push and pull request
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Get the code from GitHub
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Step 2: Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: |
+        npm ci
+        npm ci --prefix frontend
+
+    # Step 4: Run frontend linting
+    - name: Lint frontend code
+      run: npm run lint --prefix frontend
+
+    # Step 5: Build frontend
+    - name: Build frontend
+      run: npm run build --prefix frontend
+
+    # Step 6: Run tests
+    - name: Run tests
+      run: npm test

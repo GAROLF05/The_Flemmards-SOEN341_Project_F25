@@ -113,22 +113,100 @@ exports.createOrganization = async (req,res)=>{
     }
 }
 
-// API Endpoint to get all organization
+// API Endpoint for admins to create organization
+exports.adminCreateOrganization = async (req, res) => {
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        const { name, description, website, contact, organizerEmail } = req.body;
+
+        // Validate required fields
+        if (!name || !description || !website || !contact) {
+            return res.status(400).json({ error: 'Missing required fields: name, description, website, and contact are required' });
+        }
+
+        // Validate contact object structure
+        if (!contact.email || !contact.phone) {
+            return res.status(400).json({ error: 'Contact object must include email and phone' });
+        }
+
+        // If organizerEmail is provided, link to that organizer user
+        let organizerId = null;
+        if (organizerEmail) {
+            const organizer = await User.findOne({ email: organizerEmail, role: 'Organizer' });
+            if (!organizer) {
+                return res.status(404).json({ error: `Organizer with email ${organizerEmail} not found. Please ensure the user exists and has Organizer role.` });
+            }
+            if (organizer.organization) {
+                return res.status(409).json({ error: `Organizer ${organizerEmail} already has an organization` });
+            }
+            organizerId = organizer._id;
+        }
+
+        // Create organization - admins can create with approved status
+        const organization = await Organization.create({
+            name,
+            description,
+            website,
+            contact,
+            status: ORGANIZATION_STATUS.APPROVED, // Admins can approve immediately
+            organizer: organizerId // Optional - can be null if no organizer specified
+        });
+
+        // If organizer was specified, link organization to user
+        if (organizerId) {
+            const organizer = await User.findById(organizerId);
+            organizer.organization = organization._id;
+            await organizer.save();
+        }
+
+        // Populate organizer information in response
+        const populatedOrg = await Organization.findById(organization._id)
+            .populate('organizer', 'name email username')
+            .lean();
+
+        return res.status(201).json({
+            message: 'Organization created successfully',
+            organization: populatedOrg
+        });
+    } catch (e) {
+        console.error('Error creating organization (admin):', e);
+        if (e.code === 11000) {
+            return res.status(409).json({ error: 'Organization with this name, email, website, or phone already exists' });
+        }
+        return res.status(500).json({ error: 'Failed to create organization' });
+    }
+}
+
+// API Endpoint to get all approved organizations with approved organizer users
 exports.getAllOrganizations = async (req,res)=>{
     try {
         // Admin only
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
-        const organizations = await Organization.find()
-            .populate('organizer', 'name email username')
+        // Get approved and suspended organizations that have an organizer user
+        const organizations = await Organization.find({
+            status: { $in: [ORGANIZATION_STATUS.APPROVED, ORGANIZATION_STATUS.SUSPENDED] },
+            organizer: { $exists: true, $ne: null }
+        })
+            .populate({
+                path: 'organizer',
+                select: 'name email username role',
+                match: { role: 'Organizer' } // Only include if user is an Organizer
+            })
             .sort({ createdAt: -1 })
             .lean();
 
+        // Filter out organizations where organizer population failed (null organizer or not Organizer role)
+        const filteredOrganizations = organizations.filter(org => org.organizer !== null && org.organizer !== undefined);
+
         return res.status(200).json({
             message: 'Organizations fetched successfully',
-            total: organizations.length,
-            organizations
+            total: filteredOrganizations.length,
+            organizations: filteredOrganizations
         });
     } catch (e) {
         console.error('Error fetching organizations:', e);

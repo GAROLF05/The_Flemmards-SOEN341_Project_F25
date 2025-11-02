@@ -3,7 +3,7 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotification } from '../../hooks/useNotification';
 import Select from '../../components/select/Select';
-import Signup from './Signup';
+import Signup from './SignUp';
 import Login from './Login';
 import { login, signup } from '../../api/authenticationApi';
 
@@ -43,6 +43,7 @@ export default function Authentication() {
 		const data = {
 			usernameEmail: loginForm.email.trim(),
 			password: loginForm.password,
+			role: loginForm.role, // Send selected role to backend
 		};
 
 		console.log('Attempting login with:', { email: data.usernameEmail });

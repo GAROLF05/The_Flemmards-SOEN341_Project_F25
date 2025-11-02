@@ -18,6 +18,9 @@ const { requireAuth, requireAdmin } = require('../middlewares/auth');
 // Create organization (requires authentication - organizer only)
 router.post('/create', requireAuth, organizationController.createOrganization);
 
+// Admin create organization (requires admin authentication)
+router.post('/admin/create', requireAdmin, organizationController.adminCreateOrganization);
+
 // Read
 router.get('/all', requireAdmin, organizationController.getAllOrganizations);
 router.get('/:org_id', organizationController.getOrganizationById);

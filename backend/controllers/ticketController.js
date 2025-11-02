@@ -669,136 +669,51 @@ exports.getTicketsByUser = async (req,res)=>{
     }
 }
 
-// Task #58: Export attendee list as CSV (organizer or admin)
-exports.exportAttendeesCSV = async (req, res) => {
+//US.09 - Task.2 - remaining capacity and attendance rate
+exports.getEventMetrics = async (req, res) => {
     try {
+        // Require authentication
+        if (!req.user) return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+
         const { event_id } = req.params;
+        if (!event_id) 
+            return res.status(400).json({ error: "event_id required" });
 
-        // Validate event ID format
-        if (!event_id) {
-            return res.status(400).json({ 
-                error: 'Event ID is required',
-                code: 'INVALID_INPUT'
-            });
+        if (!mongoose.Types.ObjectId.isValid(event_id)) 
+            return res.status(400).json({ error: "Invalid event_id format" });
+
+        //Fetch event capacity
+        const event = await Event.findById(event_id).select('capacity').lean();
+
+        if (!event) 
+            return res.status(404).json({ error: 'Event not found' });
+
+        // Compute issued and used counts
+        const issuedCount = await Ticket.countDocuments({ event: event_id });
+        const usedCount = await Ticket.countDocuments({ event: event_id, status: 'used' }); //event attended
+
+        let capacity;
+        if (typeof event.capacity === 'number') {
+            capacity = event.capacity
+        } else {
+            capacity = null;
         }
 
-        if (!mongoose.Types.ObjectId.isValid(event_id)) {
-            return res.status(400).json({ 
-                error: 'Invalid event ID format',
-                code: 'INVALID_FORMAT'
-            });
-        }
+        const remainingCapacity = capacity !== null ? Math.max(0, capacity - issuedCount) : null;
 
-        // Check if user is admin or organizer of the event
-        const { ensureAdminOrEventOrganizer } = require('../utils/authHelpers');
-        try { 
-            await ensureAdminOrEventOrganizer(req, event_id); 
-        } catch (e) { 
-            return res.status(e.status || 401).json({ 
-                code: e.code || 'UNAUTHORIZED', 
-                message: e.message 
-            }); 
-        }
+        const attendanceRate = issuedCount > 0 ? (usedCount / issuedCount) * 100 : 0; //percent
 
-        // Check if event exists
-        const event = await Event.findById(event_id).lean();
-        if (!event) {
-            return res.status(404).json({ 
-                error: 'Event not found',
-                code: 'EVENT_NOT_FOUND'
-            });
-        }
-
-        // Get all registrations for this event
-        const registrations = await Registration.find({ event: event_id })
-            .populate({
-                path: 'user',
-                select: 'name email'
-            })
-            .populate({
-                path: 'ticketIds',
-                select: 'ticketId status scannedAt'
-            })
-            .lean();
-
-        // Handle empty list
-        if (!registrations || registrations.length === 0) {
-            return res.status(404).json({ 
-                error: 'No attendees found for this event',
-                code: 'EMPTY_LIST',
-                message: 'The attendee list is empty'
-            });
-        }
-
-        // Build CSV content
-        const csvRows = [];
-        
-        // CSV Header
-        csvRows.push([
-            'Registration ID',
-            'Name',
-            'Email',
-            'Quantity',
-            'Status',
-            'Registered At',
-            'Tickets Issued',
-            'Ticket IDs',
-            'Check-in Status'
-        ].join(','));
-
-        // CSV Data rows
-        for (const reg of registrations) {
-            // Handle invalid data gracefully
-            const name = reg.user?.name || 'Unknown';
-            const email = reg.user?.email || 'N/A';
-            const quantity = reg.quantity || 0;
-            const status = reg.status || 'unknown';
-            const registeredAt = reg.createdAt ? new Date(reg.createdAt).toISOString() : 'N/A';
-            const ticketsIssued = reg.ticketsIssued || 0;
-            
-            // Get ticket IDs
-            const ticketIds = Array.isArray(reg.ticketIds) 
-                ? reg.ticketIds.map(t => t.ticketId || t._id).join('; ')
-                : 'None';
-
-            // Check-in status (how many tickets were scanned)
-            const scannedTickets = Array.isArray(reg.ticketIds)
-                ? reg.ticketIds.filter(t => t.status === 'used').length
-                : 0;
-            const checkinStatus = `${scannedTickets}/${ticketsIssued}`;
-
-            csvRows.push([
-                reg.registrationId || reg._id,
-                `"${name}"`, // Quote in case name contains commas
-                email,
-                quantity,
-                status,
-                registeredAt,
-                ticketsIssued,
-                `"${ticketIds}"`,
-                checkinStatus
-            ].join(','));
-        }
-
-        const csvContent = csvRows.join('\n');
-
-        // Set response headers for CSV download
-        const filename = `attendees_${event.title.replace(/[^a-z0-9]/gi, '_')}_${event_id}_${Date.now()}.csv`;
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        
-        // Log export action
-        const userType = req.isAdmin ? 'Admin' : 'Organizer';
-        console.log(`[AUDIT] ${userType} ${req.user.email} exported attendee list for event ${event.title} (ID: ${event_id})`);
-
-        return res.status(200).send(csvContent);
+        return res.status(200).json({
+            eventId: event_id,
+            capacity,
+            issuedCount,
+            usedCount,
+            remainingCapacity,
+            attendanceRate: Number(attendanceRate.toFixed(2)) // percent
+        });
 
     } catch (e) {
-        console.error('Error exporting attendees CSV:', e);
-        return res.status(500).json({ 
-            error: 'Failed to export attendee list',
-            code: 'EXPORT_FAILED'
-        });
+        console.error('Failed to compute event metrics', e);
+        return res.status(500).json({ error: 'Failed to compute event metrics' });
     }
 };
-
