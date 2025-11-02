@@ -1,26 +1,73 @@
-import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, TicketIcon, UsersIcon } from '@heroicons/react/24/outline';
-import { useState, useMemo, useEffect } from 'react';
+import { BuildingOfficeIcon, CalendarDateRangeIcon, ChevronLeftIcon, ChevronRightIcon, MapPinIcon, QrCodeIcon, TicketIcon, UsersIcon } from '@heroicons/react/24/outline';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import Modal from '../../components/modal/Modal';
-import { browseEvents } from '../../api/eventApi';
-import { transformEventsForFrontend } from '../../utils/eventTransform';
+import { getEventsByUser } from '../../api/eventApi';
+import { decodeToken } from '../../utils/jwt';
+import LoadingPage from '../../layouts/LoadingPage';
+import { generateRandomTicketNumber } from '../../utils/mockData';
+import { useNotification } from '../../hooks/useNotification';
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
-    const { translate } = useLanguage();
+    const [isLoadingQRGeneration, setIsLoadingQRGeneration] = useState(false);
+    const { showNotification } = useNotification();
 
     if (!event)
-        return null;
+        return <></>;
 
     const eventDate = new Date(event.date || event.start_at);
     const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+    const handleDownloadQRCode = async () => {
+        const ticketNumber = generateRandomTicketNumber(); // Random ticket number for now
+
+        // Construct the API URL. We request a 400x400 pixel image.
+        const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(ticketNumber)}`;
+
+        try {
+            setIsLoadingQRGeneration(true);
+
+            // Fetch the image data from the API URL
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch QR code image.');
+            }
+
+            // Convert the response to a Blob (binary data)
+            const blob = await response.blob();
+
+            // Create a temporary URL for the Blob
+            const objectUrl = URL.createObjectURL(blob);
+
+            // Create a temporary link element to trigger the download
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = `ticket-${ticketNumber}.png`; // Set the desired filename
+
+            // Append the link to the body, click it, and then remove it
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the temporary object URL
+            URL.revokeObjectURL(objectUrl);
+
+        } catch (error) {
+            console.error('Error downloading QR code:', error);
+            showNotification("Download failed", "error");
+        } finally {
+            setIsLoadingQRGeneration(false);
+        }
+    };
+
     return (
         <Modal isOpen={isOpen} onClose={onClose} width="medium">
             <>
-                <img 
-                    src={event.imageUrl} 
-                    alt={event.title} 
+                <img
+                    src={event.imageUrl}
+                    alt={event.title}
                     className="w-full h-64 object-cover rounded-t-xl"
                     onError={(e) => {
                         e.target.src = '/uploads/events/default-event-image.svg';
@@ -58,21 +105,17 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    {event.organizationStatus === 'suspended' ? (
-                        <div className="w-full">
-                            <button 
-                                disabled 
-                                className="w-full bg-gray-400 dark:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60 text-lg"
-                            >
-                                Registration Unavailable
-                            </button>
-                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                                This event's organization has been suspended. Registration is currently unavailable.
-                            </p>
-                        </div>
-                    ) : (
-                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
-                            {translate("reserveNow")}
+                    {event.status === "confirmed" && (
+                        <button
+                            onClick={handleDownloadQRCode}
+                            disabled={isLoadingQRGeneration}
+                            className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <QrCodeIcon className="w-6 h-6" />
+                            Download Ticket QR Code
+                            {isLoadingQRGeneration && (
+                                <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
+                            )}
                         </button>
                     )}
                 </div>
@@ -85,47 +128,45 @@ const CalendarPage = () => {
     const [currentDate, setCurrentDate] = useState(new Date('2025-10-11T12:00:00'));
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [eventsData, setEventsData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { translate, currentLanguage } = useLanguage();
 
     const openEventModal = (event) => setSelectedEvent(event);
     const closeEventModal = () => setSelectedEvent(null);
 
-    // Fetch events from API
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const response = await browseEvents({ limit: 200 }); // Get up to 200 events for calendar
-                console.log('Calendar API Response:', response);
-                
-                // Handle different response formats
-                const events = response.events || response || [];
-                
-                if (!Array.isArray(events)) {
-                    console.error('Events is not an array:', events);
-                    setError('Invalid response format from server');
-                    setEventsData([]);
-                    return;
-                }
-                
-                // Transform events to frontend format
-                const transformedEvents = transformEventsForFrontend(events);
-                console.log('Calendar Events transformed:', transformedEvents.length);
-                setEventsData(transformedEvents);
-            } catch (err) {
-                console.error('Error fetching events for calendar:', err);
+    const fetchMyEvents = useCallback(() => {
+        const user = decodeToken();
+        const userId = user.userId;
+
+        setIsLoading(true);
+        getEventsByUser(userId)
+            .then(response => {
+                let data = response.events.map(x => ({
+                    id: x.event._id,
+                    title: x.event.title,
+                    category: x.event.category,
+                    date: x.event.start_at,
+                    location: x.event.location.name,
+                    organization: x.event.organization.name,
+                    description: x.event.description,
+                    imageUrl: x.event.image,
+                    price: x.event.price || "Free",
+                    status: x.status,
+                }));
+
+                setEventsData(data);
+            })
+            .catch(err => {
                 setError(err.message || 'Failed to load events');
                 setEventsData([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchEvents();
+            })
+            .finally(() => setIsLoading(false));
     }, []);
+
+    useEffect(() => {
+        fetchMyEvents();
+    }, [fetchMyEvents])
 
     const daysOfWeek = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
         .map(day => translate(day))
@@ -156,7 +197,7 @@ const CalendarPage = () => {
         return eventsData.reduce((acc, event) => {
             const eventDate = event.date || event.start_at;
             if (!eventDate) return acc;
-            
+
             const dateKey = new Date(eventDate).toDateString();
             if (!acc[dateKey]) {
                 acc[dateKey] = [];
@@ -176,11 +217,9 @@ const CalendarPage = () => {
 
     const today = new Date();
 
-    if (loading) {
+    if (isLoading) {
         return (
-            <div className="flex-grow flex items-center justify-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
-                <p className="text-gray-600 dark:text-gray-400">Loading events...</p>
-            </div>
+            <LoadingPage text="Loading Calendar..." />
         );
     }
 
