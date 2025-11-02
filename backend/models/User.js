@@ -44,6 +44,16 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Approval status for organizers (only applies when role is 'Organizer')
+    approved: {
+      type: Boolean,
+      default: function() {
+        // Students are approved by default, organizers need admin approval
+        return this.role === 'Student';
+      },
+      index: true,
+    },
+
     organization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Organization',

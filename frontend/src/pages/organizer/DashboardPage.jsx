@@ -623,7 +623,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
     );
 };
 
-const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categories }) => {
+const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApproved, categories }) => {
     const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -683,6 +683,12 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Check user approval status
+        if (!userApproved) {
+            alert('Your organizer account must be approved by an administrator before you can create events.');
+            return;
+        }
 
         // Check for missing organization ID first (this is a system issue, not user input)
         if (!organizationId) {
@@ -899,7 +905,10 @@ const DashboardPage = () => {
     const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [organizationId, setOrganizationId] = useState(null);
+    const [userApproved, setUserApproved] = useState(false);
+    const [organizationName, setOrganizationName] = useState(null);
     const { translate } = useLanguage();
+    const { showNotification } = useNotification();
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
 
@@ -938,29 +947,39 @@ const DashboardPage = () => {
                     return;
                 }
 
-                // Extract organization ID - handle both populated object and string ObjectId
-                let orgId;
+                // Check user approval status (for organizers)
+                const isApproved = user.approved !== false; // Default to true if not set (for backwards compatibility)
+                setUserApproved(isApproved);
+
+                // Extract organization ID and name - handle both populated object and string ObjectId
+                let orgId = null;
+                let orgName = null;
+
                 if (typeof user.organization === 'string') {
                     orgId = user.organization;
                 } else if (user.organization && user.organization._id) {
                     orgId = user.organization._id;
+                    orgName = user.organization.name || null;
                 } else if (user.organization && typeof user.organization === 'object') {
                     // Try to extract _id or convert to string
                     orgId = user.organization._id || user.organization.toString();
+                    orgName = user.organization.name || null;
                 }
 
+                console.log('User approval status:', isApproved); // Debug
                 console.log('Extracted organization ID:', orgId); // Debug
                 console.log('Organization type:', typeof user.organization); // Debug
 
-                if (!orgId) {
-                    console.error('Organization ID not found. Organization value:', user.organization);
+                // Store organization ID and name (if available)
+                if (orgId) {
+                    setOrganizationId(orgId);
+                    setOrganizationName(orgName);
+                } else {
+                    // No organization yet
                     setEvents([]);
                     setLoading(false);
                     return;
                 }
-
-                // Store organization ID for event creation
-                setOrganizationId(orgId);
 
                 const response = await getEventsByOrganization(orgId);
                 console.log('API Response (raw):', response); // Debug log
@@ -1037,6 +1056,14 @@ const DashboardPage = () => {
         // This could be useful if the backend adds additional data
     };
 
+    const handleCreateEventClick = () => {
+        if (!userApproved) {
+            showNotification('Your organizer account must be approved by an administrator before you can create events.', 'error');
+            return;
+        }
+        setIsCreateModalOpen(true);
+    };
+
     const filteredEvents = useMemo(() => {
         return events.filter(event =>
             event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1058,11 +1085,36 @@ const DashboardPage = () => {
 
     return (
         <>
+            {/* Approval Status Banner */}
+            {!userApproved && (
+                <div className="mb-6 p-4 rounded-lg border-2 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
+                    <div className="flex items-start gap-3">
+                        <InformationCircleIcon className="w-5 h-5 mt-0.5 text-yellow-600 dark:text-yellow-400" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-yellow-800 dark:text-yellow-300">
+                                Awaiting Account Approval
+                            </h3>
+                            <p className="text-sm mt-1 text-yellow-700 dark:text-yellow-400">
+                                Your organizer account is pending approval. You will be able to create events and organizations once an administrator approves your account.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-8" ref={eventsListRef}>
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{translate("eventsDashboard")}</h1>
 
-                    <button onClick={() => setIsCreateModalOpen(true)} className="mt-4 flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
+                    <button 
+                        onClick={handleCreateEventClick}
+                        disabled={!userApproved}
+                        className={`mt-4 flex items-center gap-2 font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ${
+                            userApproved
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer'
+                                : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-60'
+                        }`}
+                    >
                         <PlusCircleIcon className="w-5 h-5"/>
                         <span>{translate("createEvent")}</span>
                     </button>
@@ -1119,6 +1171,7 @@ const DashboardPage = () => {
                 onClose={() => setIsCreateModalOpen(false)}
                 onAddEvent={handleAddEvent}
                 organizationId={organizationId}
+                userApproved={userApproved}
                 categories={categories}
             />
         </>

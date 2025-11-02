@@ -22,8 +22,9 @@ const { requireAuth, requireAdmin } = require('../middlewares/auth');
 router.get('/dashboard/stats', requireAdmin, adminController.getDashboardStats);
 router.get('/analytics', requireAdmin, adminController.getSystemAnalytics);
 
-// Organization management
-router.patch('/approve-organizer/:org_id', requireAdmin, adminController.approveOrganizer);
+// Organizer user account management
+router.get('/pending-organizers', requireAdmin, adminController.getPendingOrganizers);
+router.patch('/approve-organizer/:user_id', requireAdmin, adminController.approveOrganizer);
 router.patch('/suspend-organization/:org_id', requireAdmin, adminController.suspendOrganization);
 router.delete('/organizations/:org_id', requireAdmin, adminController.deleteOrganization);
 

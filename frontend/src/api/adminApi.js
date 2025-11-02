@@ -50,17 +50,21 @@ export const adminApi = {
         return await axiosClient.get('/admin/dashboard/stats');
     },
 
-    // Organizer Approval
-    async approveOrganizer(orgId, rejectionReason = '') {
-        return await axiosClient.patch(`/admin/approve-organizer/${orgId}`, {
-            status: 'approved',
+    // Organizer User Account Approval
+    async getPendingOrganizers() {
+        return await axiosClient.get('/admin/pending-organizers');
+    },
+
+    async approveOrganizer(userId, rejectionReason = '') {
+        return await axiosClient.patch(`/admin/approve-organizer/${userId}`, {
+            approved: true,
             rejectionReason: rejectionReason
         });
     },
 
-    async rejectOrganizer(orgId, rejectionReason) {
-        return await axiosClient.patch(`/admin/approve-organizer/${orgId}`, {
-            status: 'rejected',
+    async rejectOrganizer(userId, rejectionReason) {
+        return await axiosClient.patch(`/admin/approve-organizer/${userId}`, {
+            approved: false,
             rejectionReason: rejectionReason
         });
     }

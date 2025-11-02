@@ -61,12 +61,15 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
+    // Organizers need admin approval, students are approved by default
+    const isOrganizer = role === USER_ROLE.ORGANIZER;
     const newUser = new User({
       name: name ? name.trim() : null,
       username: username ? username.trim() : null,
       email: email.toLowerCase().trim(),
       password: hashedPassword,
       role: role,
+      approved: !isOrganizer, // Students approved by default, organizers need approval
     });
 
     await newUser.save();
@@ -81,6 +84,7 @@ exports.registerUser = async (req, res) => {
       username: newUser.username,
       email: newUser.email,
       role: newUser.role,
+      approved: newUser.approved,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };
@@ -229,6 +233,7 @@ exports.loginUser = async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      approved: user.approved !== false, // Default to true if not set (for backwards compatibility)
     };
 
     return res.status(200).json({
