@@ -5,7 +5,6 @@ import Modal from '../../components/modal/Modal';
 import { getEventsByUser } from '../../api/eventApi';
 import { decodeToken } from '../../utils/jwt';
 import LoadingPage from '../../layouts/LoadingPage';
-import { generateRandomTicketNumber } from '../../utils/mockData';
 import { useNotification } from '../../hooks/useNotification';
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
@@ -20,7 +19,10 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const handleDownloadQRCode = async () => {
-        const ticketNumber = generateRandomTicketNumber(); // Random ticket number for now
+        const ticketNumber = event.ticketNumber;
+
+        if (!ticketNumber)
+            return;
 
         // Construct the API URL. We request a 400x400 pixel image.
         const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(ticketNumber)}`;
@@ -44,7 +46,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
             // Create a temporary link element to trigger the download
             const link = document.createElement('a');
             link.href = objectUrl;
-            link.download = `ticket-${ticketNumber}.png`; // Set the desired filename
+            link.download = `${event.title.replace(/\s+/g, '_')}-${ticketNumber}.png`; // Set the desired filename
 
             // Append the link to the body, click it, and then remove it
             document.body.appendChild(link);
@@ -105,7 +107,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         )}
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
-                    {event.status === "confirmed" && (
+                    {event.status === "confirmed" && event.ticketNumber && (
                         <button
                             onClick={handleDownloadQRCode}
                             disabled={isLoadingQRGeneration}
@@ -153,6 +155,7 @@ const CalendarPage = () => {
                     imageUrl: x.event.image,
                     price: x.event.price || "Free",
                     status: x.status,
+                    ticketNumber: x.ticketNumbers?.length > 0 ? x.ticketNumbers[0] : null,
                 }));
 
                 setEventsData(data);
