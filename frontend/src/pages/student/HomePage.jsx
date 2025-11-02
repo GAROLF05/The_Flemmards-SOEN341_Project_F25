@@ -5,7 +5,7 @@ import Modal from '../../components/modal/Modal';
 import Carousel from '../../components/carousel/Carousel';
 import { useLanguage } from '../../hooks/useLanguage';
 import { browseEvents, registerToEvent } from '../../api/eventApi';
-import { transformEventsForFrontend, getUniqueCategories } from '../../utils/eventTransform';
+import { transformEventsForFrontend, getUniqueCategories, getUniqueLocations, getUniqueOrganizations } from '../../utils/eventTransform';
 import LoadingPage from '../../layouts/LoadingPage';
 import { useNotification } from '../../hooks/useNotification';
 
@@ -534,6 +534,10 @@ const HomePage = () => {
 
     // Extract dynamic categories, locations, and organizations from fetched events
     const categories = useMemo(() => getUniqueCategories(eventsData), [eventsData]);
+    const uniqueLocations = useMemo(() => getUniqueLocations(eventsData), [eventsData]);
+    const uniqueOrganizations = useMemo(() => getUniqueOrganizations(eventsData), [eventsData]);
+
+    // Scroll to top
 
     useEffect(() => {
         if (isInitialMount) {
@@ -755,7 +759,6 @@ const HomePage = () => {
     const handleClearFilters = () => {
         setModalFilters(initialFilters);
         setActiveFilters(initialFilters);
-        setIsFilterModalOpen(false);
     };
 
     const indexOfLastEvent = currentPage * eventsPerPage;
@@ -849,8 +852,8 @@ const HomePage = () => {
                 clearFilters={handleClearFilters}
                 maxPrice={maxPrice}
                 categories={categories}
-                // uniqueLocations={uniqueLocations}
-                // uniqueOrganizations={uniqueOrganizations}
+                uniqueLocations={uniqueLocations}
+                uniqueOrganizations={uniqueOrganizations}
             />
 
             <EventDetailModal
