@@ -107,7 +107,7 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <LoadingPage title="Loading dashboard..." />
+            <LoadingPage text="Loading dashboard..." />
         );
     }
 
