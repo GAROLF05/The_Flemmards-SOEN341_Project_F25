@@ -76,7 +76,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     }}
                 />
                 <div className="p-8">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{event.category}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                     <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                         <div className="flex items-center gap-3">
