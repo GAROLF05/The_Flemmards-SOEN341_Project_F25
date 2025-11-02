@@ -58,7 +58,7 @@ const EventCard = ({ event, onViewDetails }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{event.category}</span>
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300 capitalize">{event.category}</span>
                         <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
                             {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
                         </span>
@@ -149,7 +149,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
             <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl" />
 
             <div className="p-8">
-                <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
+                <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{event.category}</span>
                 <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                 <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                     <div className="flex items-center gap-3">
@@ -205,18 +205,19 @@ export default function MyEventsPage() {
         setIsLoading(true);
         getEventsByUser(userId)
             .then(response => {
-                console.log('the response', response)
                 let data = response.events.map(x => ({
                     id: x.event._id,
                     title: x.event.title,
-                    category: x.category,
+                    category: x.event.category,
                     date: x.event.start_at,
-                    location: x.event.location,
+                    location: x.event.location.name,
                     organization: x.event.organization.name,
                     description: x.event.description,
                     imageUrl: x.event.image,
-                    price: "Free",
+                    price: x.event.price || "Free",
+                    status: x.status,
                 }));
+                console.log('the response', data, response)
 
                 setMyEvents(data);
             })
