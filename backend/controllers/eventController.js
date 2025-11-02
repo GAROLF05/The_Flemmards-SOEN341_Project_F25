@@ -497,8 +497,8 @@ exports.getEventsByUserRegistrations = async (req,res)=>{
             path: 'user', 
             select: 'name email'})
         .populate({
-            path: 'event', 
-            select: 'organization title description start_at end_at location image',
+            path: 'event',
+            select: 'organization title category description start_at end_at location image',
             populate:{
             path: 'organization',
             select: 'name website',
