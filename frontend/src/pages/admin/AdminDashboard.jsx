@@ -10,31 +10,9 @@ import {
     Tooltip,
     Legend
 } from 'recharts';
+import LoadingPage from '../../layouts/LoadingPage';
 import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
-
-// --- MOCK DATA ---
-// eslint-disable-next-line no-unused-vars
-const mockEventsData = [
-  { id: 1, organization: 'Evenko', price: 55, capacity: 5000, ticketsIssued: 4500, attendees: 4200 },
-  { id: 2, organization: 'Osheaga', price: 75, capacity: 10000, ticketsIssued: 8500, attendees: 8000 },
-  { id: 3, organization: 'Startup Montreal', price: 15, capacity: 200, ticketsIssued: 180, attendees: 175 },
-  { id: 4, organization: 'Concordia Continuing Education', price: 250, capacity: 50, ticketsIssued: 45, attendees: 40 },
-  { id: 5, organization: 'Run Montreal', price: 40, capacity: 2000, ticketsIssued: 1500, attendees: 1400 },
-  { id: 6, organization: 'City of Montreal', price: 'Free', capacity: 1000, ticketsIssued: 0, attendees: 800 },
-  { id: 7, organization: 'Tech Summit Inc.', price: 499, capacity: 1500, ticketsIssued: 1200, attendees: 1150 },
-  { id: 8, organization: 'Cinéma du Parc', price: 12, capacity: 150, ticketsIssued: 140, attendees: 130 },
-  { id: 9, organization: 'McGill University', price: 125, capacity: 800, ticketsIssued: 750, attendees: 700 },
-  { id: 10, organization: 'MURAL Festival', price: 25, capacity: 30, ticketsIssued: 30, attendees: 28 },
-  { id: 11, organization: 'Quebec Hiking Association', price: 'Free', capacity: 100, ticketsIssued: 0, attendees: 85 },
-  { id: 12, organization: 'Evenko', price: 'Free', capacity: 3000, ticketsIssued: 0, attendees: 2500 },
-  { id: 13, organization: 'Osheaga', price: 45, capacity: 15000, ticketsIssued: 12000, attendees: 11000 },
-  { id: 14, organization: 'Concordia University', price: 'Free', capacity: 100, ticketsIssued: 90, attendees: 85 },
-  { id: 15, organization: 'Orchestre symphonique de Montréal', price: 80, capacity: 2100, ticketsIssued: 1800, attendees: 1750 },
-  { id: 16, organization: 'McGill University', price: 35, capacity: 40, ticketsIssued: 40, attendees: 38 },
-  { id: 17, organization: 'The Comedy Nest', price: 20, capacity: 120, ticketsIssued: 110, attendees: 105 },
-  { id: 18, organization: 'Allez Up', price: 30, capacity: 20, ticketsIssued: 20, attendees: 18 },
-];
 
 // Mock data for the participation trend chart
 const participationTrendData = [
@@ -129,9 +107,7 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-gray-600 dark:text-gray-400">Loading dashboard...</div>
-            </div>
+            <LoadingPage text="Loading dashboard..." />
         );
     }
 

@@ -9,7 +9,7 @@ const ENDPOINTS = {
 	ORGANIZATION_STATS: (id) => `/org/stats/${id}`,
 	ORGANIZATION_UPDATE: (id) => `/org/update/${id}`,
 	ORGANIZATION_DELETE: (id) => `/org/delete/${id}`,
-	
+
 	SEND_NOTIFICATION: "/notifications/send",
 
 	// User Management
@@ -43,7 +43,7 @@ const ENDPOINTS = {
 	EVENT_REGISTRATION: "/registrations/register",
 
 	// Tickets
-	TICKETS: (registrationId) => `/tickets/${registrationId}`,
+	SCAN_TICKET: "/tickets/ticket/scan",
 };
 
 export default ENDPOINTS;

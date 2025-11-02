@@ -50,12 +50,9 @@ export default function Authentication() {
 
 		login(data)
 			.then(response => {
-				console.log('Login response:', response);
-				
 				// axiosClient interceptor returns response.data directly
 				if (response && response.token) {
 					localStorage.setItem("auth-token", response.token);
-					console.log('Token stored in localStorage');
 				}
 
 				const role = response?.user?.role?.toLowerCase() || '';
@@ -73,9 +70,9 @@ export default function Authentication() {
 			.catch(error => {
 				console.error('Login error:', error);
 				console.error('Error response:', error.response);
-				
+
 				const errorMessage = error.response?.data?.error || error.message || translate("anErrorHasOccured");
-				
+
 				if (error.response?.status === 401) {
 					showNotification(translate("invalidCredentials") || "Invalid email or password", 'error');
 				} else if (error.response?.status === 400) {

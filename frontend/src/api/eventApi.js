@@ -52,7 +52,10 @@ export const createEvent = (eventData, imageFile = null) => {
         // Use FormData for file upload or when location is an object
         const formData = new FormData();
         Object.keys(eventData).forEach(key => {
-            if (key === 'location' && typeof eventData[key] === 'object') {
+            if (key === 'category') {
+                formData.append('category', eventData[key].toLowerCase());
+            }
+            else if (key === 'location' && typeof eventData[key] === 'object') {
                 // Backend expects location[name] and location[address] form fields
                 formData.append('location[name]', eventData[key].name || '');
                 formData.append('location[address]', eventData[key].address || '');
