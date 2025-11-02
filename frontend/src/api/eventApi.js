@@ -124,17 +124,17 @@ export const getEventAttendees = (eventId) => api.get(ENDPOINTS.EVENT_ATTENDEES(
 // Export attendees as CSV (Admin or Organizer)
 export const exportAttendeesCSV = async (eventId) => {
     console.log('Exporting attendees CSV for event:', eventId);
-    
+
     // Validate eventId
     if (!eventId) {
         throw new Error('Event ID is required');
     }
-    
+
     // Use axios directly to bypass interceptor that returns only response.data
     // We need full response with headers for blob downloads
     const token = localStorage.getItem("auth-token");
     const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
-    
+
     try {
         const response = await axios.get(`${baseURL}/events/export-csv/${eventId}`, {
             responseType: 'blob',
@@ -143,7 +143,7 @@ export const exportAttendeesCSV = async (eventId) => {
             },
             validateStatus: (status) => status < 500, // Don't throw on 4xx errors
         });
-        
+
         // Check if response is an error blob (backend returns JSON error as blob)
         if (response.status >= 400) {
             const text = await response.data.text();
@@ -156,7 +156,7 @@ export const exportAttendeesCSV = async (eventId) => {
             }
             throw new Error(errorMessage);
         }
-        
+
         return response;
     } catch (error) {
         console.error('Error exporting attendees CSV:', error);
@@ -184,3 +184,5 @@ export const promoteWaitlistedUsers = (eventId) => api.patch(ENDPOINTS.EVENT_PRO
 export const getEvents = getAllEvents;
 
 export const registerToEvent = (eventId, quantity = 1) => api.post(ENDPOINTS.EVENT_REGISTRATION, { eventId, quantity });
+
+export const getPendingApprovalEvents = () => api.get(ENDPOINTS.EVENT_MODERATION_STATUS('pending_approval'));
