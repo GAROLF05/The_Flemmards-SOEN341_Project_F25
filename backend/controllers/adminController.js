@@ -49,6 +49,9 @@ const mongoose = require('mongoose');
 const { error } = require('console');
 
 // API Endpoint to get admin dashboard statistics
+let _dashboardCache = null;
+let _dashboardCacheExpires = 0;
+
 exports.getDashboardStats = async (req,res) => {
     try {
         // Admin only
