@@ -440,9 +440,17 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                             </p>
                         </div>
                     ) : (
-                        <button className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 text-lg">
+                        <button
+                            onClick={handleEventRegistration}
+                            disabled={isLoadingRegistration}
+                            className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                        >
                             {translate("reserveNow")}
+                            {isLoadingRegistration && (
+                                <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
+                            )}
                         </button>
+
                     )}
                 </div>
             </>
@@ -545,8 +553,6 @@ const HomePage = () => {
     // Featured events - Smart algorithm to select the best events to feature
     const featuredEvents = useMemo(() => {
         const now = new Date();
-        const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
         // Filter upcoming events
         const upcoming = eventsData.filter(e => {
@@ -843,8 +849,8 @@ const HomePage = () => {
                 clearFilters={handleClearFilters}
                 maxPrice={maxPrice}
                 categories={categories}
-                uniqueLocations={uniqueLocations}
-                uniqueOrganizations={uniqueOrganizations}
+                // uniqueLocations={uniqueLocations}
+                // uniqueOrganizations={uniqueOrganizations}
             />
 
             <EventDetailModal
