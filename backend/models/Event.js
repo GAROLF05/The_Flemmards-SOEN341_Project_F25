@@ -24,6 +24,7 @@ const CATEGORY = {
     FOOD_DRINK: 'food & drink',
     HEALTH_WELLNESS: 'health & wellness',
     EDUCATION: 'education',
+    WORKSHOP: 'workshop',
     OTHER: 'other'
 };
 
