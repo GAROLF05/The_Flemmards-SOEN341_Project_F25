@@ -863,7 +863,7 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 {isSubmitting ? 'Creating...' : 'Create Event'}
                             </button>
