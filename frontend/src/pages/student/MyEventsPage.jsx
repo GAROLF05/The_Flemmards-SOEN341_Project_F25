@@ -136,17 +136,19 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">{event.description}</p>
 
-                <button
-                    onClick={handleDownloadQRCode}
-                    disabled={isLoadingQRGeneration}
-                    className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
-                >
-                    <QrCodeIcon className="w-6 h-6" />
-                    Download Ticket QR Code
-                    {isLoadingQRGeneration && (
-                        <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
-                    )}
-                </button>
+                {event.status === "confirmed" && (
+                    <button
+                        onClick={handleDownloadQRCode}
+                        disabled={isLoadingQRGeneration}
+                        className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                        <QrCodeIcon className="w-6 h-6" />
+                        Download Ticket QR Code
+                        {isLoadingQRGeneration && (
+                            <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
+                        )}
+                    </button>
+                )}
             </div>
         </Modal>
     );
