@@ -85,8 +85,11 @@ exports.browseEvents = async (req, res) => {
         // Build query
         let query = {};
 
-        // Filter by status - only show upcoming and active events to students
-        query.status = { $in: ['upcoming', 'active'] };
+        // Filter by status - only show upcoming and ongoing events to students
+        query.status = { $in: [EVENT_STATUS.UPCOMING, EVENT_STATUS.ONGOING] };
+        
+        // Filter by moderation status - only show approved events to students
+        query.moderationStatus = MODERATION_STATUS.APPROVED;
 
         // Search in title and description
         if (q) {

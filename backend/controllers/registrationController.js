@@ -92,6 +92,7 @@ exports.registerToEvent = async (req, res) => {
 
         let registration;
         let event;
+        let newlyCreatedTickets = [];
         try {
             // Fetch event to check its capacity and status
             event = await Event.findById(eventId).populate('organization');
@@ -127,12 +128,27 @@ exports.registerToEvent = async (req, res) => {
             await registration.save({ session });
 
             if (registrationStatus === REGISTRATION_STATUS.CONFIRMED) {
-                // atomic decrement and addToSet to prevent duplicates
                 event.capacity = Math.max(0, event.capacity - qty);
                 event.registered_users.addToSet(req.user._id);
 
+                const ticketsToCreate = [];
+                for (let i = 0; i < qty; i++) {
+                    ticketsToCreate.push({ 
+                        user: req.user._id, 
+                        event: eventId, 
+                        registration: registration._id 
+                    });
+                }
+                if (ticketsToCreate.length > 0) {
+                    const created = await Ticket.create(ticketsToCreate, { session });
+                    const newIds = created.map(t => t._id);
+                    registration.ticketIds = newIds;
+                    registration.ticketsIssued = newIds.length;
+                    await registration.save({ session });
+                    newlyCreatedTickets = created;
+                }
             } else {
-                // push registration to waitlist
+                // waitlist
                 event.waitlist.push(registration._id);
             }
 
@@ -145,6 +161,23 @@ exports.registerToEvent = async (req, res) => {
             throw e;
         } finally {
             session.endSession();
+        }
+
+        // Generate QR codes for tickets after transaction commit (outside transaction to avoid long transactions)
+        if (newlyCreatedTickets && newlyCreatedTickets.length > 0) {
+            try {
+                for (const t of newlyCreatedTickets) {
+                    const ticketDoc = await Ticket.findById(t._id);
+                    if (!ticketDoc) continue;
+                    const payload = ticketDoc.code || ticketDoc.ticketId || String(ticketDoc._id);
+                    const dataUrl = await qrcode.toDataURL(payload);
+                    ticketDoc.qrDataUrl = dataUrl;
+                    ticketDoc.qr_expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
+                    await ticketDoc.save();
+                }
+            } catch (e) {
+                console.error('QR generation failed for created tickets:', e);
+            }
         }
 
         try {
