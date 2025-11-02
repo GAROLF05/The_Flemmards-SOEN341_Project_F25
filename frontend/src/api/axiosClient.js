@@ -28,8 +28,6 @@ axiosClient.interceptors.request.use(config => {
 // Handle responses
 axiosClient.interceptors.response.use(response =>
     response.data, error => {
-        console.error("API Error:", error);
-        
         // Preserve error structure for error handling
         return Promise.reject(error);
     }
