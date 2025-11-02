@@ -8,43 +8,7 @@ import LoadingPage from '../../layouts/LoadingPage';
 import { useLanguage } from '../../hooks/useLanguage';
 import { decodeToken } from '../../utils/jwt';
 
-// --- MOCK DATA ---
-// A smaller list representing events the student has reserved
-// const myReservedEventsData = [
-//     {
-//         id: 3,
-//         title: 'Startup Pitch Night',
-//         category: 'Business',
-//         date: '2025-11-05T19:00:00',
-//         location: 'Innovation Hub, Montreal',
-//         organization: 'Startup Montreal',
-//         description: 'Watch the city\'s brightest entrepreneurs pitch their ideas to a panel of venture capitalists.',
-//         imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?q=80&w=2070&auto=format&fit=crop',
-//         price: 15,
-//     },
-//     {
-//         id: 4,
-//         title: 'Advanced React Workshop',
-//         category: 'Technology',
-//         date: '2025-11-18T10:00:00',
-//         location: 'Online',
-//         organization: 'Concordia Continuing Education',
-//         description: 'Deep dive into advanced React patterns, hooks, and performance optimization techniques.',
-//         imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop',
-//         price: 250,
-//     },
-//     {
-//         id: 17,
-//         title: 'Stand-up Comedy Night',
-//         category: 'Arts & Culture',
-//         date: '2025-12-12T20:00:00',
-//         location: 'The Comedy Nest, Montreal',
-//         organization: 'The Comedy Nest',
-//         description: 'A night of laughs with some of Montreal\'s best up-and-coming comedians.',
-//         imageUrl: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?q=80&w=2070&auto=format&fit=crop',
-//         price: 20,
-//     },
-// ];
+const eventStatuses = ['all', 'confirmed', 'waitlisted', 'cancelled'];
 
 const EventCard = ({ event, onViewDetails }) => {
     return (
@@ -188,9 +152,29 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
     );
 };
 
+const StatusFilter = ({ activeStatus, setActiveStatus }) => {
+    return (
+        <div className="flex flex-wrap gap-3 mb-8">
+            {eventStatuses.map(status => (
+                <button
+                    key={status}
+                    onClick={() => setActiveStatus(status)}
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-colors duration-200 whitespace-nowrap capitalize cursor-pointer ${
+                        activeStatus === status
+                        ? 'bg-indigo-600 text-white shadow-lg'
+                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}>
+                    {status}
+                </button>
+            ))}
+        </div>
+    );
+};
+
 export default function MyEventsPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [activeStatus, setActiveStatus] = useState('all');
     const [myEvents, setMyEvents] = useState([]);
     const { translate } = useLanguage();
     const { showNotification } = useNotification();
@@ -231,6 +215,10 @@ export default function MyEventsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const filteredEvents = activeStatus === 'all'
+        ? myEvents
+        : myEvents.filter(event => event.status.toLowerCase() === activeStatus.toLowerCase());
+
     useEffect(() => {
         fetchMyEvents();
     }, [fetchMyEvents])
@@ -247,9 +235,11 @@ export default function MyEventsPage() {
                 <p className="mt-1 text-gray-600 dark:text-gray-400">All the events you're scheduled to attend.</p>
             </div>
 
-            {myEvents.length > 0 ? (
+            <StatusFilter activeStatus={activeStatus} setActiveStatus={setActiveStatus} />
+
+            {filteredEvents.length > 0 ? (
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {myEvents.map(event => (
+                    {filteredEvents.map(event => (
                         <EventCard key={event.id} event={event} onViewDetails={openEventModal} />
                     ))}
                 </div>
