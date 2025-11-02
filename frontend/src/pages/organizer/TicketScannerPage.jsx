@@ -1,7 +1,8 @@
-import { ArrowUpTrayIcon, CheckCircleIcon, QrCodeIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowUpTrayIcon, CheckCircleIcon, QrCodeIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { useState, useRef } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
 import jsQR from "jsqr";
+import { scanTicket } from '../../api/ticketApi';
 
 const Scanner = () => {
     const [validationStatus, setValidationStatus] = useState(null); // null, 'success', 'error'
@@ -32,18 +33,28 @@ const Scanner = () => {
                 const imageData = ctx.getImageData(0, 0, img.width, img.height);
                 const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-                setTimeout(() => { // Just wasting time
-                    if (code && code.data) {
-                        console.log(code.data);
-                        setValidationStatus('success');
-                    }
-                    else {
-                        setValidationStatus('error');
-                    }
-
+                if (!code) {
+                    setValidationStatus('error');
                     setIsLoading(false);
-                }, 1000);
+
+                    return;
+                }
+
+                scanTicket(code.data)
+                    .then(() => {
+                        setValidationStatus('success');
+                    })
+                    .catch(error => {
+                        if (error.response.data.code.toUpperCase() === "TICKET_ALREADY_USED")
+                            setValidationStatus('used');
+                        else
+                            setValidationStatus('error');
+                    })
+                    .finally(() => {
+                        setIsLoading(false);
+                    });
             };
+            
             img.src = event.target.result;
         };
         reader.readAsDataURL(file);
@@ -78,6 +89,19 @@ const Scanner = () => {
                     <p className="mt-2 text-gray-600 dark:text-gray-400">{translate("ticketValidDescription")}</p>
                     <button onClick={resetScanner} className="mt-6 bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
                         Scan Next Ticket
+                    </button>
+                </div>
+            );
+        }
+
+        if (validationStatus === 'used') {
+            return (
+                <div className="flex flex-col items-center justify-center text-center p-10 h-[500px]">
+                    <ExclamationTriangleIcon className="w-24 h-24 text-yellow-500" />
+                    <h3 className="mt-4 text-3xl font-bold text-gray-900 dark:text-white">Ticket Already Used</h3>
+                    <p className="mt-2 text-gray-600 dark:text-gray-400">This ticket has already been scanned and marked as used.</p>
+                    <button onClick={resetScanner} className="mt-6 bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">
+                        {translate("tryAgain")}
                     </button>
                 </div>
             );
