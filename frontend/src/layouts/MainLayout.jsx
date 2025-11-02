@@ -12,7 +12,7 @@ const MainLayout = ({ accountType }) => {
             <Header accountType={accountType} onMenuClick={() => setIsMobileMenuOpen(true)} />
             <MobileMenu accountType={accountType} isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-            <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-16 py-8">
+            <main className="relative flex-grow container mx-auto px-4 sm:px-6 lg:px-16 py-8">
                 <Outlet />
             </main>
 

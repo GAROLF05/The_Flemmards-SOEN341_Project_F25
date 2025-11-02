@@ -39,7 +39,7 @@ export function NotificationProvider({ children }) {
             {
                 notifications.length > 0 &&
                 (
-                    <div className="fixed top-0 right-0 p-4 sm:p-6 z-150 w-full max-w-sm">
+                    <div className="fixed top-0 right-0 p-4 sm:p-6 z-250 w-full max-w-sm">
                         {notifications.map(notification => (
                             <Notification
                                 key={notification.id}

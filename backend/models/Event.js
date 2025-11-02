@@ -15,16 +15,17 @@ const MODERATION_STATUS = {
 };
 
 const CATEGORY = {
-    MUSIC: 'Music',
-    TECHNOLOGY: 'Technology',
-    BUSINESS: 'Business',
-    SPORTS: 'Sports',
-    COMMUNITY: 'Community',
-    ARTS_CULTURE: 'Arts & Culture',
-    FOOD_DRINK: 'Food & Drink',
-    HEALTH_WELLNESS: 'Health & Wellness',
-    EDUCATION: 'Education',
-    OTHER: 'Other'
+    MUSIC: 'music',
+    TECHNOLOGY: 'technology',
+    BUSINESS: 'business',
+    SPORTS: 'sports',
+    COMMUNITY: 'community',
+    ARTS_CULTURE: 'arts & culture',
+    FOOD_DRINK: 'food & drink',
+    HEALTH_WELLNESS: 'health & wellness',
+    EDUCATION: 'education',
+    WORKSHOP: 'workshop',
+    OTHER: 'other'
 };
 
 // Database that will contain all events on the website
