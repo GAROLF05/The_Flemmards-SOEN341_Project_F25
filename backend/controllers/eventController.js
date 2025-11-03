@@ -632,12 +632,21 @@ exports.createEvent = async (req,res)=>{
         const org = await Organization.findById(organization).lean();
         if (!org) return res.status(404).json({ error: 'Organization not found' });
 
-        // If user is organizer (not admin), verify they own this organization
+        // If user is organizer (not admin), verify they own this organization and are approved
         if (!userIsAdmin && userIsOrganizer) {
-            // Fetch full user to get organization reference
-            const user = await User.findById(req.user._id).select('organization').lean();
+            // Fetch full user to get organization reference and approval status
+            const user = await User.findById(req.user._id).select('organization approved').lean();
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
+            }
+            
+            // Check if organizer user account is approved
+            if (!user.approved) {
+                return res.status(403).json({ 
+                    code: 'FORBIDDEN',
+                    error: 'Your organizer account must be approved before you can create events',
+                    message: 'Your account is pending administrator approval'
+                });
             }
             
             // Check if organizer's organization matches the event organization

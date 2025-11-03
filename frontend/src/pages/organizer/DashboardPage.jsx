@@ -623,7 +623,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
     );
 };
 
-const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categories }) => {
+const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApproved, categories }) => {
     const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -683,6 +683,16 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, categor
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Check user approval status
+        if (!userApproved) {
+            if (userRejected) {
+                alert('Your organizer account has been rejected. You cannot create events. Please contact support if you believe this is an error.');
+            } else {
+                alert('Your organizer account must be approved by an administrator before you can create events.');
+            }
+            return;
+        }
 
         // Check for missing organization ID first (this is a system issue, not user input)
         if (!organizationId) {
@@ -899,7 +909,12 @@ const DashboardPage = () => {
     const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [organizationId, setOrganizationId] = useState(null);
+    const [userApproved, setUserApproved] = useState(false);
+    const [userRejected, setUserRejected] = useState(false);
+    const [rejectedAt, setRejectedAt] = useState(null);
+    const [organizationName, setOrganizationName] = useState(null);
     const { translate } = useLanguage();
+    const { showNotification } = useNotification();
     const [isInitialMount,setIsInitialMount] = useState(true);
     const eventsListRef = useRef(null);
 
@@ -938,29 +953,52 @@ const DashboardPage = () => {
                     return;
                 }
 
-                // Extract organization ID - handle both populated object and string ObjectId
-                let orgId;
+                // Check user approval status (for organizers)
+                // User is approved if: approved is true AND not rejected (rejectedAt is null or undefined)
+                const isApproved = user.approved === true && !user.rejectedAt;
+                const isRejected = user.rejectedAt !== null && user.rejectedAt !== undefined;
+                setUserApproved(isApproved);
+                setUserRejected(isRejected);
+                setRejectedAt(user.rejectedAt || null);
+                
+                // Store rejection status for display
+                if (isRejected && !user.approved) {
+                    // User is rejected
+                    console.log('User account has been rejected. Rejected at:', user.rejectedAt);
+                } else if (!isApproved && !isRejected) {
+                    // User is pending approval
+                    console.log('User account is pending approval');
+                }
+
+                // Extract organization ID and name - handle both populated object and string ObjectId
+                let orgId = null;
+                let orgName = null;
+
                 if (typeof user.organization === 'string') {
                     orgId = user.organization;
                 } else if (user.organization && user.organization._id) {
                     orgId = user.organization._id;
+                    orgName = user.organization.name || null;
                 } else if (user.organization && typeof user.organization === 'object') {
                     // Try to extract _id or convert to string
                     orgId = user.organization._id || user.organization.toString();
+                    orgName = user.organization.name || null;
                 }
 
+                console.log('User approval status:', isApproved); // Debug
                 console.log('Extracted organization ID:', orgId); // Debug
                 console.log('Organization type:', typeof user.organization); // Debug
 
-                if (!orgId) {
-                    console.error('Organization ID not found. Organization value:', user.organization);
+                // Store organization ID and name (if available)
+                if (orgId) {
+                    setOrganizationId(orgId);
+                    setOrganizationName(orgName);
+                } else {
+                    // No organization yet
                     setEvents([]);
                     setLoading(false);
                     return;
                 }
-
-                // Store organization ID for event creation
-                setOrganizationId(orgId);
 
                 const response = await getEventsByOrganization(orgId);
                 console.log('API Response (raw):', response); // Debug log
@@ -1037,6 +1075,18 @@ const DashboardPage = () => {
         // This could be useful if the backend adds additional data
     };
 
+    const handleCreateEventClick = () => {
+        if (!userApproved) {
+            if (userRejected) {
+                showNotification('Your organizer account has been rejected. You cannot create events. Please contact support if you believe this is an error.', 'error');
+            } else {
+                showNotification('Your organizer account must be approved by an administrator before you can create events.', 'error');
+            }
+            return;
+        }
+        setIsCreateModalOpen(true);
+    };
+
     const filteredEvents = useMemo(() => {
         return events.filter(event =>
             event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1058,11 +1108,56 @@ const DashboardPage = () => {
 
     return (
         <>
+            {/* Approval Status Banner */}
+            {userRejected ? (
+                <div className="mb-6 p-4 rounded-lg border-2 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700">
+                    <div className="flex items-start gap-3">
+                        <InformationCircleIcon className="w-5 h-5 mt-0.5 text-red-600 dark:text-red-400" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-red-800 dark:text-red-300">
+                                Account Rejected
+                            </h3>
+                            <p className="text-sm mt-1 text-red-700 dark:text-red-400">
+                                Your organizer account has been rejected by an administrator. 
+                                {rejectedAt && (
+                                    <span className="block mt-1">
+                                        Rejected on: {new Date(rejectedAt).toLocaleDateString()}
+                                    </span>
+                                )}
+                                You cannot create events or perform organizer actions. Please contact support if you believe this is an error.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : !userApproved ? (
+                <div className="mb-6 p-4 rounded-lg border-2 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
+                    <div className="flex items-start gap-3">
+                        <InformationCircleIcon className="w-5 h-5 mt-0.5 text-yellow-600 dark:text-yellow-400" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-yellow-800 dark:text-yellow-300">
+                                Awaiting Account Approval
+                            </h3>
+                            <p className="text-sm mt-1 text-yellow-700 dark:text-yellow-400">
+                                Your organizer account is pending approval. You will be able to create events and organizations once an administrator approves your account.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
             <div className="flex justify-between items-center mb-8" ref={eventsListRef}>
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{translate("eventsDashboard")}</h1>
 
-                    <button onClick={() => setIsCreateModalOpen(true)} className="mt-4 flex items-center gap-2 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
+                    <button 
+                        onClick={handleCreateEventClick}
+                        disabled={!userApproved}
+                        className={`mt-4 flex items-center gap-2 font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ${
+                            userApproved
+                                ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer'
+                                : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-60'
+                        }`}
+                    >
                         <PlusCircleIcon className="w-5 h-5"/>
                         <span>{translate("createEvent")}</span>
                     </button>
@@ -1119,6 +1214,7 @@ const DashboardPage = () => {
                 onClose={() => setIsCreateModalOpen(false)}
                 onAddEvent={handleAddEvent}
                 organizationId={organizationId}
+                userApproved={userApproved}
                 categories={categories}
             />
         </>

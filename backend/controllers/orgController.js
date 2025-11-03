@@ -81,6 +81,9 @@ exports.createOrganization = async (req,res)=>{
             return res.status(403).json({ error: 'Only organizers can create organizations' });
         }
 
+        // Note: Unapproved organizers can create organizations during signup
+        // but cannot create events until approved
+
         // Create organization with pending status and link to organizer
         const organization = await Organization.create({
             name,
