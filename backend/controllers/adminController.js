@@ -198,10 +198,11 @@ exports.getPendingOrganizers = async (req,res)=>{
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
+        // Find organizers who are not approved and not rejected
         const organizers = await User.find({ 
             role: USER_ROLE.ORGANIZER,
             approved: false,
-            rejectedAt: null // Not rejected
+            rejectedAt: null
         })
             .select('-password')
             .sort({ createdAt: -1 })
@@ -214,7 +215,7 @@ exports.getPendingOrganizers = async (req,res)=>{
         });
     } catch (e) {
         console.error('Error fetching pending organizers:', e);
-        return res.status(500).json({ error: 'Failed to fetch pending organizers' });
+        return res.status(500).json({ error: 'Failed to fetch pending organizers', details: e.message });
     }
 }
 
@@ -225,10 +226,11 @@ exports.getRejectedOrganizers = async (req,res)=>{
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
+        // Find organizers who are not approved and have been rejected
         const organizers = await User.find({ 
             role: USER_ROLE.ORGANIZER,
             approved: false,
-            rejectedAt: { $ne: null } // Has been rejected
+            rejectedAt: { $ne: null }
         })
             .select('-password')
             .sort({ rejectedAt: -1 })
@@ -241,7 +243,7 @@ exports.getRejectedOrganizers = async (req,res)=>{
         });
     } catch (e) {
         console.error('Error fetching rejected organizers:', e);
-        return res.status(500).json({ error: 'Failed to fetch rejected organizers' });
+        return res.status(500).json({ error: 'Failed to fetch rejected organizers', details: e.message });
     }
 }
 

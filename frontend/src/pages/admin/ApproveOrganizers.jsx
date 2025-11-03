@@ -28,12 +28,27 @@ export default function ApproveOrganizers() {
         try {
             setLoading(true);
             const response = await adminApi.getPendingOrganizers();
-            if (response.data && response.data.organizers) {
-                setPendingOrganizers(response.data.organizers);
+            console.log('Pending organizers response:', response);
+            
+            // axiosClient interceptor returns response.data directly
+            if (response && response.organizers) {
+                console.log('Setting pending organizers:', response.organizers);
+                setPendingOrganizers(Array.isArray(response.organizers) ? response.organizers : []);
+            } else if (Array.isArray(response)) {
+                // Fallback if response is directly an array
+                setPendingOrganizers(response);
+            } else {
+                console.warn('Unexpected response structure:', response);
+                setPendingOrganizers([]);
             }
         } catch (error) {
             console.error('Error fetching pending organizers:', error);
-            showNotification('Failed to fetch pending organizers', 'error');
+            console.error('Error response:', error.response);
+            showNotification(
+                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch pending organizers', 
+                'error'
+            );
+            setPendingOrganizers([]);
         } finally {
             setLoading(false);
         }
@@ -43,12 +58,27 @@ export default function ApproveOrganizers() {
         try {
             setLoading(true);
             const response = await adminApi.getRejectedOrganizers();
-            if (response.data && response.data.organizers) {
-                setRejectedOrganizers(response.data.organizers);
+            console.log('Rejected organizers response:', response);
+            
+            // axiosClient interceptor returns response.data directly
+            if (response && response.organizers) {
+                console.log('Setting rejected organizers:', response.organizers);
+                setRejectedOrganizers(Array.isArray(response.organizers) ? response.organizers : []);
+            } else if (Array.isArray(response)) {
+                // Fallback if response is directly an array
+                setRejectedOrganizers(response);
+            } else {
+                console.warn('Unexpected response structure:', response);
+                setRejectedOrganizers([]);
             }
         } catch (error) {
             console.error('Error fetching rejected organizers:', error);
-            showNotification('Failed to fetch rejected organizers', 'error');
+            console.error('Error response:', error.response);
+            showNotification(
+                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch rejected organizers', 
+                'error'
+            );
+            setRejectedOrganizers([]);
         } finally {
             setLoading(false);
         }
@@ -134,8 +164,8 @@ export default function ApproveOrganizers() {
     };
 
     const tabs = [
-        { value: 'pending', label: translate('pending') || 'Pending' },
-        { value: 'rejected', label: translate('rejected') || 'Rejected' }
+        { value: 'pending', label: translate('Pending') || 'Pending' },
+        { value: 'rejected', label: translate('Rejected') || 'Rejected' }
     ];
 
     const currentOrganizers = activeTab === 'pending' ? pendingOrganizers : rejectedOrganizers;
@@ -258,8 +288,8 @@ export default function ApproveOrganizers() {
                                         <td colSpan={activeTab === 'pending' ? 6 : 6} className="px-6 py-12 text-center">
                                             <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
                                                 {activeTab === 'pending' 
-                                                    ? (translate("noPendingApplications") || "No pending organizers") 
-                                                    : (translate("noRejectedApplications") || "No rejected organizers")}
+                                                    ? (translate("No Pending Applications") || "No pending organizers") 
+                                                    : (translate("No Rejected Applications") || "No rejected organizers")}
                                             </p>
                                         </td>
                                     </tr>
