@@ -456,37 +456,59 @@ export default function ApproveOrganizers() {
                                         {translate("Actions") || "Actions"}
                                     </h3>
                                     
+                                    {/* Check if organizer is already rejected */}
+                                    {selectedOrganizer && selectedOrganizer.rejectedAt ? (
+                                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                            <p className="text-sm text-red-700 dark:text-red-300">
+                                                This organizer account has already been rejected. You can re-approve it, but cannot reject it again.
+                                            </p>
+                                        </div>
+                                    ) : null}
+                                    
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         <button
                                             onClick={handleApprove}
                                             disabled={isProcessing}
                                             className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            {isProcessing ? 'Processing...' : (translate("Approve Organizer") || 'Approve Organizer')}
+                                            {isProcessing ? 'Processing...' : (selectedOrganizer?.rejectedAt ? (translate("Re-approve Organizer") || 'Re-approve Organizer') : (translate("Approve Organizer") || 'Approve Organizer'))}
                                         </button>
                                         
-                                        <button
-                                            onClick={handleReject}
-                                            disabled={isProcessing}
-                                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            {isProcessing ? 'Processing...' : (translate("Reject Organizer") || 'Reject Organizer')}
-                                        </button>
+                                        {/* Only show reject button if organizer is not already rejected */}
+                                        {selectedOrganizer && !selectedOrganizer.rejectedAt ? (
+                                            <button
+                                                onClick={handleReject}
+                                                disabled={isProcessing}
+                                                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {isProcessing ? 'Processing...' : (translate("Reject Organizer") || 'Reject Organizer')}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                disabled={true}
+                                                className="flex-1 px-4 py-2 bg-gray-400 text-gray-200 rounded-lg font-medium cursor-not-allowed opacity-50"
+                                                title="Cannot reject an already rejected account"
+                                            >
+                                                {translate("Reject Organizer") || 'Reject Organizer'}
+                                            </button>
+                                        )}
                                     </div>
                                     
-                                    {/* Rejection Reason Input */}
-                                    <div className="mt-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {translate("Rejection Reason") || "Rejection Reason"} (Required for rejection)
-                                        </label>
-                                        <textarea
-                                            value={rejectionReason}
-                                            onChange={(e) => setRejectionReason(e.target.value)}
-                                            placeholder={translate("Enter rejection reason") || "Enter rejection reason..."}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:text-white"
-                                            rows="3"
-                                        />
-                                    </div>
+                                    {/* Rejection Reason Input - Only show if organizer is not already rejected */}
+                                    {selectedOrganizer && !selectedOrganizer.rejectedAt && (
+                                        <div className="mt-4">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                {translate("Rejection Reason") || "Rejection Reason"} (Required for rejection)
+                                            </label>
+                                            <textarea
+                                                value={rejectionReason}
+                                                onChange={(e) => setRejectionReason(e.target.value)}
+                                                placeholder={translate("Enter rejection reason") || "Enter rejection reason..."}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:text-white"
+                                                rows="3"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
