@@ -34,6 +34,10 @@ const ENDPOINTS = {
 	EVENT_ATTENDEES: (id) => `/events/get/attendees/${id}`,
 	EVENT_WAITLIST: (id) => `/events/get/waitlist/${id}`,
 	EVENT_PROMOTE_WAITLIST: (id) => `/events/promote/${id}`,
+	EVENT_MODERATION_STATUS: (status) => `/events/moderation/status/${status}`,
+	EVENT_APPROVE: (id) => `/admin/events/approve/${id}`,
+	EVENT_REJECT: (id) => `/admin/events/reject/${id}`,
+	EVENT_FLAG: (id) => `/admin/events/flag/${id}`,
 
 	// Legacy/Simplified endpoints for compatibility
 	EVENTS: "/events/get/all",

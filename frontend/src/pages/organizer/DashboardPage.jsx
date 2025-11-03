@@ -623,7 +623,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
     );
 };
 
-const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApproved, categories }) => {
+const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApproved, userRejected, categories }) => {
     const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -960,7 +960,7 @@ const DashboardPage = () => {
                 setUserApproved(isApproved);
                 setUserRejected(isRejected);
                 setRejectedAt(user.rejectedAt || null);
-                
+
                 // Store rejection status for display
                 if (isRejected && !user.approved) {
                     // User is rejected
@@ -1118,7 +1118,7 @@ const DashboardPage = () => {
                                 Account Rejected
                             </h3>
                             <p className="text-sm mt-1 text-red-700 dark:text-red-400">
-                                Your organizer account has been rejected by an administrator. 
+                                Your organizer account has been rejected by an administrator.
                                 {rejectedAt && (
                                     <span className="block mt-1">
                                         Rejected on: {new Date(rejectedAt).toLocaleDateString()}
@@ -1149,7 +1149,7 @@ const DashboardPage = () => {
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{translate("eventsDashboard")}</h1>
 
-                    <button 
+                    <button
                         onClick={handleCreateEventClick}
                         disabled={!userApproved}
                         className={`mt-4 flex items-center gap-2 font-semibold py-2 px-4 rounded-lg transition-colors duration-300 ${
@@ -1214,7 +1214,9 @@ const DashboardPage = () => {
                 onClose={() => setIsCreateModalOpen(false)}
                 onAddEvent={handleAddEvent}
                 organizationId={organizationId}
+                organizationName={organizationName}
                 userApproved={userApproved}
+                userRejected={userRejected}
                 categories={categories}
             />
         </>
