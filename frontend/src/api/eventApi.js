@@ -186,3 +186,7 @@ export const getEvents = getAllEvents;
 export const registerToEvent = (eventId, quantity = 1) => api.post(ENDPOINTS.EVENT_REGISTRATION, { eventId, quantity });
 
 export const getPendingApprovalEvents = () => api.get(ENDPOINTS.EVENT_MODERATION_STATUS('pending_approval'));
+
+export const approveEvent = (eventId) => api.patch(ENDPOINTS.EVENT_APPROVE(eventId));
+
+export const rejectEvent = (eventId) => api.patch(ENDPOINTS.EVENT_REJECT(eventId));
