@@ -686,7 +686,11 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApp
 
         // Check user approval status
         if (!userApproved) {
-            alert('Your organizer account must be approved by an administrator before you can create events.');
+            if (userRejected) {
+                alert('Your organizer account has been rejected. You cannot create events. Please contact support if you believe this is an error.');
+            } else {
+                alert('Your organizer account must be approved by an administrator before you can create events.');
+            }
             return;
         }
 
@@ -906,6 +910,8 @@ const DashboardPage = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [organizationId, setOrganizationId] = useState(null);
     const [userApproved, setUserApproved] = useState(false);
+    const [userRejected, setUserRejected] = useState(false);
+    const [rejectedAt, setRejectedAt] = useState(null);
     const [organizationName, setOrganizationName] = useState(null);
     const { translate } = useLanguage();
     const { showNotification } = useNotification();
@@ -948,8 +954,21 @@ const DashboardPage = () => {
                 }
 
                 // Check user approval status (for organizers)
-                const isApproved = user.approved !== false; // Default to true if not set (for backwards compatibility)
+                // User is approved if: approved is true AND not rejected (rejectedAt is null or undefined)
+                const isApproved = user.approved === true && !user.rejectedAt;
+                const isRejected = user.rejectedAt !== null && user.rejectedAt !== undefined;
                 setUserApproved(isApproved);
+                setUserRejected(isRejected);
+                setRejectedAt(user.rejectedAt || null);
+                
+                // Store rejection status for display
+                if (isRejected && !user.approved) {
+                    // User is rejected
+                    console.log('User account has been rejected. Rejected at:', user.rejectedAt);
+                } else if (!isApproved && !isRejected) {
+                    // User is pending approval
+                    console.log('User account is pending approval');
+                }
 
                 // Extract organization ID and name - handle both populated object and string ObjectId
                 let orgId = null;
@@ -1058,7 +1077,11 @@ const DashboardPage = () => {
 
     const handleCreateEventClick = () => {
         if (!userApproved) {
-            showNotification('Your organizer account must be approved by an administrator before you can create events.', 'error');
+            if (userRejected) {
+                showNotification('Your organizer account has been rejected. You cannot create events. Please contact support if you believe this is an error.', 'error');
+            } else {
+                showNotification('Your organizer account must be approved by an administrator before you can create events.', 'error');
+            }
             return;
         }
         setIsCreateModalOpen(true);
@@ -1086,7 +1109,27 @@ const DashboardPage = () => {
     return (
         <>
             {/* Approval Status Banner */}
-            {!userApproved && (
+            {userRejected ? (
+                <div className="mb-6 p-4 rounded-lg border-2 bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700">
+                    <div className="flex items-start gap-3">
+                        <InformationCircleIcon className="w-5 h-5 mt-0.5 text-red-600 dark:text-red-400" />
+                        <div className="flex-1">
+                            <h3 className="font-semibold text-red-800 dark:text-red-300">
+                                Account Rejected
+                            </h3>
+                            <p className="text-sm mt-1 text-red-700 dark:text-red-400">
+                                Your organizer account has been rejected by an administrator. 
+                                {rejectedAt && (
+                                    <span className="block mt-1">
+                                        Rejected on: {new Date(rejectedAt).toLocaleDateString()}
+                                    </span>
+                                )}
+                                You cannot create events or perform organizer actions. Please contact support if you believe this is an error.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            ) : !userApproved ? (
                 <div className="mb-6 p-4 rounded-lg border-2 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700">
                     <div className="flex items-start gap-3">
                         <InformationCircleIcon className="w-5 h-5 mt-0.5 text-yellow-600 dark:text-yellow-400" />
@@ -1100,7 +1143,7 @@ const DashboardPage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            ) : null}
 
             <div className="flex justify-between items-center mb-8" ref={eventsListRef}>
                 <div>

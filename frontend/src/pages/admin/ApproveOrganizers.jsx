@@ -482,7 +482,7 @@ export default function ApproveOrganizers() {
                                         <textarea
                                             value={rejectionReason}
                                             onChange={(e) => setRejectionReason(e.target.value)}
-                                            placeholder={translate("rejectionReasonPlaceholder") || "Enter rejection reason..."}
+                                            placeholder={translate("Enter rejection reason") || "Enter rejection reason..."}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:text-white"
                                             rows="3"
                                         />

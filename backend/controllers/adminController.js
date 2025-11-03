@@ -291,6 +291,26 @@ exports.approveOrganizer = async (req,res)=>{
         }
         await user.save();
 
+        // Update organization status if organizer has an organization
+        if (user.organization) {
+            const organization = await Organization.findById(user.organization);
+            if (organization) {
+                if (approved) {
+                    // If approving, set organization to approved (if it was pending)
+                    if (organization.status === ORGANIZATION_STATUS.PENDING || organization.status === ORGANIZATION_STATUS.REJECTED) {
+                        organization.status = ORGANIZATION_STATUS.APPROVED;
+                        await organization.save();
+                        console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to APPROVED`);
+                    }
+                } else {
+                    // If rejecting, set organization to rejected
+                    organization.status = ORGANIZATION_STATUS.REJECTED;
+                    await organization.save();
+                    console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to REJECTED`);
+                }
+            }
+        }
+
         // Log admin action
         console.log(`[AUDIT] Admin ${req.user.email} ${approved ? 'approved' : 'rejected'} organizer user ${user.email} (ID: ${user_id})`);
         if (!approved && rejectionReason) {
