@@ -5,7 +5,6 @@
 const path = require("path");
 // Express setup
 const express = require("express");
-const cors = require("cors");
 
 // Cookies
 const cookieParser = require("cookie-parser");
@@ -25,7 +24,22 @@ const app = express();
 app.use(express.json());
 app.use(express.text({ type: "text/plain" }));
 app.use(cookieParser());
-app.use(cors()); // Use the cors middleware package
+
+// CORS middleware to handle cross-origin requests
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Check authentication
 app.use(checkAuth);
