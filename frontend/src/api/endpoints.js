@@ -37,6 +37,7 @@ const ENDPOINTS = {
 	EVENT_MODERATION_STATUS: (status) => `/events/moderation/status/${status}`,
 	EVENT_APPROVE: (id) => `/admin/events/approve/${id}`,
 	EVENT_REJECT: (id) => `/admin/events/reject/${id}`,
+	EVENT_FLAG: (id) => `/admin/events/flag/${id}`,
 
 	// Legacy/Simplified endpoints for compatibility
 	EVENTS: "/events/get/all",

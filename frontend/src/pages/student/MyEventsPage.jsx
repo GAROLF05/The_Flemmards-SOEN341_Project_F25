@@ -228,7 +228,6 @@ export default function MyEventsPage() {
         );
     }, [searchTerm, myEvents, activeStatus]);
 
-
     useEffect(() => {
         fetchMyEvents();
     }, [fetchMyEvents])

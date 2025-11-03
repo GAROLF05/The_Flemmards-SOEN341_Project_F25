@@ -189,4 +189,6 @@ export const getPendingApprovalEvents = () => api.get(ENDPOINTS.EVENT_MODERATION
 
 export const approveEvent = (eventId) => api.patch(ENDPOINTS.EVENT_APPROVE(eventId));
 
-export const rejectEvent = (eventId) => api.patch(ENDPOINTS.EVENT_REJECT(eventId));
+export const rejectEvent = (eventId) => api.patch(ENDPOINTS.EVENT_REJECT(eventId), { reason: '' });
+
+export const flagEvent = (eventId) => api.patch(ENDPOINTS.EVENT_FLAG(eventId), { flagReason: 'flag' });
