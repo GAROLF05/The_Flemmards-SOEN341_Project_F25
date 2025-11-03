@@ -191,75 +191,146 @@ exports.getDashboardStats = async (req,res) => {
     }
 }
 
-// API Endpoint to approve or reject organizer
+// API Endpoint to get pending organizer users (users with role Organizer who are not approved and not rejected)
+exports.getPendingOrganizers = async (req,res)=>{
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        // Find organizers who are not approved and not rejected
+        const organizers = await User.find({ 
+            role: USER_ROLE.ORGANIZER,
+            approved: false,
+            rejectedAt: null
+        })
+            .select('-password')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Pending organizers fetched successfully',
+            total: organizers.length,
+            organizers
+        });
+    } catch (e) {
+        console.error('Error fetching pending organizers:', e);
+        return res.status(500).json({ error: 'Failed to fetch pending organizers', details: e.message });
+    }
+}
+
+// API Endpoint to get rejected organizer users
+exports.getRejectedOrganizers = async (req,res)=>{
+    try {
+        // Admin only
+        const { ensureAdmin } = require('../utils/authHelpers');
+        try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
+
+        // Find organizers who are not approved and have been rejected
+        const organizers = await User.find({ 
+            role: USER_ROLE.ORGANIZER,
+            approved: false,
+            rejectedAt: { $ne: null }
+        })
+            .select('-password')
+            .sort({ rejectedAt: -1 })
+            .lean();
+
+        return res.status(200).json({
+            message: 'Rejected organizers fetched successfully',
+            total: organizers.length,
+            organizers
+        });
+    } catch (e) {
+        console.error('Error fetching rejected organizers:', e);
+        return res.status(500).json({ error: 'Failed to fetch rejected organizers', details: e.message });
+    }
+}
+
+// API Endpoint to approve or reject organizer user account
 exports.approveOrganizer = async (req,res)=>{
     try {
         // Admin only
         const { ensureAdmin } = require('../utils/authHelpers');
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
-        const { org_id } = req.params;
-        const { status, rejectionReason } = req.body;
+        const { user_id } = req.params;
+        const { approved, rejectionReason } = req.body;
 
-        // Validate org_id
-        if (!org_id || !mongoose.Types.ObjectId.isValid(org_id)) {
-            return res.status(400).json({ error: 'Invalid organization ID' });
+        // Validate user_id
+        if (!user_id || !mongoose.Types.ObjectId.isValid(user_id)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
         }
 
-        // Validate status
-        if (!status || !['approved', 'rejected'].includes(status)) {
+        // Validate approved status
+        if (approved === undefined || approved === null) {
             return res.status(400).json({ 
-                error: 'Status must be either "approved" or "rejected"' 
+                error: 'Approval status is required' 
             });
         }
 
-        // If rejected, rejectionReason should be provided
-        if (status === 'rejected' && !rejectionReason) {
-            return res.status(400).json({ 
-                error: 'Rejection reason is required when rejecting an organization' 
-            });
+        // Find user
+        const user = await User.findById(user_id);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        // Find organization
-        const organization = await Organization.findById(org_id);
-        if (!organization) {
-            return res.status(404).json({ error: 'Organization not found' });
+        // Verify it's an organizer
+        if (user.role !== USER_ROLE.ORGANIZER) {
+            return res.status(400).json({ error: 'User is not an organizer' });
         }
 
-        // Update status
-        organization.status = status;
-        if (status === 'approved') {
-            organization.verified = true;
-        } else if (status === 'rejected') {
-            organization.verified = false;
+        // Update approval status
+        user.approved = approved === true;
+        if (approved) {
+            // Clear rejection timestamp if approving
+            user.rejectedAt = null;
+        } else {
+            // Set rejection timestamp if rejecting
+            user.rejectedAt = new Date();
         }
-        
-        await organization.save();
+        await user.save();
 
-        // Task #123: Send notification to organizer
-        await notifyOrganizationStatus(org_id, status, rejectionReason);
+        // Update organization status if organizer has an organization
+        if (user.organization) {
+            const organization = await Organization.findById(user.organization);
+            if (organization) {
+                if (approved) {
+                    // If approving, set organization to approved (if it was pending)
+                    if (organization.status === ORGANIZATION_STATUS.PENDING || organization.status === ORGANIZATION_STATUS.REJECTED) {
+                        organization.status = ORGANIZATION_STATUS.APPROVED;
+                        await organization.save();
+                        console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to APPROVED`);
+                    }
+                } else {
+                    // If rejecting, set organization to rejected
+                    organization.status = ORGANIZATION_STATUS.REJECTED;
+                    await organization.save();
+                    console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to REJECTED`);
+                }
+            }
+        }
 
-        // Log admin action (Task #124 - audit logs)
-        console.log(`[AUDIT] Admin ${req.user.email} ${status} organization ${organization.name} (ID: ${org_id})`);
-        if (rejectionReason) {
+        // Log admin action
+        console.log(`[AUDIT] Admin ${req.user.email} ${approved ? 'approved' : 'rejected'} organizer user ${user.email} (ID: ${user_id})`);
+        if (!approved && rejectionReason) {
             console.log(`[AUDIT] Rejection reason: ${rejectionReason}`);
         }
 
         return res.status(200).json({
-            message: `Organization ${status} successfully`,
-            organization: {
-                _id: organization._id,
-                name: organization.name,
-                status: organization.status,
-                verified: organization.verified
+            message: `Organizer ${approved ? 'approved' : 'rejected'} successfully`,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                approved: user.approved
             },
-            rejectionReason: status === 'rejected' ? rejectionReason : undefined,
-            notificationSent: true
+            rejectionReason: !approved ? rejectionReason : undefined
         });
 
     } catch (e) {
-        console.error('Error approving/rejecting organization:', e);
-        return res.status(500).json({ error: 'Failed to update organization status' });
+        console.error('Error approving/rejecting organizer:', e);
+        return res.status(500).json({ error: 'Failed to update organizer approval status' });
     }
 }
 

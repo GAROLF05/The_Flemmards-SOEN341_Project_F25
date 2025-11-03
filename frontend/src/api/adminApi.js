@@ -48,5 +48,28 @@ export const adminApi = {
     // Dashboard Stats
     async getDashboardStats() {
         return await axiosClient.get('/admin/dashboard/stats');
+    },
+
+    // Organizer User Account Approval
+    async getPendingOrganizers() {
+        return await axiosClient.get('/admin/pending-organizers');
+    },
+
+    async getRejectedOrganizers() {
+        return await axiosClient.get('/admin/rejected-organizers');
+    },
+
+    async approveOrganizer(userId, rejectionReason = '') {
+        return await axiosClient.patch(`/admin/approve-organizer/${userId}`, {
+            approved: true,
+            rejectionReason: rejectionReason
+        });
+    },
+
+    async rejectOrganizer(userId, rejectionReason) {
+        return await axiosClient.patch(`/admin/approve-organizer/${userId}`, {
+            approved: false,
+            rejectionReason: rejectionReason
+        });
     }
 };
