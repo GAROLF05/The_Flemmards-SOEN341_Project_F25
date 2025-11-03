@@ -12,7 +12,7 @@
 Elliot Boismartel, Omar Dbaa, Nameer Hanif, Curtis Moxebo, Nihit Patel, Bijoy Sengupta, Mostafa Maraie
 
 **Goal of Minutes:**
-The goal of the to have a short meeting to review the current progress towards Sprint 2 to ensure that the team members were on track to comple their tasks, and resolve possible technical difficulties.
+The goal of the meeting was to have a short meeting to review the current progress towards Sprint 2 to ensure that the team members were on track to complete their tasks, and resolve possible technical difficulties.
  
 **Reports:** 
 - Solved issues some members of the team were facing regarding running the frontend code locally.
