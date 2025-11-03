@@ -1,18 +1,23 @@
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
+import { getOrganizationById } from '../../api/organizationApi';
 import ButtonGroup from '../../components/button/ButtonGroup';
+import Modal from '../../components/modal/Modal';
 
 export default function ApproveOrganizers() {
     const [activeTab, setActiveTab] = useState('pending');
     const [pendingOrganizers, setPendingOrganizers] = useState([]);
     const [rejectedOrganizers, setRejectedOrganizers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [rejectingId, setRejectingId] = useState(null);
+    const [moderationModalOpen, setModerationModalOpen] = useState(false);
+    const [selectedOrganizer, setSelectedOrganizer] = useState(null);
+    const [organizationDetails, setOrganizationDetails] = useState(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
-    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const { showNotification } = useNotification();
     const { translate } = useLanguage();
 
@@ -84,61 +89,105 @@ export default function ApproveOrganizers() {
         }
     };
 
-    const handleApprove = async (userId, userName) => {
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (moderationModalOpen) {
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            
+            return () => {
+                document.body.style.overflow = originalOverflow;
+            };
+        }
+    }, [moderationModalOpen]);
+
+    const handleModerate = async (organizer) => {
+        setSelectedOrganizer(organizer);
+        setModerationModalOpen(true);
+        setLoadingDetails(true);
+        setOrganizationDetails(null);
+        setRejectionReason('');
+        
         try {
-            await adminApi.approveOrganizer(userId);
-            showNotification(`Organizer "${userName}" has been approved successfully.`, 'success');
-            // Remove from current list and refresh
-            if (activeTab === 'pending') {
-                setPendingOrganizers(prev => prev.filter(org => org._id !== userId));
+            // Get organization ID from organizer
+            const orgId = organizer.organization;
+            
+            if (orgId) {
+                // Fetch organization details
+                const detailsResponse = await getOrganizationById(orgId);
+                const organization = detailsResponse?.organization || detailsResponse;
+                setOrganizationDetails(organization);
             } else {
-                // If approving from rejected tab, remove from rejected and refresh pending
-                setRejectedOrganizers(prev => prev.filter(org => org._id !== userId));
-                fetchPendingOrganizers();
+                // No organization found
+                setOrganizationDetails(null);
             }
         } catch (error) {
-            console.error('Error approving organizer:', error);
-            showNotification(error.response?.data?.error || 'Failed to approve organizer', 'error');
+            console.error('Error fetching organization details:', error);
+            setOrganizationDetails(null);
+            // Don't show error if organization doesn't exist - organizer might not have created one yet
+        } finally {
+            setLoadingDetails(false);
         }
     };
 
-    const handleRejectClick = (userId) => {
-        setRejectingId(userId);
-        setRejectionReason('');
-        setShowRejectModal(true);
+    const handleApprove = async () => {
+        if (!selectedOrganizer) return;
+        
+        setIsProcessing(true);
+        try {
+            await adminApi.approveOrganizer(selectedOrganizer._id);
+            showNotification(`Organizer "${selectedOrganizer.name || selectedOrganizer.email}" has been approved successfully.`, 'success');
+            
+            // Remove from current list and refresh
+            if (activeTab === 'pending') {
+                setPendingOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
+            } else {
+                setRejectedOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
+                fetchPendingOrganizers();
+            }
+            
+            setModerationModalOpen(false);
+            setSelectedOrganizer(null);
+            setOrganizationDetails(null);
+        } catch (error) {
+            console.error('Error approving organizer:', error);
+            showNotification(error.response?.data?.error || 'Failed to approve organizer', 'error');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
-    const handleRejectConfirm = async () => {
+    const handleReject = async () => {
+        if (!selectedOrganizer) return;
+        
         if (!rejectionReason.trim()) {
             showNotification('Please provide a rejection reason', 'error');
             return;
         }
-
+        
+        setIsProcessing(true);
         try {
-            const currentList = activeTab === 'pending' ? pendingOrganizers : rejectedOrganizers;
-            const organizer = currentList.find(o => o._id === rejectingId);
-            await adminApi.rejectOrganizer(rejectingId, rejectionReason);
-            showNotification(`Organizer "${organizer?.name || organizer?.email}" has been rejected.`, 'success');
-            // Remove from current list and refresh rejected list
+            await adminApi.rejectOrganizer(selectedOrganizer._id, rejectionReason);
+            showNotification(`Organizer "${selectedOrganizer.name || selectedOrganizer.email}" has been rejected.`, 'success');
+            
+            // Remove from current list and refresh
             if (activeTab === 'pending') {
-                setPendingOrganizers(prev => prev.filter(org => org._id !== rejectingId));
+                setPendingOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
                 fetchRejectedOrganizers();
             } else {
-                setRejectedOrganizers(prev => prev.filter(org => org._id !== rejectingId));
+                setRejectedOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
             }
-            setShowRejectModal(false);
-            setRejectingId(null);
+            
+            setModerationModalOpen(false);
+            setSelectedOrganizer(null);
+            setOrganizationDetails(null);
             setRejectionReason('');
         } catch (error) {
             console.error('Error rejecting organizer:', error);
             showNotification(error.response?.data?.error || 'Failed to reject organizer', 'error');
+        } finally {
+            setIsProcessing(false);
         }
-    };
-
-    const handleRejectCancel = () => {
-        setShowRejectModal(false);
-        setRejectingId(null);
-        setRejectionReason('');
     };
 
     const getStatusBadge = (approved, rejectedAt) => {
@@ -249,37 +298,15 @@ export default function ApproveOrganizers() {
                                                     </div>
                                                 </td>
                                             )}
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                                {activeTab === 'pending' ? (
-                                                    <>
-                                                        <button 
-                                                            onClick={() => handleRejectClick(organizer._id)} 
-                                                            className="text-red-600 hover:text-red-800 dark:text-red-500 dark:hover:text-red-400 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50 transition-all cursor-pointer transition-colors duration-300"
-                                                            title="Reject"
-                                                        >
-                                                            <span className="sr-only">{translate("deny")}</span>
-                                                            <XCircleIcon className="w-6 h-6" />
-                                                        </button>
-                                                        
-                                                        <button 
-                                                            onClick={() => handleApprove(organizer._id, organizer.name || organizer.email)} 
-                                                            className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all cursor-pointer transition-colors duration-300"
-                                                            title="Approve"
-                                                        >
-                                                            <span className="sr-only">{translate("approve")}</span>
-                                                            <CheckCircleIcon className="w-6 h-6" />
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <button 
-                                                        onClick={() => handleApprove(organizer._id, organizer.name || organizer.email)} 
-                                                        className="text-green-600 hover:text-green-800 dark:text-green-500 dark:hover:text-green-400 p-1 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 transition-all cursor-pointer transition-colors duration-300"
-                                                        title="Approve"
-                                                    >
-                                                        <span className="sr-only">{translate("approve")}</span>
-                                                        <CheckCircleIcon className="w-6 h-6" />
-                                                    </button>
-                                                )}
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button 
+                                                    onClick={() => handleModerate(organizer)} 
+                                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all cursor-pointer transition-colors duration-300"
+                                                    title="Moderate Organizer"
+                                                >
+                                                    <span className="sr-only">Moderate</span>
+                                                    <ShieldCheckIcon className="w-5 h-5" />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -300,40 +327,172 @@ export default function ApproveOrganizers() {
                 </div>
             )}
 
-            {/* Rejection Reason Modal */}
-            {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                            {translate("rejectOrganizer") || "Reject Organizer"}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            {translate("provideRejectionReason") || "Please provide a reason for rejecting this organizer:"}
-                        </p>
-                        <textarea
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            placeholder={translate("rejectionReasonPlaceholder") || "Enter rejection reason..."}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            rows="4"
-                        />
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <button
-                                onClick={handleRejectCancel}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                {translate("cancel") || "Cancel"}
-                            </button>
-                            <button
-                                onClick={handleRejectConfirm}
-                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
-                            >
-                                {translate("confirmReject") || "Confirm Rejection"}
-                            </button>
-                        </div>
+            {/* Moderation Modal */}
+            <Modal isOpen={moderationModalOpen} onClose={() => setModerationModalOpen(false)} width="large">
+                <div 
+                    className="flex flex-col max-h-[90vh]"
+                    onWheel={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                >
+                    {/* Fixed Header */}
+                    <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {translate("Moderate Organizer") || "Moderate Organizer"}
+                        </h2>
+                        <button
+                            onClick={() => setModerationModalOpen(false)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div 
+                        className="overflow-y-auto flex-1 p-6 scrollbar-hide" 
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        onWheel={(e) => e.stopPropagation()}
+                    >
+                        <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+                        {loadingDetails ? (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500 dark:text-gray-400">Loading organizer details...</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Organizer Details */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <InformationCircleIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                            {translate("Organizer Details") || "Organizer Details"}
+                                        </h3>
+                                    </div>
+                                    
+                                    {selectedOrganizer && (
+                                        <div className="space-y-4 text-sm">
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Name:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{selectedOrganizer.name || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Email:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{selectedOrganizer.email || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Username:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{selectedOrganizer.username || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Registered:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">
+                                                    {selectedOrganizer.createdAt ? new Date(selectedOrganizer.createdAt).toLocaleDateString() : 'N/A'}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Status:</span>
+                                                {getStatusBadge(selectedOrganizer.approved, selectedOrganizer.rejectedAt)}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Organization Details */}
+                                {organizationDetails ? (
+                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <InformationCircleIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                                {translate("Organization Details") || "Organization Details"}
+                                            </h3>
+                                        </div>
+                                        
+                                        <div className="space-y-4 text-sm">
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Name:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{organizationDetails.name || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Description:</span>
+                                                <p className="mt-1 text-gray-900 dark:text-white">{organizationDetails.description || 'No description'}</p>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Website:</span>
+                                                <a href={organizationDetails.website} target="_blank" rel="noopener noreferrer" className="ml-2 text-indigo-600 dark:text-indigo-400 hover:underline">
+                                                    {organizationDetails.website || 'N/A'}
+                                                </a>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Contact Email:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{organizationDetails.contact?.email || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Contact Phone:</span>
+                                                <span className="ml-2 text-gray-900 dark:text-white">{organizationDetails.contact?.phone || 'N/A'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Status:</span>
+                                                <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
+                                                    organizationDetails.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                    organizationDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
+                                                }`}>
+                                                    {(organizationDetails.status || 'Unknown').toUpperCase()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {translate("NoOrganization") || "This organizer has not created an organization yet."}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Approval Actions */}
+                                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                        {translate("Actions") || "Actions"}
+                                    </h3>
+                                    
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <button
+                                            onClick={handleApprove}
+                                            disabled={isProcessing}
+                                            className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isProcessing ? 'Processing...' : (translate("Approve Organizer") || 'Approve Organizer')}
+                                        </button>
+                                        
+                                        <button
+                                            onClick={handleReject}
+                                            disabled={isProcessing}
+                                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isProcessing ? 'Processing...' : (translate("Reject Organizer") || 'Reject Organizer')}
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Rejection Reason Input */}
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            {translate("Rejection Reason") || "Rejection Reason"} (Required for rejection)
+                                        </label>
+                                        <textarea
+                                            value={rejectionReason}
+                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                            placeholder={translate("rejectionReasonPlaceholder") || "Enter rejection reason..."}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-800 dark:text-white"
+                                            rows="3"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
+            </Modal>
         </>
     );
 }
