@@ -23,7 +23,7 @@ const ButtonGroup = ({ value, onChange, options = [], disabled = false, classNam
     return (
         <div
             className={classNames(
-                "flex w-full rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-6 transition-colors duration-300",
+                "flex w-full rounded-lg bg-gray-100 p-1 mb-6",
                 className
             )
             }>
@@ -34,8 +34,8 @@ const ButtonGroup = ({ value, onChange, options = [], disabled = false, classNam
                     onClick={e => handleClick(e, option.value)}
                     className={`w-full py-2.5 text-sm font-semibold text-center rounded-md transition-all duration-300 ease-in-out cursor-pointer
                     ${value === option.value
-                            ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm dark:shadow-gray-900/50'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                            ? 'bg-white text-indigo-600 shadow-sm'
+                            : 'text-gray-500 hover:bg-gray-200'
                         }`}
                 >
                     {option.label}

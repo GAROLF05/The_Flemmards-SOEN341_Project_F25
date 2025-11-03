@@ -4,7 +4,6 @@ import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
 import { getOrganizationById } from '../../api/organizationApi';
-import ButtonGroup from '../../components/button/ButtonGroup';
 import Modal from '../../components/modal/Modal';
 
 export default function ApproveOrganizers() {
@@ -227,12 +226,22 @@ export default function ApproveOrganizers() {
             </div>
 
             <div className="mb-6">
-                <ButtonGroup
-                    options={tabs}
-                    value={activeTab}
-                    onChange={setActiveTab}
-                    className="mb-6"
-                />
+                <div className="flex w-full rounded-lg bg-gray-100 dark:bg-gray-700 p-1 mb-6 transition-colors duration-300">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.value}
+                            type="button"
+                            onClick={() => setActiveTab(tab.value)}
+                            className={`w-full py-2.5 text-sm font-semibold text-center rounded-md transition-all duration-300 ease-in-out cursor-pointer
+                            ${activeTab === tab.value
+                                    ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm dark:shadow-gray-900/50'
+                                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {loading ? (
