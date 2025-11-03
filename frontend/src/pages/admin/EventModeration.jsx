@@ -1,5 +1,5 @@
-import { BuildingOfficeIcon, CalendarDaysIcon, CheckCircleIcon, MagnifyingGlassIcon, MapPinIcon, XCircleIcon } from '@heroicons/react/24/outline';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BuildingOfficeIcon, CalendarDaysIcon, CheckCircleIcon, MagnifyingGlassIcon, MapPinIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import LoadingPage from '../../layouts/LoadingPage';
@@ -80,14 +80,36 @@ const EventCard = ({ event, onApprove, onDeny, onFlag, isLoadingApproval }) => {
     );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    const { translate } = useLanguage();
+
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+    if (totalPages <= 1)
+        return null;
+
+    return (
+        <div className="mt-12 flex justify-center items-center space-x-2">
+            <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> {translate("previous")} </button>
+            {pageNumbers.map(number => (<button key={number} onClick={() => onPageChange(number)} className={`px-4 py-2 rounded-md transition-colors duration-300 ${currentPage === number ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}> {number} </button>))}
+            <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-300"> {translate("next")} </button>
+        </div>
+    );
+};
+
 export default function EventModeration() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingApproval, setIsLoadingApproval] = useState(false);
     const [events, setEvents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeStatus, setActiveStatus] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
     const { showNotification } = useNotification();
+    const [isInitialMount, setIsInitialMount] = useState(true);
+    const eventsListRef = useRef(null);
     const { translate } = useLanguage();
+
+    const eventsPerPage = 9;
 
     const fetchPendingApprovalEvents = useCallback(() => {
         setIsLoading(true);
@@ -126,9 +148,29 @@ export default function EventModeration() {
         );
     }, [searchTerm, events, activeStatus]);
 
+    const indexOfLastEvent = currentPage * eventsPerPage;
+    const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
+    const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
+    const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+
     useEffect(() => {
         fetchPendingApprovalEvents();
     }, [fetchPendingApprovalEvents])
+
+    useEffect(() => {
+        if (isInitialMount) {
+            setIsInitialMount(false);
+        } else {
+            const top = eventsListRef.current.getBoundingClientRect().top + window.scrollY - 90;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
+
+    useEffect(() => {
+        // Reset to the first page whenever filters change
+        setCurrentPage(1);
+    }, [searchTerm, activeStatus]);
 
     const handleApprove = (id, title) => {
         if (!id)
@@ -193,7 +235,7 @@ export default function EventModeration() {
                 <p className="mt-1 text-gray-600 dark:text-gray-400 transition-colors duration-300">{translate("eventModerationSubtitle")}</p>
             </div>
 
-            <div className="flex justify-between items-center mb-8">
+            <div ref={eventsListRef} className="flex justify-between items-center mb-8">
                 <StatusFilter activeStatus={activeStatus} setActiveStatus={setActiveStatus} />
 
                 <div className="flex items-center gap-4">
@@ -204,22 +246,33 @@ export default function EventModeration() {
                             placeholder={translate("searchEvents")}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full pl-10 pr-10 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            >
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {filteredEvents.length > 0 ? (
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredEvents.map(event => (
-                        <EventCard key={event.id} event={event} onApprove={handleApprove} onDeny={handleDeny} onFlag={handleFlag} isLoadingApproval={isLoadingApproval} />
-                    ))}
-                </div>
+            {currentEvents.length > 0 ? (
+                <>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {currentEvents.map(event => (
+                            <EventCard key={event.id} event={event} onApprove={handleApprove} onDeny={handleDeny} onFlag={handleFlag} isLoadingApproval={isLoadingApproval} />
+                        ))}
+                    </div>
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                </>
             ) : (
                 <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">No Reserved Events</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400">You haven't reserved any events yet. Go explore!</p>
+                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">{translate("noEventsFound")}</h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">{translate("noEventsFoundDescription")}</p>
                 </div>
             )}
         </div>
