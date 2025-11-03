@@ -1,5 +1,5 @@
-import { BuildingOfficeIcon, CalendarDaysIcon, MapPinIcon, QrCodeIcon, TicketIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useCallback, useEffect, useState } from 'react';
+import { BuildingOfficeIcon, CalendarDaysIcon, MagnifyingGlassIcon, MapPinIcon, QrCodeIcon, TicketIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import { useNotification } from '../../hooks/useNotification';
 import { getEventsByUser } from '../../api/eventApi';
@@ -158,7 +158,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 
 const StatusFilter = ({ activeStatus, setActiveStatus }) => {
     return (
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-3">
             {eventStatuses.map(status => (
                 <button
                     key={status}
@@ -180,6 +180,7 @@ export default function MyEventsPage() {
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [activeStatus, setActiveStatus] = useState('all');
     const [myEvents, setMyEvents] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const { translate } = useLanguage();
     const { showNotification } = useNotification();
 
@@ -219,9 +220,14 @@ export default function MyEventsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const filteredEvents = activeStatus === 'all'
-        ? myEvents
-        : myEvents.filter(event => event.status.toLowerCase() === activeStatus.toLowerCase());
+    const filteredEvents = useMemo(() => {
+        return myEvents.filter(event =>
+            (event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.organization.toLowerCase().includes(searchTerm.toLowerCase())) &&
+            (activeStatus === 'all' || event.status.toLowerCase() === activeStatus.toLowerCase())
+        );
+    }, [searchTerm, myEvents, activeStatus]);
+
 
     useEffect(() => {
         fetchMyEvents();
@@ -239,7 +245,22 @@ export default function MyEventsPage() {
                 <p className="mt-1 text-gray-600 dark:text-gray-400">All the events you're scheduled to attend.</p>
             </div>
 
-            <StatusFilter activeStatus={activeStatus} setActiveStatus={setActiveStatus} />
+            <div className="flex justify-between items-center mb-8">
+                <StatusFilter activeStatus={activeStatus} setActiveStatus={setActiveStatus} />
+
+                <div className="flex items-center gap-4">
+                    <div className="relative flex-grow max-w-xs ml-4">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder={translate("searchEvents")}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                    </div>
+                </div>
+            </div>
 
             {filteredEvents.length > 0 ? (
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
