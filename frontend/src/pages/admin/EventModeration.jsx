@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import LoadingPage from '../../layouts/LoadingPage';
-import { approveEvent, getPendingApprovalEvents } from '../../api/eventApi';
+import { approveEvent, getPendingApprovalEvents, rejectEvent } from '../../api/eventApi';
 
 // --- MOCK DATA ---
 export default function EventModeration() {
@@ -49,7 +49,7 @@ export default function EventModeration() {
 
         approveEvent(id)
             .then(() => {
-                showNotification(`The event ${title} has been approved successfully.`, 'success');
+                showNotification(`The event ${title} has been approved successfully.`, "success");
                 setPendingEvents(prev => prev.filter(event => event.id !== id));
             })
             .catch(() => {
@@ -59,8 +59,20 @@ export default function EventModeration() {
     };
 
     const handleDeny = (id, title) => {
-        showNotification(`The event ${title} has been denied successfully.`, 'success');
-        setPendingEvents(prev => prev.filter(event => event.id !== id));
+        if (!id)
+            return;
+
+        setIsLoadingApproval(true);
+
+        rejectEvent(id)
+            .then(() => {
+                showNotification(`The event ${title} has been rejected successfully.`, "warning");
+                setPendingEvents(prev => prev.filter(event => event.id !== id));
+            })
+            .catch(() => {
+                showNotification(translate("anErrorHasOccured"), "error");
+            })
+            .finally(() => setIsLoadingApproval(false));
     };
 
     const formatEventDate = (dateString) => {
