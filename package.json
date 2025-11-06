@@ -1,0 +1,27 @@
+{
+  "name": "the_flemmards-soen341_project_f25",
+  "version": "1.0.0",
+  "description": "This is a web-app for Campus Event & Ticketing Application to help students discover, organize and attend campus events. Additionally, this app allows organizers to create and manage events, and observe the analytics of the events through user-friendly dashboards. Furthermore, this app allows administrators to moderate content and oversee organizations to assure the safety and appropriateness of events.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "concurrently \"npm --prefix backend start\" \"npm --prefix frontend start\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25/issues"
+  },
+  "homepage": "https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
