@@ -18,11 +18,11 @@
     "doc": "docs"
   },
   "scripts": {
-    "dev": "concurrently \"nodemon backend/server.js\" \"npm --prefix frontend run dev\"",
-    "dev:backend": "nodemon backend/server.js",
+    "dev": "concurrently \"nodemon server.js\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "nodemon server.js",
     "dev:frontend": "npm --prefix frontend run dev",
     "build": "npm --prefix frontend run build",
-    "start": "node backend/server.js",
+    "start": "node server.js",
     "build-and-start": "npm run build; npm run start",
     "test": "jest",
     "test:watch": "jest --watch",
