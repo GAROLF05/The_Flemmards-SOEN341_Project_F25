@@ -35,6 +35,9 @@ const {
 } = require("../models/Registrations");
 const Ticket = require("../models/Ticket");
 
+// Import axios for HTTP requests:
+const axios = require("axios");
+
 // QR Code setup (npm install qrcode)
 const qrcode = require("qrcode");
 
