@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 // User role enum
 const USER_ROLE = {
-  STUDENT: 'Student',
-  ORGANIZER: 'Organizer'
+  STUDENT: "Student",
+  ORGANIZER: "Organizer",
 };
 
 // Database that will contain all the users of the website
@@ -47,9 +47,9 @@ const userSchema = new mongoose.Schema(
     // Approval status for organizers (only applies when role is 'Organizer')
     approved: {
       type: Boolean,
-      default: function() {
+      default: function () {
         // Students are approved by default, organizers need admin approval
-        return this.role === 'Student';
+        return this.role === "Student";
       },
       index: true,
     },
@@ -63,10 +63,19 @@ const userSchema = new mongoose.Schema(
 
     organization: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Organization',
+      ref: "Organization",
       required: false,
       sparse: true,
       unique: true,
+    },
+
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+      select: false,
     },
   },
   {

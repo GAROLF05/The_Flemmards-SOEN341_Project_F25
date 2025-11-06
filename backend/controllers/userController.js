@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../middlewares/auth");
 const { isAdmin } = require("../utils/authHelpers");
+const emailService = require("../utils/emailService");
 
 // API endpoint to Register a new user (signup)
 exports.registerUser = async (req, res) => {
@@ -38,7 +39,9 @@ exports.registerUser = async (req, res) => {
     // Validate role
     if (!Object.values(USER_ROLE).includes(role))
       return res.status(400).json({
-        error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(", ")}`,
+        error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(
+          ", "
+        )}`,
       });
 
     // Check for existing email
@@ -63,6 +66,8 @@ exports.registerUser = async (req, res) => {
     // Create user
     // Organizers need admin approval, students are approved by default
     const isOrganizer = role === USER_ROLE.ORGANIZER;
+    const verificationToken = emailService.generateVerificationToken();
+
     const newUser = new User({
       name: name ? name.trim() : null,
       username: username ? username.trim() : null,
@@ -70,6 +75,8 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       role: role,
       approved: !isOrganizer, // Students approved by default, organizers need approval
+      verificationToken: verificationToken,
+      verified: false,
     });
 
     await newUser.save();
@@ -77,6 +84,20 @@ exports.registerUser = async (req, res) => {
     console.log(
       `New user created: ${newUser.username || newUser.email} (Role: ${role})`
     );
+
+    try {
+      // Send verification email
+      await emailService.sendVerificationEmail(
+        newUser.email,
+        newUser.name || newUser.username || "",
+        newUser.role,
+        verificationToken
+      );
+      console.log(`Verification email sent to ${newUser.email}`);
+    } catch (emailError) {
+      console.error("Failed to send confirmation email:", emailError);
+      // Don't fail the registration if email fails - it's non-critical
+    }
 
     // Return user without password
     const userResponse = {
@@ -116,9 +137,14 @@ exports.loginUser = async (req, res) => {
 
     // If admin role is requested, check Administrator collection first
     // Otherwise, prioritize User collection but still check both
-    const checkAdminFirst = requestedRole && requestedRole.toLowerCase() === 'admin';
-    
-    console.log('Login attempt:', { email: usernameEmail, requestedRole, checkAdminFirst });
+    const checkAdminFirst =
+      requestedRole && requestedRole.toLowerCase() === "admin";
+
+    console.log("Login attempt:", {
+      email: usernameEmail,
+      requestedRole,
+      checkAdminFirst,
+    });
 
     if (checkAdminFirst) {
       // Check Administrator collection first for admin login
@@ -136,7 +162,9 @@ exports.loginUser = async (req, res) => {
         // Verify password for administrator
         const isValidPassword = await bcrypt.compare(password, admin.password);
         if (!isValidPassword)
-          return res.status(401).json({ error: "Invalid email/username or password" });
+          return res
+            .status(401)
+            .json({ error: "Invalid email/username or password" });
 
         // Create admin user object for JWT
         user = {
@@ -146,9 +174,11 @@ exports.loginUser = async (req, res) => {
           role: "Admin",
         };
         isAdmin = true;
-        console.log('Admin login successful:', admin.email);
+        console.log("Admin login successful:", admin.email);
       } else {
-        return res.status(401).json({ error: "Invalid email/username or password for admin account" });
+        return res.status(401).json({
+          error: "Invalid email/username or password for admin account",
+        });
       }
     } else {
       // Regular login: check User collection first
@@ -176,9 +206,14 @@ exports.loginUser = async (req, res) => {
 
         if (admin) {
           // Verify password for administrator
-          const isValidPassword = await bcrypt.compare(password, admin.password);
+          const isValidPassword = await bcrypt.compare(
+            password,
+            admin.password
+          );
           if (!isValidPassword)
-            return res.status(401).json({ error: "Invalid email/username or password" });
+            return res
+              .status(401)
+              .json({ error: "Invalid email/username or password" });
 
           // Create admin user object for JWT
           user = {
@@ -188,16 +223,29 @@ exports.loginUser = async (req, res) => {
             role: "Admin",
           };
           isAdmin = true;
-          console.log('Admin login successful (fallback):', admin.email);
+          console.log("Admin login successful (fallback):", admin.email);
         } else {
-          return res.status(401).json({ error: "Invalid email/username or password" });
+          return res
+            .status(401)
+            .json({ error: "Invalid email/username or password" });
         }
       } else {
         // Verify password for regular user
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword)
-          return res.status(401).json({ error: "Invalid email/username or password" });
-        console.log('User login successful:', user.email, 'Role:', user.role);
+          return res
+            .status(401)
+            .json({ error: "Invalid email/username or password" });
+
+        // Check if email is verified
+        if (!user.verified) {
+          return res.status(403).json({
+            error:
+              "Please verify your email address before logging in. Check your email for the verification link.",
+          });
+        }
+
+        console.log("User login successful:", user.email, "Role:", user.role);
       }
     }
 
@@ -336,7 +384,10 @@ exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
       .select("-password")
-      .populate("organization", 'name description website contact status verified _id')
+      .populate(
+        "organization",
+        "name description website contact status verified _id"
+      )
       .lean()
       .exec();
 
@@ -405,7 +456,9 @@ exports.updateUser = async (req, res) => {
     if (role) {
       if (!Object.values(USER_ROLE).includes(role))
         return res.status(400).json({
-          error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(", ")}`,
+          error: `Invalid role. Must be one of: ${Object.values(USER_ROLE).join(
+            ", "
+          )}`,
         });
       if (adminCheck) user.role = role;
       else
@@ -433,6 +486,39 @@ exports.updateUser = async (req, res) => {
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Failed to update user" });
+  }
+};
+
+// API endpoint to verify email
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: "Verification token is required" });
+    }
+
+    // Find user with this verification token
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid verification token" });
+    }
+
+    // Mark user as verified and remove verification token
+    user.verified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    // Get the redirect URL from query params or use default
+    const redirectTo =
+      req.query.redirectTo || "http://localhost:5173/verify-success";
+
+    // Redirect to frontend with success status
+    res.redirect(`${redirectTo}?status=success`);
+  } catch (e) {
+    console.error("Email verification error:", e);
+    return res.status(500).json({ error: "Failed to verify email" });
   }
 };
 
@@ -492,4 +578,3 @@ exports.deleteUser = async (req, res) => {
     return res.status(500).json({ error: "Failed to delete user" });
   }
 };
-

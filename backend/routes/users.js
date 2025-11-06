@@ -19,6 +19,7 @@ const { requireAuth, requireAdmin } = require("../middlewares/auth");
 // Authentication routes (public - no middleware required)
 router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
+router.get("/verify-email", userController.verifyEmail);
 router.post("/logout", requireAuth, userController.logoutUser);
 
 // User CRUD management (private - requires authentication)
