@@ -161,7 +161,10 @@ const CalendarPage = () => {
                 setEventsData(data);
             })
             .catch(err => {
-                setError(err.message || 'Failed to load events');
+                if (err.response.status !== 404) {
+                    setError(err.message || 'Failed to load events');
+                }
+
                 setEventsData([]);
             })
             .finally(() => setIsLoading(false));
