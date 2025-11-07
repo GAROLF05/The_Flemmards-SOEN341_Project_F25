@@ -184,7 +184,7 @@ exports.getAllEvents = async (req,res) => {
         try { await ensureAdmin(req); } catch (e) { return res.status(e.status || 401).json({ code: e.code || 'UNAUTHORIZED', message: e.message }); }
 
         const events = await Event.find()
-            .select('organization title description category start_at end_at capacity status location registered_users waitlist image')
+            .select('organization title description category start_at end_at capacity status location registered_users waitlist image moderationStatus')
             .populate({
                 path: 'organization',
                 select: 'name description website contact.email contact.phone contact.socials'
