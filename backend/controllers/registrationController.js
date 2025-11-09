@@ -221,13 +221,35 @@ exports.registerToEvent = async (req, res) => {
       const eventTitle = event.title || "your event";
       const registrationId = registration._id;
 
-      // Create a ticket download link
-      const ticketLink = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${registrationId}`;
+      let ticketCode = null;
+      let ticketLink = null;
+      let qrImageBuffer = null;
+
+      if (
+        registration.status === REGISTRATION_STATUS.CONFIRMED &&
+        newlyCreatedTickets.length > 0
+      ) {
+        // Use the first ticket's code (or ticketId or _id as fallback)
+        const firstTicket = newlyCreatedTickets[0];
+        ticketCode =
+          firstTicket.code || firstTicket.ticketId || String(firstTicket._id);
+
+        // Generate QR code link using the ticket code
+        ticketLink = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+          ticketCode
+        )}`;
+
+        // Fetch the QR code image
+        const response = await axios.get(ticketLink, {
+          responseType: "arraybuffer",
+        });
+        const qrImageBuffer = Buffer.from(response.data, "binary");
+      }
 
       const response = await axios.get(ticketLink, {
         responseType: "arraybuffer",
       });
-      const qrImageBuffer = Buffer.from(response.data, "binary");
+      qrImageBuffer = Buffer.from(response.data, "binary");
 
       // Set up email transporter
       const transporter = nodemailer.createTransport({
@@ -254,7 +276,7 @@ exports.registerToEvent = async (req, res) => {
       const attachments = [];
       if (registration.status === REGISTRATION_STATUS.CONFIRMED) {
         attachments.push({
-          filename: `ticket_${registrationId}.png`,
+          filename: `ticket_${ticketCode}.png`,
           content: qrImageBuffer,
           contentType: "image/png",
           cid: `qrcode_${registrationId}`, // this must match HTML <img src="cid:...">
@@ -275,7 +297,8 @@ exports.registerToEvent = async (req, res) => {
                   registration.status === REGISTRATION_STATUS.CONFIRMED
                     ? `<p><strong>Your Ticket QR Code:</strong></p>
                        <img src="cid:qrcode_${registrationId}" alt="Ticket QR Code" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;" />
-                       <p><strong>Can't see the image?</strong> <a href="${ticketLink}" style="color: #007bff; text-decoration: none;">Click here to view your ticket</a></p>`
+                       <p><strong>Can't see the image?</strong> <a href="${ticketLink}" style="color: #007bff; text-decoration: none;">Click here to view your ticket</a></p>
+                        <p style="font-size: 12px; color: #666;">Ticket Code: ${ticketCode}</p>`
                     : ``
                 }
                 <p style="margin-top: 30px; color: #666; font-size: 12px;">
