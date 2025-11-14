@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
-import { EnvelopeIcon } from "@heroicons/react/24/outline";
+import { EnvelopeIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import Button from "../../components/button/Button";
 import TextField from "../../components/textField/TextField";
 import { forgotPassword } from "../../api/authenticationApi";
@@ -47,7 +47,18 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div
+      className={`absolute top-0 left-0 h-full w-full bg-white p-6 sm:p-8 lg:p-12 flex items-center justify-center transition-transform duration-700 ease-in-out transform z-10 translate-x-0`}
+    >
+      {/* Back arrow to return to login (same behavior as SignUp) */}
+      <Button
+        variant="none"
+        onClick={() => navigate("/login")}
+        aria-label={translate("goBack")}
+        className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        <ArrowLeftIcon className="h-6 w-6 text-gray-900" />
+      </Button>
       <div className="w-full max-w-md">
         <div className="text-center lg:text-left mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
