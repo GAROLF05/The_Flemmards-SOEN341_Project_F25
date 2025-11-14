@@ -20,11 +20,12 @@ import { classNames } from "../../utils/classNames";
  * @returns {JSX.Element} - The rendered text field component.
  */
 
-const TextField = ({ value, name, id, placeholder, onChange, IconLeft, type = "text", required = false, autocomplete = "off", className = "", iconLeftClasses = "", disabled = false, ...rest }) => {
+const TextField = ({ value = "", name = "", id = "", placeholder = "", onChange, IconLeft, type = "text", required = false, autocomplete = "off", className = "", iconLeftClasses = "", disabled = false, ...rest }) => {
     const handleChange = (e) => {
         if (disabled)
             e.preventDefault();
-        else
+
+        else if (typeof onChange === "function")
             onChange(e)
     }
 

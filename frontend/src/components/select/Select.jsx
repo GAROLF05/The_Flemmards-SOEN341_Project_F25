@@ -35,7 +35,7 @@ const Select = ({ label, value, onChange, options = [], disabled = false, classN
     }, [isOpen]);
 
     const handleOptionClick = (optionValue) => {
-        if (!disabled) {
+        if (!disabled && typeof onChange === "function") {
             onChange(optionValue);
             setIsOpen(false);
         }
