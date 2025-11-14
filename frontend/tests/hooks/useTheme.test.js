@@ -1,6 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
-import React from 'react';
 import { useTheme } from '../../src/hooks/useTheme';
 import { ThemeContext } from '../../src/context/ThemeContext';
 
