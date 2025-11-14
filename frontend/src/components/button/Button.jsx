@@ -27,6 +27,7 @@ const Button = ({ children, onClick, type = "button", variant = "contained", cla
         <button
             type={type}
             onClick={handleClick}
+            disabled={disabled}
             className={classNames(
                 "text-sm font-semibold rounded-lg transition-transform transform",
                 borderRouned && "",
