@@ -17,11 +17,11 @@ import { classNames } from "../../utils/classNames";
  * @returns {JSX.Element} - The rendered checkbox component.
  */
 
-const Checkbox = ({ label, name, id, onChange, checked = false, color = "primary", size = "medium", className = "", disabled = false, ...rest }) => {
+const Checkbox = ({ label = "", name = "", id = "", onChange, checked = false, color = "primary", size = "medium", className = "", disabled = false, ...rest }) => {
     const handleChange = (e) => {
         if (disabled)
             e.preventDefault();
-        else
+        else if (typeof onChange === "function")
             onChange(e)
     }
 
