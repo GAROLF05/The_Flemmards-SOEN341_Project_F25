@@ -36,6 +36,6 @@ jobs:
     - name: Build frontend
       run: npm run build --prefix frontend
 
-    # Step 6: Run tests
-    - name: Run tests
-      run: npm test
+    # Step 6: Run frontend tests
+    - name: Run frontend tests
+      run: npm test --prefix frontend

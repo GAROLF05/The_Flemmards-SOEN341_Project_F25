@@ -41,9 +41,9 @@ const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
                 >
                     <div className="relative flex flex-col max-h-full">
                         <button onClick={onClose} className="absolute top-4 right-4 z-10 text-gray-900 dark:text-white rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer">
-                            <XMarkIcon className="h-6 w-6"/>
+                            <XMarkIcon className="h-6 w-6" />
                         </button>
-                        {children}
+                        {isOpen && children}
                     </div>
                 </div>
             </div>
