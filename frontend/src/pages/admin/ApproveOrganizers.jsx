@@ -33,7 +33,7 @@ export default function ApproveOrganizers() {
             setLoading(true);
             const response = await adminApi.getPendingOrganizers();
             console.log('Pending organizers response:', response);
-            
+
             // axiosClient interceptor returns response.data directly
             if (response && response.organizers) {
                 console.log('Setting pending organizers:', response.organizers);
@@ -49,7 +49,7 @@ export default function ApproveOrganizers() {
             console.error('Error fetching pending organizers:', error);
             console.error('Error response:', error.response);
             showNotification(
-                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch pending organizers', 
+                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch pending organizers',
                 'error'
             );
             setPendingOrganizers([]);
@@ -63,7 +63,7 @@ export default function ApproveOrganizers() {
             setLoading(true);
             const response = await adminApi.getRejectedOrganizers();
             console.log('Rejected organizers response:', response);
-            
+
             // axiosClient interceptor returns response.data directly
             if (response && response.organizers) {
                 console.log('Setting rejected organizers:', response.organizers);
@@ -79,7 +79,7 @@ export default function ApproveOrganizers() {
             console.error('Error fetching rejected organizers:', error);
             console.error('Error response:', error.response);
             showNotification(
-                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch rejected organizers', 
+                error.response?.data?.error || error.response?.data?.details || 'Failed to fetch rejected organizers',
                 'error'
             );
             setRejectedOrganizers([]);
@@ -93,7 +93,7 @@ export default function ApproveOrganizers() {
         if (moderationModalOpen) {
             const originalOverflow = document.body.style.overflow;
             document.body.style.overflow = 'hidden';
-            
+
             return () => {
                 document.body.style.overflow = originalOverflow;
             };
@@ -106,11 +106,11 @@ export default function ApproveOrganizers() {
         setLoadingDetails(true);
         setOrganizationDetails(null);
         setRejectionReason('');
-        
+
         try {
             // Get organization ID from organizer
             const orgId = organizer.organization;
-            
+
             if (orgId) {
                 // Fetch organization details
                 const detailsResponse = await getOrganizationById(orgId);
@@ -131,12 +131,25 @@ export default function ApproveOrganizers() {
 
     const handleApprove = async () => {
         if (!selectedOrganizer) return;
-        
+
         setIsProcessing(true);
         try {
             await adminApi.approveOrganizer(selectedOrganizer._id);
+
+            // Send email notification to organizer
+            try {
+                await adminApi.sendNotification(
+                    selectedOrganizer.email,
+                    'Organizer Account Approved',
+                    `Dear ${selectedOrganizer.name || 'Organizer'},\n\nYour organizer account has been approved! You can now create and manage events on our platform.\n\nBest regards,\nThe Admin Team`
+                );
+            } catch (emailError) {
+                console.error('Failed to send approval email:', emailError);
+                // Don't fail the whole operation if email fails
+            }
+
             showNotification(`Organizer "${selectedOrganizer.name || selectedOrganizer.email}" has been approved successfully.`, 'success');
-            
+
             // Remove from current list and refresh
             if (activeTab === 'pending') {
                 setPendingOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
@@ -144,7 +157,7 @@ export default function ApproveOrganizers() {
                 setRejectedOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
                 fetchPendingOrganizers();
             }
-            
+
             setModerationModalOpen(false);
             setSelectedOrganizer(null);
             setOrganizationDetails(null);
@@ -158,17 +171,30 @@ export default function ApproveOrganizers() {
 
     const handleReject = async () => {
         if (!selectedOrganizer) return;
-        
+
         if (!rejectionReason.trim()) {
             showNotification('Please provide a rejection reason', 'error');
             return;
         }
-        
+
         setIsProcessing(true);
         try {
             await adminApi.rejectOrganizer(selectedOrganizer._id, rejectionReason);
+
+            // Send email notification to organizer
+            try {
+                await adminApi.sendNotification(
+                    selectedOrganizer.email,
+                    'Organizer Account Application Update',
+                    `Dear ${selectedOrganizer.name || 'Applicant'},\n\nWe regret to inform you that your organizer account application has been reviewed and cannot be approved at this time.\n\nReason: ${rejectionReason}\n\nIf you have any questions or would like to reapply, please contact our support team.\n\nBest regards,\nThe Admin Team`
+                );
+            } catch (emailError) {
+                console.error('Failed to send rejection email:', emailError);
+                // Don't fail the whole operation if email fails
+            }
+
             showNotification(`Organizer "${selectedOrganizer.name || selectedOrganizer.email}" has been rejected.`, 'success');
-            
+
             // Remove from current list and refresh
             if (activeTab === 'pending') {
                 setPendingOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
@@ -176,7 +202,7 @@ export default function ApproveOrganizers() {
             } else {
                 setRejectedOrganizers(prev => prev.filter(org => org._id !== selectedOrganizer._id));
             }
-            
+
             setModerationModalOpen(false);
             setSelectedOrganizer(null);
             setOrganizationDetails(null);
@@ -308,8 +334,8 @@ export default function ApproveOrganizers() {
                                                 </td>
                                             )}
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button 
-                                                    onClick={() => handleModerate(organizer)} 
+                                                <button
+                                                    onClick={() => handleModerate(organizer)}
                                                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all cursor-pointer transition-colors duration-300"
                                                     title="Moderate Organizer"
                                                 >
@@ -323,8 +349,8 @@ export default function ApproveOrganizers() {
                                     <tr>
                                         <td colSpan={activeTab === 'pending' ? 6 : 6} className="px-6 py-12 text-center">
                                             <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                                                {activeTab === 'pending' 
-                                                    ? (translate("No Pending Applications") || "No pending organizers") 
+                                                {activeTab === 'pending'
+                                                    ? (translate("No Pending Applications") || "No pending organizers")
                                                     : (translate("No Rejected Applications") || "No rejected organizers")}
                                             </p>
                                         </td>
@@ -338,7 +364,7 @@ export default function ApproveOrganizers() {
 
             {/* Moderation Modal */}
             <Modal isOpen={moderationModalOpen} onClose={() => setModerationModalOpen(false)} width="large">
-                <div 
+                <div
                     className="flex flex-col max-h-[90vh]"
                     onWheel={(e) => e.stopPropagation()}
                     onTouchMove={(e) => e.stopPropagation()}
@@ -357,8 +383,8 @@ export default function ApproveOrganizers() {
                     </div>
 
                     {/* Scrollable Content */}
-                    <div 
-                        className="overflow-y-auto flex-1 p-6 scrollbar-hide" 
+                    <div
+                        className="overflow-y-auto flex-1 p-6 scrollbar-hide"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                         onWheel={(e) => e.stopPropagation()}
                     >
@@ -377,7 +403,7 @@ export default function ApproveOrganizers() {
                                             {translate("Organizer Details") || "Organizer Details"}
                                         </h3>
                                     </div>
-                                    
+
                                     {selectedOrganizer && (
                                         <div className="space-y-4 text-sm">
                                             <div>
@@ -415,7 +441,7 @@ export default function ApproveOrganizers() {
                                                 {translate("Organization Details") || "Organization Details"}
                                             </h3>
                                         </div>
-                                        
+
                                         <div className="space-y-4 text-sm">
                                             <div>
                                                 <span className="font-semibold text-gray-700 dark:text-gray-300">Name:</span>
@@ -441,11 +467,10 @@ export default function ApproveOrganizers() {
                                             </div>
                                             <div>
                                                 <span className="font-semibold text-gray-700 dark:text-gray-300">Status:</span>
-                                                <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${
-                                                    organizationDetails.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                    organizationDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                    'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
-                                                }`}>
+                                                <span className={`ml-2 px-2 py-1 rounded text-xs font-semibold ${organizationDetails.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                        organizationDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                            'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200'
+                                                    }`}>
                                                     {(organizationDetails.status || 'Unknown').toUpperCase()}
                                                 </span>
                                             </div>
@@ -464,7 +489,7 @@ export default function ApproveOrganizers() {
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                                         {translate("Actions") || "Actions"}
                                     </h3>
-                                    
+
                                     {/* Check if organizer is already rejected */}
                                     {selectedOrganizer && selectedOrganizer.rejectedAt ? (
                                         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -473,7 +498,7 @@ export default function ApproveOrganizers() {
                                             </p>
                                         </div>
                                     ) : null}
-                                    
+
                                     <div className="flex flex-col sm:flex-row gap-3">
                                         <button
                                             onClick={handleApprove}
@@ -482,7 +507,7 @@ export default function ApproveOrganizers() {
                                         >
                                             {isProcessing ? 'Processing...' : (selectedOrganizer?.rejectedAt ? (translate("Re-approve Organizer") || 'Re-approve Organizer') : (translate("Approve Organizer") || 'Approve Organizer'))}
                                         </button>
-                                        
+
                                         {/* Only show reject button if organizer is not already rejected */}
                                         {selectedOrganizer && !selectedOrganizer.rejectedAt ? (
                                             <button
@@ -502,7 +527,7 @@ export default function ApproveOrganizers() {
                                             </button>
                                         )}
                                     </div>
-                                    
+
                                     {/* Rejection Reason Input - Only show if organizer is not already rejected */}
                                     {selectedOrganizer && !selectedOrganizer.rejectedAt && (
                                         <div className="mt-4">
