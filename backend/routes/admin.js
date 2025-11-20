@@ -53,4 +53,8 @@ router.delete('/tickets/delete/:ticket_id', requireAdmin, adminController.delete
 // Registration management
 router.get('/registrations/all', requireAdmin, adminController.getAllRegistrations);
 
+// Notification management (Task #123: View notification history)
+router.get('/notifications', requireAdmin, getAllNotifications);
+router.get('/notifications/:notification_id', requireAdmin, getNotificationById);
+
 module.exports = router;

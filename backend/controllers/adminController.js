@@ -301,12 +301,27 @@ exports.approveOrganizer = async (req,res)=>{
                         organization.status = ORGANIZATION_STATUS.APPROVED;
                         await organization.save();
                         console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to APPROVED`);
+                        
+                        // Task #123: Send notification to organizer
+                        await notifyOrganizationStatus(
+                            organization._id.toString(),
+                            ORGANIZATION_STATUS.APPROVED,
+                            user.email
+                        );
                     }
                 } else {
                     // If rejecting, set organization to rejected
                     organization.status = ORGANIZATION_STATUS.REJECTED;
                     await organization.save();
                     console.log(`[AUDIT] Organization ${organization.name} (ID: ${organization._id}) status updated to REJECTED`);
+                    
+                    // Task #123: Send notification to organizer with reason
+                    await notifyOrganizationStatus(
+                        organization._id.toString(),
+                        ORGANIZATION_STATUS.REJECTED,
+                        user.email,
+                        rejectionReason
+                    );
                 }
             }
         }
