@@ -1,10 +1,12 @@
 const request = require('supertest');
 const app = require('../../app');
-const User = require('../../models/User');
-const Organization = require('../../models/Organization');
-const Event = require('../../models/Event');
+const { User } = require('../../models/User');
+const { Organization } = require('../../models/Organization');
+const { Event } = require('../../models/Event');
 const Ticket = require('../../models/Ticket');
-const Registration = require('../../models/Registration');
+const { Registration } = require('../../models/Registrations');
+const Administrator = require('../../models/Administrators');
+const bcrypt = require('bcrypt');
 
 describe('Admin API Endpoints', () => {
   let adminToken;
@@ -15,23 +17,22 @@ describe('Admin API Endpoints', () => {
   let eventId;
 
   beforeEach(async () => {
-    // Create admin user
-    const adminRegister = await request(app)
-      .post('/api/users/register')
-      .send({
-        email: 'admin@example.com',
-        password: 'Test1234!',
-        name: 'Admin User',
-        role: 'Admin'
-      });
+    // Create admin user directly in Administrator collection
+    const hashedPassword = await bcrypt.hash('Test1234!', 10);
+    const adminUser = await Administrator.create({
+      email: 'admin@example.com',
+      password: hashedPassword,
+      name: 'Admin User'
+    });
+    adminUserId = adminUser._id.toString();
 
-    adminUserId = adminRegister.body.user._id;
-
+    // Login as admin with role='admin'
     const adminLogin = await request(app)
       .post('/api/users/login')
       .send({
-        email: 'admin@example.com',
-        password: 'Test1234!'
+        usernameEmail: 'admin@example.com',
+        password: 'Test1234!',
+        role: 'admin'
       });
 
     adminToken = adminLogin.body.token;
@@ -51,7 +52,7 @@ describe('Admin API Endpoints', () => {
     const userLogin = await request(app)
       .post('/api/users/login')
       .send({
-        email: 'regular@example.com',
+        usernameEmail: 'regular@example.com',
         password: 'Test1234!'
       });
 
@@ -62,7 +63,11 @@ describe('Admin API Endpoints', () => {
       name: 'Test Organization',
       description: 'Test Org Description',
       status: 'pending',
-      contact: { email: 'org@example.com' }
+      contact: { 
+        email: 'org@example.com',
+        phone: '+1234567890'
+      },
+      website: 'https://example.com'
     });
     orgId = org._id.toString();
 
@@ -78,8 +83,12 @@ describe('Admin API Endpoints', () => {
       capacity: 100,
       category: 'workshop',
       organization: orgId,
-      status: 'published',
-      moderationStatus: 'pending'
+      status: 'upcoming',
+      moderationStatus: 'pending_approval',
+      location: {
+        name: 'Test Location',
+        address: '123 Test Street, Test City'
+      }
     });
     eventId = event._id.toString();
   });
@@ -186,6 +195,7 @@ describe('Admin API Endpoints', () => {
       const response = await request(app)
         .patch(`/api/admin/approve-organizer/${userId}`)
         .set('Authorization', `Bearer ${adminToken}`)
+        .send({ approved: true })
         .expect(200);
 
       expect(response.body).toHaveProperty('user');
@@ -278,7 +288,7 @@ describe('Admin API Endpoints', () => {
 
       await Ticket.create({
         registration: registration._id,
-        status: 'active',
+        status: 'valid',
         qrCode: 'test-qr'
       });
     });
