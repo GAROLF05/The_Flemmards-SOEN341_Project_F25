@@ -1,7 +1,7 @@
 const request = require('supertest');
 const app = require('../../app');
-const Organization = require('../../models/Organization');
-const Event = require('../../models/Event');
+const { Organization } = require('../../models/Organization');
+const { Event, EVENT_STATUS } = require('../../models/Event');
 
 describe('Calendar API Endpoints', () => {
   let orgId;
@@ -13,7 +13,11 @@ describe('Calendar API Endpoints', () => {
       name: 'Test Organization',
       description: 'Test Org Description',
       status: 'approved',
-      contact: { email: 'org@example.com' }
+      website: 'https://example.com',
+      contact: {
+        email: 'org@example.com',
+        phone: '+1234567890'
+      }
     });
     orgId = org._id.toString();
 
@@ -29,7 +33,7 @@ describe('Calendar API Endpoints', () => {
       capacity: 100,
       category: 'workshop',
       organization: orgId,
-      status: 'published',
+      status: EVENT_STATUS.UPCOMING,
       moderationStatus: 'approved',
       location: {
         name: 'Test Location',

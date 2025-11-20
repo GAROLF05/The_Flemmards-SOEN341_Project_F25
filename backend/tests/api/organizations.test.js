@@ -1,7 +1,9 @@
 const request = require('supertest');
 const app = require('../../app');
-const User = require('../../models/User');
-const Organization = require('../../models/Organization');
+const { User } = require('../../models/User');
+const { Organization } = require('../../models/Organization');
+const Administrator = require('../../models/Administrators');
+const bcrypt = require('bcrypt');
 
 describe('Organizations API Endpoints', () => {
   let authToken;
@@ -22,32 +24,40 @@ describe('Organizations API Endpoints', () => {
 
     userId = registerResponse.body.user._id;
 
+    // Verify user email
+    await User.findByIdAndUpdate(userId, {
+      verified: true
+    });
+
     const loginResponse = await request(app)
       .post('/api/users/login')
       .send({
-        email: 'orguser@example.com',
+        usernameEmail: 'orguser@example.com',
         password: 'Test1234!'
       });
 
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body).toHaveProperty('token');
     authToken = loginResponse.body.token;
 
-    // Create admin user
-    const adminRegister = await request(app)
-      .post('/api/users/register')
-      .send({
-        email: 'admin@example.com',
-        password: 'Test1234!',
-        name: 'Admin User',
-        role: 'Admin'
-      });
+    // Create admin user directly in Administrator collection
+    const hashedPassword = await bcrypt.hash('Test1234!', 10);
+    await Administrator.create({
+      email: 'admin@example.com',
+      password: hashedPassword,
+      name: 'Admin User'
+    });
 
     const adminLogin = await request(app)
       .post('/api/users/login')
       .send({
-        email: 'admin@example.com',
-        password: 'Test1234!'
+        usernameEmail: 'admin@example.com',
+        password: 'Test1234!',
+        role: 'admin'
       });
 
+    expect(adminLogin.status).toBe(200);
+    expect(adminLogin.body).toHaveProperty('token');
     adminToken = adminLogin.body.token;
   });
 
@@ -56,9 +66,10 @@ describe('Organizations API Endpoints', () => {
       const orgData = {
         name: 'New Test Organization',
         description: 'Test organization description',
+        website: 'https://testorg.com',
         contact: {
           email: 'contact@testorg.com',
-          phone: '123-456-7890'
+          phone: '+1234567890'
         }
       };
 
@@ -107,7 +118,11 @@ describe('Organizations API Endpoints', () => {
         name: 'Test Org',
         description: 'Test Description',
         status: 'approved',
-        contact: { email: 'test@org.com' }
+        website: 'https://testorg.com',
+        contact: { 
+          email: 'test@org.com',
+          phone: '+1234567890'
+        }
       });
       orgId = org._id.toString();
     });
@@ -135,13 +150,21 @@ describe('Organizations API Endpoints', () => {
         name: 'Org 1',
         description: 'Description 1',
         status: 'approved',
-        contact: { email: 'org1@test.com' }
+        website: 'https://org1.com',
+        contact: { 
+          email: 'org1@test.com',
+          phone: '+1234567890'
+        }
       });
       await Organization.create({
         name: 'Org 2',
         description: 'Description 2',
         status: 'pending',
-        contact: { email: 'org2@test.com' }
+        website: 'https://org2.com',
+        contact: { 
+          email: 'org2@test.com',
+          phone: '+1234567890'
+        }
       });
     });
 
@@ -169,7 +192,11 @@ describe('Organizations API Endpoints', () => {
         name: 'Pending Org',
         description: 'Pending Description',
         status: 'pending',
-        contact: { email: 'pending@test.com' }
+        website: 'https://pending.com',
+        contact: { 
+          email: 'pending@test.com',
+          phone: '+1234567890'
+        }
       });
     });
 
@@ -190,7 +217,11 @@ describe('Organizations API Endpoints', () => {
         name: 'Original Org',
         description: 'Original Description',
         status: 'approved',
-        contact: { email: 'original@test.com' }
+        website: 'https://original.com',
+        contact: { 
+          email: 'original@test.com',
+          phone: '+1234567890'
+        }
       });
       orgId = org._id.toString();
     });
@@ -225,7 +256,11 @@ describe('Organizations API Endpoints', () => {
         name: 'To Delete Org',
         description: 'To Delete',
         status: 'approved',
-        contact: { email: 'delete@test.com' }
+        website: 'https://delete.com',
+        contact: { 
+          email: 'delete@test.com',
+          phone: '+1234567890'
+        }
       });
       orgId = org._id.toString();
     });
