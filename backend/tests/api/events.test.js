@@ -1,8 +1,8 @@
 const request = require('supertest');
 const app = require('../../app');
-const User = require('../../models/User');
-const Organization = require('../../models/Organization');
-const Event = require('../../models/Event');
+const { User } = require('../../models/User');
+const { Organization } = require('../../models/Organization');
+const { Event } = require('../../models/Event');
 
 describe('Events API Endpoints', () => {
   let authToken;
@@ -22,26 +22,37 @@ describe('Events API Endpoints', () => {
 
     userId = registerResponse.body.user._id;
 
-    // Login to get token
-    const loginResponse = await request(app)
-      .post('/api/users/login')
-      .send({
-        email: 'organizer@example.com',
-        password: 'Test1234!'
-      });
-
-    authToken = loginResponse.body.token;
-
     // Create an approved organization
     const org = await Organization.create({
       name: 'Test Organization',
       description: 'Test Org Description',
+      website: 'https://testorg.com',
       status: 'approved',
       contact: {
-        email: 'org@example.com'
+        email: 'org@example.com',
+        phone: '1234567890'
       }
     });
     orgId = org._id.toString();
+
+    // Associate user with organization, approve them, and verify email
+    await User.findByIdAndUpdate(userId, {
+      organization: orgId,
+      approved: true,
+      verified: true
+    });
+
+    // Login to get token
+    const loginResponse = await request(app)
+      .post('/api/users/login')
+      .send({
+        usernameEmail: 'organizer@example.com',
+        password: 'Test1234!'
+      });
+
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body).toHaveProperty('token');
+    authToken = loginResponse.body.token;
   });
 
   describe('GET /api/events/browse', () => {
@@ -58,8 +69,12 @@ describe('Events API Endpoints', () => {
         capacity: 100,
         category: 'workshop',
         organization: orgId,
-        status: 'published',
-        moderationStatus: 'approved'
+        status: 'upcoming',
+        moderationStatus: 'approved',
+        location: {
+          name: 'Test Location 1',
+          address: '123 Test St'
+        }
       });
 
       await Event.create({
@@ -68,10 +83,14 @@ describe('Events API Endpoints', () => {
         start_at: futureDate,
         end_at: new Date(futureDate.getTime() + 2 * 60 * 60 * 1000),
         capacity: 50,
-        category: 'social',
+        category: 'community',
         organization: orgId,
-        status: 'published',
-        moderationStatus: 'approved'
+        status: 'upcoming',
+        moderationStatus: 'approved',
+        location: {
+          name: 'Test Location 2',
+          address: '456 Test Ave'
+        }
       });
     });
 
@@ -113,7 +132,8 @@ describe('Events API Endpoints', () => {
         .expect(200);
 
       expect(response.body.events.length).toBeLessThanOrEqual(1);
-      expect(response.body).toHaveProperty('pagination');
+      expect(response.body).toHaveProperty('totalPages');
+      expect(response.body).toHaveProperty('currentPage');
     });
   });
 
