@@ -20,6 +20,8 @@ const { requireAuth, requireAdmin } = require("../middlewares/auth");
 router.post("/register", userController.registerUser);
 router.post("/login", userController.loginUser);
 router.get("/verify-email", userController.verifyEmail);
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password", userController.resetPassword);
 router.post("/logout", requireAuth, userController.logoutUser);
 
 // User CRUD management (private - requires authentication)

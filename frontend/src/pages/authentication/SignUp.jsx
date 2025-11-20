@@ -1,4 +1,12 @@
-import { ArrowLeftIcon, EnvelopeIcon, LockClosedIcon, UserIcon, PhoneIcon, GlobeAltIcon, BuildingOfficeIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+  UserIcon,
+  PhoneIcon,
+  GlobeAltIcon,
+  BuildingOfficeIcon,
+} from "@heroicons/react/24/outline";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/button/Button";
@@ -14,29 +22,37 @@ const Signup = ({ signUpForm, setSignUpForm, handleSignUp, isSignUp }) => {
         { value: 'organizer', label: translate("organizer") },
     ];
 
-    return (
-        <div className={`absolute top-0 left-0 h-full w-full bg-white p-6 sm:p-8 lg:p-12 flex items-center justify-center transition-transform duration-700 ease-in-out transform z-10 ${isSignUp ? 'translate-x-0' : 'translate-x-full'}`}>
-            <Button
-                variant="none"
-                onClick={() => navigate("/login")}
-                aria-label={translate("goBack")}
-                className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors"
-            >
-                <ArrowLeftIcon className="h-6 w-6 text-gray-900" />
-            </Button>
+  return (
+    <div
+      className={`absolute top-0 left-0 h-full w-full bg-white p-6 sm:p-8 lg:p-12 flex items-center justify-center transition-transform duration-700 ease-in-out transform z-10 ${
+        isSignUp ? "translate-x-0" : "translate-x-full"
+      }`}
+    >
+      <Button
+        variant="none"
+        onClick={() => navigate("/login")}
+        aria-label={translate("goBack")}
+        className="absolute top-6 left-6 sm:top-8 sm:left-8 text-gray-500 hover:text-gray-800 transition-colors"
+      >
+        <ArrowLeftIcon className="h-6 w-6 text-gray-900" />
+      </Button>
 
-            <div className="w-full max-w-md">
-                <div className="text-center lg:text-left mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">{translate("createAccount")}</h1>
-                    <p className="mt-2 text-sm text-gray-600">{translate("createAccountSubtitle")}</p>
-                </div>
+      <div className="w-full max-w-md">
+        <div className="text-center lg:text-left mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {translate("createAccount")}
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            {translate("createAccountSubtitle")}
+          </p>
+        </div>
 
-                <ButtonGroup
-                    options={roles}
-                    value={signUpForm.role || 'student'}
-                    onChange={value => setSignUpForm({ ...signUpForm, role: value })}
-                    className="mb-6"
-                />
+        <ButtonGroup
+          options={roles}
+          value={signUpForm.role || "student"}
+          onChange={(value) => setSignUpForm({ ...signUpForm, role: value })}
+          className="mb-6"
+        />
 
                 <div
                     className="max-h-[calc(100vh-250px)] overflow-y-auto pr-2 signup-form-scroll"
