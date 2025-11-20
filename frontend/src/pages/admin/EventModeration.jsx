@@ -4,6 +4,7 @@ import { useNotification } from '../../hooks/useNotification';
 import { useLanguage } from '../../hooks/useLanguage';
 import LoadingPage from '../../layouts/LoadingPage';
 import { approveEvent, flagEvent, getAllEvents, rejectEvent } from '../../api/eventApi';
+import { adminApi } from '../../api/adminApi';
 
 const moderationStatuses = ['all', 'pending_approval', 'approved', 'rejected', 'flagged'];
 
@@ -172,45 +173,77 @@ export default function EventModeration() {
         setCurrentPage(1);
     }, [searchTerm, activeStatus]);
 
-    const handleApprove = (id, title) => {
+    const handleApprove = async (id, title) => {
         if (!id)
             return;
 
         setIsLoadingApproval(true);
 
-        approveEvent(id)
-            .then(() => {
-                showNotification(`The event ${title} has been approved successfully.`, "success");
-                setEvents(prev => prev.map(event => ({ ...event, moderationStatus: event.id === id ? 'approved' : event.moderationStatus })));
-            })
-            .catch(() => {
-                showNotification(translate("anErrorHasOccured"), "error");
-            })
-            .finally(() => setIsLoadingApproval(false));
+        try {
+            await approveEvent(id);
+
+            // Find the approved event to get organizer details
+            const approvedEvent = events.find(e => e.id === id);
+
+            // Send email notification to organizer
+            if (approvedEvent) {
+                try {
+                    await adminApi.sendNotification(
+                        approvedEvent.organization.toLowerCase().replace(/\s+/g, '.') + '@example.com',
+                        'Event Approved',
+                        `Dear Organizer,\n\nYour event "${title}" has been approved and is now live on our platform!\n\nEvent Details:\n- Title: ${title}\n- Date: ${new Date(approvedEvent.date).toLocaleDateString()}\n- Location: ${approvedEvent.location}\n\nBest regards,\nThe Admin Team`
+                    );
+                } catch (emailError) {
+                    console.error('Failed to send approval email:', emailError);
+                }
+            }
+
+            showNotification(`The event ${title} has been approved successfully.`, "success");
+            setEvents(prev => prev.map(event => ({ ...event, moderationStatus: event.id === id ? 'approved' : event.moderationStatus })));
+        } catch (error) {
+            showNotification(translate("anErrorHasOccured"), "error");
+        } finally {
+            setIsLoadingApproval(false);
+        }
     };
 
-    const handleDeny = (id, title) => {
+    const handleDeny = async (id, title) => {
         if (!id)
             return;
 
         setIsLoadingApproval(true);
 
-        rejectEvent(id)
-            .then(() => {
-                showNotification(`The event ${title} has been rejected successfully.`, "warning");
-                setEvents(prev => prev.map(event => ({ ...event, moderationStatus: event.id === id ? 'rejected' : event.moderationStatus })));
-            })
-            .catch(() => {
-                showNotification(translate("anErrorHasOccured"), "error");
-            })
-            .finally(() => setIsLoadingApproval(false));
+        try {
+            await rejectEvent(id);
+
+            // Find the rejected event to get organizer details
+            const rejectedEvent = events.find(e => e.id === id);
+
+            // Send email notification to organizer
+            if (rejectedEvent) {
+                try {
+                    await adminApi.sendNotification(
+                        rejectedEvent.organization.toLowerCase().replace(/\s+/g, '.') + '@example.com',
+                        'Event Review Update',
+                        `Dear Organizer,\n\nWe regret to inform you that your event "${title}" has been reviewed and cannot be approved at this time.\n\nThis may be due to policy violations or content that does not comply with our community guidelines. Please review our event posting policies and feel free to resubmit with appropriate modifications.\n\nIf you have any questions, please contact our support team.\n\nBest regards,\nThe Admin Team`
+                    );
+                } catch (emailError) {
+                    console.error('Failed to send rejection email:', emailError);
+                }
+            }
+
+            showNotification(`The event ${title} has been rejected successfully.`, "success");
+            setEvents(prev => prev.map(event => ({ ...event, moderationStatus: event.id === id ? 'rejected' : event.moderationStatus })));
+        } catch (error) {
+            showNotification(translate("anErrorHasOccured"), "error");
+        } finally {
+            setIsLoadingApproval(false);
+        }
     };
 
     const handleFlag = (id, title) => {
         if (!id)
-            return;
-
-        setIsLoadingApproval(true);
+            return; setIsLoadingApproval(true);
 
         flagEvent(id)
             .then(() => {
