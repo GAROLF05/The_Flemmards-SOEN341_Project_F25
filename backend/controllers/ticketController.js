@@ -30,7 +30,7 @@ const Administrator = require('../models/Administrators');
 const { User } = require('../models/User');
 const { Event, EVENT_STATUS, CATEGORY } = require('../models/Event');
 const Organization = require('../models/Organization');
-const Registration = require('../models/Registrations');
+const { Registration } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
 
 // QR Code setup (npm install qrcode)

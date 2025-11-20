@@ -8,7 +8,7 @@
 // Models of DB
 const { User, USER_ROLE } = require("../models/User");
 const Administrator = require("../models/Administrators");
-const Registration = require("../models/Registrations");
+const { Registration } = require("../models/Registrations");
 const Ticket = require("../models/Ticket");
 
 // Utilities
