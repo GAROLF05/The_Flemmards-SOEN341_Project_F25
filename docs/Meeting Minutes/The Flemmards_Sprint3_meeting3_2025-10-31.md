@@ -1,6 +1,6 @@
 # The Flemmards - Meeting Minutes
 
-## Sprint #2
+## Sprint #3
 
 ### Meeting #3
 
