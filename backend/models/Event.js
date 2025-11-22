@@ -26,6 +26,8 @@ const CATEGORY = {
     EDUCATION: 'education',
     WORKSHOP: 'workshop',
     NETWORKING: 'networking',
+    FUNDRAISER: 'fundraiser',
+    ENTERTAINMENT: 'entertainment',
     OTHER: 'other'
 };
 
