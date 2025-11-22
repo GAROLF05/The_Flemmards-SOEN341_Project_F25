@@ -127,7 +127,9 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 };
 
 const CalendarPage = () => {
-    const [currentDate, setCurrentDate] = useState(new Date('2025-10-11T12:00:00'));
+    const now = new Date();
+    const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const [currentDate, setCurrentDate] = useState(new Date(firstDayOfCurrentMonth));
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [eventsData, setEventsData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
