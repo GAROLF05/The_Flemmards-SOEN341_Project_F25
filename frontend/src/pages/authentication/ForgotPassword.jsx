@@ -65,7 +65,7 @@ const ForgotPassword = () => {
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <TextField
-              id="email-address"
+              id="email-address2"
               name="email"
               type="email"
               autoComplete="email"
