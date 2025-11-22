@@ -126,7 +126,7 @@ export default function AdminDashboard() {
 
     return (
         <>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">{translate("Dashboard")}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">{translate("dashboard")}</h1>
 
             {/* Pending Moderation - Priority Section */}
             {stats.moderation.totalPending > 0 && (
@@ -134,18 +134,18 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-3 mb-4">
                         <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                         <h2 className="text-xl font-semibold text-yellow-900 dark:text-yellow-200">
-                            {stats.moderation.totalPending} {translate("Pending Approvals") || "Pending Approvals"}
+                            {stats.moderation.totalPending} {translate("pendingApprovals")}
                         </h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {stats.moderation.pendingOrganizations > 0 && (
                             <div className="text-sm text-yellow-800 dark:text-yellow-300">
-                                <strong>{stats.moderation.pendingOrganizations}</strong> {translate("Organizations") || "Organizations"} {translate("awaitingApproval") || "awaiting approval"}
+                                <strong>{stats.moderation.pendingOrganizations}</strong> {translate("organizations")} {translate("awaitingApproval")}
                             </div>
                         )}
                         {stats.moderation.pendingEvents > 0 && (
                             <div className="text-sm text-yellow-800 dark:text-yellow-300">
-                                <strong>{stats.moderation.pendingEvents}</strong> {translate("Events") || "Events"} {translate("Awaiting Moderation") || "Awaiting Moderation"}
+                                <strong>{stats.moderation.pendingEvents}</strong> {translate("events")} {translate("awaitingModeration")}
                             </div>
                         )}
                     </div>
@@ -155,25 +155,25 @@ export default function AdminDashboard() {
             {/* Main Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <StatCard
-                    title={translate("Total Events") || "Total Events"}
+                    title={translate("totalEvents")}
                     value={stats.events.total}
                     icon={<CalendarDaysIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-blue-100 dark:bg-blue-900", text: "text-blue-600 dark:text-blue-400" }}
                 />
                 <StatCard
-                    title={translate("Total Users") || "Total Users"}
+                    title={translate("totalUsers")}
                     value={stats.users.total}
                     icon={<UsersIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-purple-100 dark:bg-purple-900", text: "text-purple-600 dark:text-purple-400" }}
                 />
                 <StatCard
-                    title={translate("Total Registrations") || "Total Registrations"}
+                    title={translate("totalRegistrations")}
                     value={stats.registrations.total}
                     icon={<TicketIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-indigo-100 dark:bg-indigo-900", text: "text-indigo-600 dark:text-indigo-400" }}
                 />
                 <StatCard
-                    title={translate("Total Organizations") || "Total Organizations"}
+                    title={translate("totalOrganizations")}
                     value={stats.organizations.total}
                     icon={<BuildingOfficeIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-teal-100 dark:bg-teal-900", text: "text-teal-600 dark:text-teal-400" }}
@@ -183,25 +183,25 @@ export default function AdminDashboard() {
             {/* Secondary Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <StatCard
-                    title={translate("Upcoming Events") || "Upcoming Events"}
+                    title={translate("upcomingEvents")}
                     value={stats.events.upcoming}
                     icon={<ClockIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-green-100 dark:bg-green-900", text: "text-green-600 dark:text-green-400" }}
                 />
                 <StatCard
-                    title={translate("Waitlisted Registrations") || "Waitlisted Registrations"}
+                    title={translate("waitlistedRegistrations")}
                     value={stats.registrations.waitlisted}
                     icon={<UsersIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-orange-100 dark:bg-orange-900", text: "text-orange-600 dark:text-orange-400" }}
                 />
                 <StatCard
-                    title={translate("Capacity Utilization") || "Capacity Utilization"}
+                    title={translate("capacityUtilization")}
                     value={`${stats.engagement.avgCapacityUtilization} %`}
                     icon={<ChartBarIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-cyan-100 dark:bg-cyan-900", text: "text-cyan-600 dark:text-cyan-400" }}
                 />
                 <StatCard
-                    title={translate("Recent Signups (7d)") || "Recent Signups (7d)"}
+                    title={translate("recentSignups")}
                     value={stats.users.recent}
                     icon={<UsersIcon className="w-6 h-6"/>}
                     color={{ bg: "bg-pink-100 dark:bg-pink-900", text: "text-pink-600 dark:text-pink-400" }}
@@ -212,15 +212,15 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        {translate("User Breakdown") || "User Breakdown"}
+                        {translate("userBreakdown")}
                     </h3>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600 dark:text-gray-400">{translate("Students") || "Students"}</span>
+                            <span className="text-gray-600 dark:text-gray-400">{translate("students")}</span>
                             <span className="text-xl font-bold text-gray-900 dark:text-white">{stats.users.students}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600 dark:text-gray-400">{translate("Organizers") || "Organizers"}</span>
+                            <span className="text-gray-600 dark:text-gray-400">{translate("organizers")}</span>
                             <span className="text-xl font-bold text-gray-900 dark:text-white">{stats.users.organizers}</span>
                         </div>
                     </div>
@@ -228,15 +228,15 @@ export default function AdminDashboard() {
 
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        {translate("Event Status") || "Event Status"}
+                        {translate("eventStatus")}
                     </h3>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600 dark:text-gray-400">{translate("Completed") || "Completed"}</span>
+                            <span className="text-gray-600 dark:text-gray-400">{translate("completed")}</span>
                             <span className="text-xl font-bold text-green-600 dark:text-green-400">{stats.events.completed}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-gray-600 dark:text-gray-400">{translate("Cancelled") || "Cancelled"}</span>
+                            <span className="text-gray-600 dark:text-gray-400">{translate("cancelled")}</span>
                             <span className="text-xl font-bold text-red-600 dark:text-red-400">{stats.events.cancelled}</span>
                         </div>
                     </div>
