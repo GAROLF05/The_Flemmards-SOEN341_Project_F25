@@ -22,47 +22,29 @@ const ResetPassword = () => {
   useEffect(() => {
     // If there's no token in query, stay but show a message
     if (!tokenFromQuery) {
-      showNotification(
-        translate("missingToken") ||
-          "Reset token missing. Please use the link from your email.",
-        "error"
-      );
+      showNotification(translate("missingToken"), "error");
     }
   }, [tokenFromQuery, showNotification, translate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password || !confirmPassword) {
-      showNotification(
-        translate("pleaseFillAllFields") || "Please fill in all fields",
-        "error"
-      );
+      showNotification(translate("pleaseFillAllFields"), "error");
       return;
     }
     if (password !== confirmPassword) {
-      showNotification(
-        translate("passwordsDoNotMatch") || "Passwords do not match",
-        "error"
-      );
+      showNotification(translate("passwordsDoNotMatch"), "error");
       return;
     }
     if (password.length < 6) {
-      showNotification(
-        translate("passwordTooShort") ||
-          "Password must be at least 6 characters",
-        "error"
-      );
+      showNotification(translate("passwordTooShort"), "error");
       return;
     }
 
     setLoading(true);
     try {
       await resetPassword({ token: tokenFromQuery, password });
-      showNotification(
-        translate("passwordResetSuccess") ||
-          "Password reset successfully. You can now log in.",
-        "success"
-      );
+      showNotification(translate("passwordResetSuccess"), "success");
       navigate("/login");
     } catch (err) {
       console.error("Reset password error:", err);
@@ -82,11 +64,10 @@ const ResetPassword = () => {
         <div className="w-full max-w-md p-6 sm:p-8 lg:p-12">
           <div className="text-center lg:text-left mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              {translate("resetPassword") || "Reset Password"}
+              {translate("resetPassword")}
             </h1>
             <p className="mt-2 text-sm text-gray-600">
-              {translate("resetPasswordSubtitle") ||
-                "Enter a new password to reset your account."}
+              {translate("resetPasswordSubtitle")}
             </p>
           </div>
 
@@ -119,14 +100,14 @@ const ResetPassword = () => {
 
             <div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {translate("setNewPassword") || "Set new password"}
+                {translate("setNewPassword")}
               </Button>
             </div>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-600">
             <Button variant="text" onClick={() => navigate("/login")}>
-              {translate("backToLogin") || "Back to login"}
+              {translate("backToLogin")}
             </Button>
           </p>
         </div>
