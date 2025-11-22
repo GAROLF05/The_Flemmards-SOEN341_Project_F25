@@ -48,10 +48,7 @@ export default function Authentication() {
 
     // Validate form
     if (!loginForm.email || !loginForm.password) {
-      showNotification(
-        translate("pleaseFillAllFields") || "Please fill in all fields",
-        "error"
-      );
+      showNotification(translate("pleaseFillAllFields"), "error");
       return;
     }
 
@@ -61,8 +58,6 @@ export default function Authentication() {
       password: loginForm.password,
       role: loginForm.role, // Send selected role to backend
     };
-
-    console.log("Attempting login with:", { email: data.usernameEmail });
 
     login(data)
       .then((response) => {
@@ -81,7 +76,6 @@ export default function Authentication() {
       })
       .catch((error) => {
         console.error("Login error:", error);
-        console.error("Error response:", error.response);
 
         const errorMessage =
           error.response?.data?.error ||
@@ -89,25 +83,16 @@ export default function Authentication() {
           translate("anErrorHasOccured");
 
         if (error.response?.status === 401) {
-          showNotification(
-            translate("invalidCredentials") || "Invalid email or password",
-            "error"
-          );
+          showNotification(translate("invalidCredentials"), "error");
         } else if (error.response?.status === 400) {
           showNotification(errorMessage, "error");
         } else if (
           error.code === "ECONNREFUSED" ||
           error.message?.includes("Network Error")
         ) {
-          showNotification(
-            "Cannot connect to server. Please check if the backend is running.",
-            "error"
-          );
+          showNotification(translate("cannotConnectToServer"), "error");
         } else {
-          showNotification(
-            errorMessage || "An error occurred. Please try again.",
-            "error"
-          );
+          showNotification(errorMessage || translate("anErrorHasOccured"), "error");
         }
       });
   };
@@ -117,20 +102,13 @@ export default function Authentication() {
 
     // Validate password confirmation
     if (signUpForm.password !== signUpForm.confirmPassword) {
-      showNotification(
-        translate("passwordsDoNotMatch") || "Passwords do not match",
-        "error"
-      );
+      showNotification(translate("passwordsDoNotMatch"), "error");
       return;
     }
 
     // Validate password length
     if (signUpForm.password.length < 6) {
-      showNotification(
-        translate("passwordTooShort") ||
-          "Password must be at least 6 characters",
-        "error"
-      );
+      showNotification(translate("passwordTooShort"), "error");
       return;
     }
 
@@ -139,11 +117,11 @@ export default function Authentication() {
     // Validate organizer-specific fields
     if (isOrganizer) {
       if (!signUpForm.organizationName?.trim()) {
-        showNotification("Organization name is required", "error");
+        showNotification(translate("organizationNameRequired"), "error");
         return;
       }
       if (!signUpForm.organizationDescription?.trim()) {
-        showNotification("Organization description is required", "error");
+        showNotification(translate("organizationDescriptionRequired"), "error");
         return;
       }
       // Website is optional, but if provided, validate URL format
@@ -151,19 +129,16 @@ export default function Authentication() {
         try {
           new URL(signUpForm.organizationWebsite.trim());
         } catch {
-          showNotification(
-            "Please enter a valid website URL (e.g., https://example.com)",
-            "error"
-          );
+          showNotification(translate("enterValidUrl"), "error");
           return;
         }
       }
       if (!signUpForm.organizationEmail?.trim()) {
-        showNotification("Organization email is required", "error");
+        showNotification(translate("organizationEmailRequired"), "error");
         return;
       }
       if (!signUpForm.organizationPhone?.trim()) {
-        showNotification("Phone number is required", "error");
+        showNotification(translate("phoneNumberRequired"), "error");
         return;
       }
     }
@@ -215,22 +190,15 @@ export default function Authentication() {
         };
 
         await createOrganization(organizationData);
-        showNotification(
-          translate("accountCreated") ||
-            "Account and organization created successfully. Awaiting admin approval.",
-          "success"
-        );
+        showNotification(translate("accountCreated"), "success");
         navigate("/organizer");
       } else {
         // Student signup - just redirect to login
-        showNotification(
-          translate("accountCreated") || "Account created successfully",
-          "success"
-        );
+        showNotification(translate("accountCreated"), "success");
         navigate("/login");
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error(translate("signUpError:"), error);
       const errorMessage =
         error.response?.data?.error ||
         error.message ||
