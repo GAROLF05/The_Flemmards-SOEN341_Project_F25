@@ -160,7 +160,6 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
         }
     };
 
-
     useEffect(() => {
         const container = scrollContainerRef.current;
 
@@ -253,7 +252,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="eventType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("eventType")}</label>
                             <TagIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="eventType" id="eventType" value={filters.eventType} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Types</option>
+                                <option value="">{translate("all")}</option>
                                 {modalEventTypes.map(type => <option key={type} value={type}>{type}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -264,7 +263,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="location" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("location")}</label>
                             <MapPinIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="location" id="location" value={filters.location} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Locations</option>
+                                <option value="">{translate("all")}</option>
                                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -275,7 +274,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="organization" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Organization</label>
                             <BuildingOfficeIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="organization" id="organization" value={filters.organization} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Organizations</option>
+                                <option value="">{translate("all")}</option>
                                 {uniqueOrganizations.map(org => <option key={org} value={org}>{org}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -286,7 +285,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <div className="flex justify-between items-center mb-2">
                                 <label htmlFor="price" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">Price Range</label>
                                 <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 rounded-full">
-                                    Up to ${filters.price}
+                                    {translate("upTo", { price: filters.price })}
                                 </span>
                             </div>
                             <input
@@ -300,7 +299,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                                 className="w-full price-slider accent-indigo-700"
                             />
                             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                <span>Free</span>
+                                <span>{translate("free")}</span>
                                 <span>${maxPrice}</span>
                             </div>
                         </div>
