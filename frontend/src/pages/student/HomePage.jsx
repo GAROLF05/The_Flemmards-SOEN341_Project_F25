@@ -8,34 +8,10 @@ import { browseEvents, registerToEvent } from '../../api/eventApi';
 import { transformEventsForFrontend, getUniqueCategories, getUniqueLocations, getUniqueOrganizations } from '../../utils/eventTransform';
 import LoadingPage from '../../layouts/LoadingPage';
 import { useNotification } from '../../hooks/useNotification';
-
-// --- HOOKS ---
-const useCountdown = (targetDate) => {
-    const countDownDate = new Date(targetDate).getTime();
-    const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCountDown(countDownDate - new Date().getTime());
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [countDownDate]);
-    return getReturnValues(countDown);
-};
-
-const getReturnValues = (countDown) => {
-    const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
-
-    return [days, hours, minutes, seconds];
-};
+import { useCountdown } from '../../hooks/useCountdown';
 
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const { translate } = useLanguage();
-
     const eventDate = event?.start_at || event?.date;
     const [days, hours, minutes, seconds] = useCountdown(eventDate || new Date().toISOString());
 
