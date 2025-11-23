@@ -28,7 +28,7 @@ try {
 // Models of DB
 const Administrator = require('../models/Administrators');
 const { User, USER_ROLE } = require('../models/User');
-const { Event, EVENT_STATUS, MODERATION_STATUS, CATEGORY } = require('../models/Event');
+const { Event, EVENT_STATUS, MODERATION_STATUS } = require('../models/Event');
 const { Organization, ORGANIZATION_STATUS }= require('../models/Organization');
 const { Registration, REGISTRATION_STATUS } = require('../models/Registrations');
 const Ticket = require('../models/Ticket');
@@ -110,6 +110,56 @@ exports.getDashboardStats = async (req,res) => {
         .select('capacity registered_users')
         .lean();
 
+        const allEvents = await Registration.find({
+            status: REGISTRATION_STATUS.CONFIRMED
+        })
+            .select('ticketsIssued quantity event')
+            .populate({
+                path: 'event',
+                select: 'start_at'
+            })
+            .lean();
+
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+        const filteredRegistrations = allEvents.filter(registration => registration && new Date(registration.event.start_at) >= twelveMonthsAgo);
+
+        // 1. Build list of last 12 months in order
+        const monthsOrder = [];
+        const today = new Date();
+
+        // start from 12 months ago (inclusive)
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const key = d.getFullYear() + "-" + (d.getMonth() + 1); // YYYY-M
+            monthsOrder.push({
+                key,
+                name: d.toLocaleString("en-US", { month: "long" }).toLowerCase()
+            });
+        }
+
+        // 2. Group your data
+        const grouped = filteredRegistrations.reduce((acc, item) => {
+            const date = new Date(item.event.start_at);
+            const key = date.getFullYear() + "-" + (date.getMonth() + 1);
+            const name = date.toLocaleString("en-US", { month: "long" });
+
+            if (!acc[key]) {
+                acc[key] = { month: name, registered: 0, ticketsIssued: 0 };
+            }
+
+            acc[key].registered += item.quantity;
+            acc[key].ticketsIssued += item.ticketsIssued;
+
+            return acc;
+        }, {});
+
+        // 3. Build final array in correct order
+        const participationTrend = monthsOrder.map(m => {
+            return grouped[m.key] ?? { month: m.name, registered: 0, ticketsIssued: 0 };
+        });
+
         let totalCapacity = 0;
         let totalRegistered = 0;
         let eventsWithData = 0;
@@ -181,7 +231,8 @@ exports.getDashboardStats = async (req,res) => {
                     pendingEvents: pendingEventModeration,
                     flaggedEvents: flaggedEvents,
                     totalPending: pendingOrganizations + pendingEventModeration
-                }
+                },
+                participationTrends: participationTrend
             }
         });
 
