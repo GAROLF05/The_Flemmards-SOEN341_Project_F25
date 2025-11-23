@@ -30,7 +30,7 @@ describe('useLanguage', () => {
         const { result } = renderHook(() => useLanguage());
 
         expect(result.current.currentLanguage).toBe('en');
-        expect(result.current.availableLanguages).toEqual(['en', 'fr']);
+        expect(result.current.availableLanguages).toEqual(['en', 'fr', 'es', 'zh']);
     });
 
     it('should call the translation function with the correct key and options', () => {
