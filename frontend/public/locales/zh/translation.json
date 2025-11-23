@@ -114,6 +114,8 @@
     "language": "语言",
     "learnMore": "了解更多",
     "light": "浅色",
+    "loading": "正在加载...",
+    "loadingDashboard": "正在加载仪表盘...",
     "loadingOrganizationDetails": "正在加载组织详情...",
     "loadingOrganizations": "正在加载组织...",
     "loadingOrganizerDetails": "正在加载组织者详情...",

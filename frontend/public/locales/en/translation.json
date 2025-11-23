@@ -114,6 +114,8 @@
     "language": "Language",
     "learnMore": "Learn more",
     "light": "Light",
+    "loading": "Loading...",
+    "loadingDashboard": "Loading dashboard...",
     "loadingOrganizationDetails": "Loading organization details...",
     "loadingOrganizations": "Loading organizations...",
     "loadingOrganizerDetails": "Loading organizer details...",

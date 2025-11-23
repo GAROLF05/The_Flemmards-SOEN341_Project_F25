@@ -114,6 +114,8 @@
     "language": "Idioma",
     "learnMore": "Saber más",
     "light": "Claro",
+    "loading": "Cargando...",
+    "loadingDashboard": "Cargando panel...",
     "loadingOrganizationDetails": "Cargando detalles de la organización...",
     "loadingOrganizations": "Cargando organizaciones...",
     "loadingOrganizerDetails": "Cargando detalles del organizador...",
