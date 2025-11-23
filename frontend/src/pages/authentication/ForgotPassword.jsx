@@ -18,21 +18,14 @@ const ForgotPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email.trim()) {
-      showNotification(
-        translate("pleaseFillAllFields") || "Please fill in all fields",
-        "error"
-      );
+      showNotification(translate("pleaseFillAllFields"), "error");
       return;
     }
 
     setLoading(true);
     try {
       await forgotPassword({ email: email.trim() });
-      showNotification(
-        translate("passwordResetEmailSent") ||
-          "If an account with that email exists, a reset link has been sent.",
-        "success"
-      );
+      showNotification(translate("passwordResetEmailSent"), "success");
       navigate("/login");
     } catch (err) {
       console.error("Forgot password error:", err);
@@ -65,15 +58,14 @@ const ForgotPassword = () => {
             {translate("forgotPassword")}
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            {translate("forgotPasswordSubtitle") ||
-              "Enter your email to receive a password reset link."}
+            {translate("forgotPasswordSubtitle")}
           </p>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <TextField
-              id="email-address"
+              id="email-address2"
               name="email"
               type="email"
               autoComplete="email"
@@ -88,14 +80,14 @@ const ForgotPassword = () => {
 
           <div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {translate("sendResetLink") || "Send reset link"}
+              {translate("sendResetLink")}
             </Button>
           </div>
         </form>
 
         <p className="mt-8 text-center text-sm text-gray-600">
           <Button variant="text" onClick={() => navigate("/login")}>
-            {translate("backToLogin") || "Back to login"}
+            {translate("backToLogin")}
           </Button>
         </p>
       </div>

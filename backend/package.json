@@ -1,0 +1,56 @@
+{
+  "name": "the_flemmards-soen341_project_f25",
+  "version": "1.0.0",
+  "description": "This is a web-app for Campus Event & Ticketing Application to help students discover, organize and attend campus events. Additionally, this app allows organizers to create and manage events, and observe the analytics of the events through user-friendly dashboards. Furthermore, this app allows administrators to moderate content and oversee organizations to assure the safety and appropriateness of events.",
+  "homepage": "https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25#readme",
+  "bugs": {
+    "url": "https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "concurrently \"nodemon server.js\" \"npm --prefix frontend run dev\"",
+    "dev:backend": "nodemon server.js",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "start": "node server.js",
+    "build-and-start": "npm run build; npm run start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "ics": "^3.8.1",
+    "jsonwebtoken": "^9.0.2",
+    "jsqr": "^1.4.0",
+    "jwt-decode": "^4.0.0",
+    "mongoose": "^8.19.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^7.0.9",
+    "qrcode": "^1.5.4",
+    "recharts": "^3.3.0",
+    "validator": "^13.15.15"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "dotenv": "^17.2.3",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.1.1",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.0.0"
+  }
+}

@@ -268,7 +268,7 @@ const initialEventsData = [
 const categories = ['All', 'Featured', 'Music', 'Technology', 'Business', 'Sports', 'Community', 'Arts & Culture', 'Food & Drink', 'Health & Wellness', 'Education'];
 
 const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
-    const { translate } = useLanguage();
+    const { translate, currentLanguage} = useLanguage();
     const { showNotification } = useNotification();
     const [isExporting, setIsExporting] = useState(false);
 
@@ -286,18 +286,17 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
     };
 
     const eventDate = new Date(event.start_at || event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formattedDate = eventDate.toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric', year: 'numeric' });
 
     const handleExportAttendees = async () => {
         if (!event.id && !event._id) {
-            showNotification('Cannot export: Event ID is missing', 'error');
+            showNotification(translate("errorExportingCSV"), 'error');
             return;
         }
 
         setIsExporting(true);
         try {
             const eventId = event.id || event._id;
-            console.log('Exporting CSV for event:', { eventId, fullEvent: event });
 
             if (!eventId) {
                 throw new Error('Event ID is missing');
@@ -337,7 +336,7 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
 
-            showNotification('Successfully exported attendees CSV', 'success');
+            showNotification(translate("exportAttendeesCSVSuccessful"), 'success');
         } catch (error) {
             console.error('Error exporting attendees:', error);
             // Error message is already formatted in the exportAttendeesCSV function
@@ -361,14 +360,14 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                 />
                 <div className="absolute inset-0 bg-opacity-20 group-hover:bg-opacity-40 transition-opacity duration-300"></div>
                 <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm text-gray-900 dark:text-white text-sm font-semibold px-3 py-1 rounded-full">
-                    {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                    {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : translate(event.price.toLowerCase())}
                 </div>
             </div>
             <div className="p-6 flex flex-col flex-grow">
                  <div className="flex-grow">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 self-start">{event.category}</span>
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 self-start">{translate(event.category.toLowerCase())}</span>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate">{event.title}</h3>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1 capitalize">
                         <p>{formattedDate}</p>
                         <p>{event.location}</p>
                     </div>
@@ -378,9 +377,9 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                         <div className="flex gap-2">
                             <button onClick={() => onViewDetails(event)} className="flex-1 bg-gray-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 capitalize cursor-pointer flex items-center justify-center gap-2">
                                 <InformationCircleIcon className="w-5 h-5" />
-                                Details
+                                {translate("details")}
                             </button>
-                            <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 capitalize cursor-pointer">
+                            <button onClick={() => onViewAnalytics(eventWithAnalytics)} className="flex-1 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
                                 {translate("eventAnalytics")}
                             </button>
                         </div>
@@ -390,7 +389,7 @@ const EventCard = ({ event, onViewAnalytics, onViewDetails }) => {
                             className="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ArrowDownTrayIcon className="w-5 h-5" />
-                            {isExporting ? 'Exporting...' : 'Export Attendees CSV'}
+                            {translate(isExporting ? "exporting..." : "exportAttendeesCSV")}
                         </button>
                     </div>
                 </div>
@@ -464,7 +463,7 @@ const AnalyticsModal = ({ event, isOpen, onClose }) => {
 };
 
 const EventDetailsModal = ({ event, isOpen, onClose }) => {
-    // const { translate } = useLanguage();
+    const { translate, currentLanguage } = useLanguage();
 
     if (!event)
         return null;
@@ -475,8 +474,10 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
     const eventEnd = endDate ? new Date(endDate) : null;
 
     const formatDateTime = (date) => {
-        if (!date) return 'Not specified';
-        return date.toLocaleDateString('en-US', {
+        if (!date)
+            return translate("notSpecified");
+
+        return date.toLocaleDateString(currentLanguage, {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -485,11 +486,6 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
             minute: '2-digit'
         });
     };
-
-    // const formatTime = (date) => {
-    //     if (!date) return '';
-    //     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    // };
 
     return (
         <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
@@ -521,7 +517,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
 
                         {/* Category Badge */}
                         <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-6">
-                            {event.category}
+                            {translate(event.category.toLowerCase())}
                         </span>
 
                         {/* Event Details Grid */}
@@ -530,13 +526,13 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                             <div className="flex items-start gap-3">
                                 <CalendarDaysIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Date & Time</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white capitalize">{translate("dateAndTime")}</p>
                                     <p className="text-gray-600 dark:text-gray-300">
                                         {formatDateTime(eventStart)}
                                     </p>
                                     {eventEnd && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Ends: {formatDateTime(eventEnd)}
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                            {translate("ends")}: {formatDateTime(eventEnd)}
                                         </p>
                                     )}
                                 </div>
@@ -546,9 +542,9 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                             <div className="flex items-start gap-3">
                                 <MapPinIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Location</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{translate("location")}</p>
                                     <p className="text-gray-600 dark:text-gray-300">
-                                        {event.location || 'Not specified'}
+                                        {event.location || translate("notSpecified")}
                                     </p>
                                     {event.address && event.address !== event.location && (
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -562,13 +558,13 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                             <div className="flex items-start gap-3">
                                 <UsersIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Capacity</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{translate("capacity")}</p>
                                     <p className="text-gray-600 dark:text-gray-300">
-                                        {event.registeredUsers || 0} / {event.capacity || 0} registered
+                                        {event.registeredUsers || 0} / {event.capacity || 0} {translate("registered")}
                                     </p>
                                     {event.capacity && (
                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            {event.capacity - (event.registeredUsers || 0)} spots remaining
+                                            {event.capacity - (event.registeredUsers || 0)} {translate("spotsRemaining")}
                                         </p>
                                     )}
                                 </div>
@@ -578,9 +574,9 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                             <div className="flex items-start gap-3">
                                 <ClockIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mt-1 flex-shrink-0" />
                                 <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">Price</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{translate("price")}</p>
                                     <p className="text-gray-600 dark:text-gray-300">
-                                        {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                                        {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : translate(event.price.toLowerCase())}
                                     </p>
                                 </div>
                             </div>
@@ -589,7 +585,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                         {/* Description */}
                         {event.description && (
                             <div className="mb-6">
-                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Description</h3>
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{translate("description")}</h3>
                                 <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                                     {event.description}
                                 </p>
@@ -599,21 +595,21 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
                         {/* Organization */}
                         {event.organization && (
                             <div className="mb-6">
-                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Organization</h3>
+                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{translate("organization")}</h3>
                                 <p className="text-gray-600 dark:text-gray-300">{event.organization.toString()}</p>
                             </div>
                         )}
 
                         {/* Status */}
                         <div className="flex items-center gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{translate("status")}:</span>
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                                 event.status === 'upcoming' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
                                 event.status === 'ongoing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
                                 event.status === 'completed' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
                                 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                             }`}>
-                                {event.status ? event.status.charAt(0).toUpperCase() + event.status.slice(1) : 'Unknown'}
+                                {event.status ? translate(event.status.toLowerCase()) : translate("unknown")}
                             </span>
                         </div>
                     </div>
@@ -624,6 +620,7 @@ const EventDetailsModal = ({ event, isOpen, onClose }) => {
 };
 
 const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApproved, userRejected, categories }) => {
+    const { translate } = useLanguage();
     const [newEvent, setNewEvent] = useState({ title: '', category: 'Music', startAt: '', endAt: '', location: '', locationAddress: '', description: '', price: 0, capacity: 0 });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -813,16 +810,16 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApp
                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ transform: isOpen ? 'scale(1)' : 'scale(0.95)', opacity: isOpen ? 1 : 0 }}>
                     <form onSubmit={handleSubmit} className="p-8">
                         <button type="button" onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"> <XMarkIcon className="h-6 w-6"/> </button>
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Create New Event</h2>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{translate("createNewEvent")}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                            <div> <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Title</label> <input id="title" name="title" value={newEvent.title} onChange={handleChange} placeholder="e.g., Summer Music Fest" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label> <select id="category" name="category" value={newEvent.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200"> {categories.filter(c => c !== 'All' && c !== 'Featured').map(cat => <option key={cat} value={cat}>{cat}</option>)} </select> </div>
-                            <div> <label htmlFor="startAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Starts At</label> <input id="startAt" name="startAt" type="datetime-local" value={newEvent.startAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="endAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ends At</label> <input id="endAt" name="endAt" type="datetime-local" value={newEvent.endAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Name</label> <input id="location" name="location" value={newEvent.location} onChange={handleChange} placeholder="e.g., Place des Arts" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="locationAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location Address</label> <input id="locationAddress" name="locationAddress" value={newEvent.locationAddress} onChange={handleChange} placeholder="e.g., 175 Sainte-Catherine St W, Montreal, QC" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("eventTitle")}</label> <input id="title" name="title" value={newEvent.title} onChange={handleChange} placeholder="e.g., Summer Music Fest" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("category")}</label> <select id="category" name="category" value={newEvent.category} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200"> {categories.filter(c => c !== 'All' && c !== 'Featured').map(cat => <option key={cat} value={cat}>{cat}</option>)} </select> </div>
+                            <div> <label htmlFor="startAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("startsAt")}</label> <input id="startAt" name="startAt" type="datetime-local" value={newEvent.startAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="endAt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("endsAt")}</label> <input id="endAt" name="endAt" type="datetime-local" value={newEvent.endAt} onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("locationName")}</label> <input id="location" name="location" value={newEvent.location} onChange={handleChange} placeholder="e.g., Place des Arts" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="locationAddress" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("locationAddress")}</label> <input id="locationAddress" name="locationAddress" value={newEvent.locationAddress} onChange={handleChange} placeholder="e.g., 175 Sainte-Catherine St W, Montreal, QC" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Image</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("eventImage")}</label>
                                 {imagePreview ? (
                                     <div className="relative">
                                         <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg border border-gray-300 dark:border-gray-600" />
@@ -858,16 +855,16 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApp
                                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-4h4m-4-4v4m0-4h-4m-4 0h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                             </svg>
                                             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">Click to upload</span> or drag and drop
+                                                <span className="font-semibold text-indigo-600 dark:text-indigo-400">{translate("clickToUpload")}</span> {translate("orDragAndDrop")}
                                             </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">PNG, JPG, GIF or WEBP (Max 5MB)</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">PNG, JPG, GIF {translate("or")} WEBP (Max 5MB)</p>
                                         </label>
                                     </div>
                                 )}
                             </div>
-                            <div> <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price</label> <input id="price" name="price" type="number" value={newEvent.price} onChange={handleChange} placeholder="0 for free" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div> <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Capacity</label> <input id="capacity" name="capacity" type="number" value={newEvent.capacity} onChange={handleChange} placeholder="e.g., 500" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
-                            <div className="md:col-span-2"> <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label> <textarea id="description" name="description" value={newEvent.description} onChange={handleChange} placeholder="Tell us more about the event..." className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" rows="3" required></textarea> </div>
+                            <div> <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("price")}</label> <input id="price" name="price" type="number" value={newEvent.price} onChange={handleChange} placeholder="0 for free" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div> <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("capacity")}</label> <input id="capacity" name="capacity" type="number" value={newEvent.capacity} onChange={handleChange} placeholder="e.g., 500" className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" required /> </div>
+                            <div className="md:col-span-2"> <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{translate("description")}</label> <textarea id="description" name="description" value={newEvent.description} onChange={handleChange} placeholder={translate("descriptionPlaceholder")} className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-gray-900 dark:text-gray-200" rows="3" required></textarea> </div>
                         </div>
                         <div className="mt-8 flex justify-end">
                             <button
@@ -875,7 +872,7 @@ const CreateEventModal = ({ isOpen, onClose, onAddEvent, organizationId, userApp
                                 disabled={isSubmitting}
                                 className={`bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                {isSubmitting ? 'Creating...' : 'Create Event'}
+                                {translate(isSubmitting ? 'creatingEvent' : 'createEvent')}
                             </button>
                         </div>
                     </form>
@@ -925,14 +922,10 @@ const DashboardPage = () => {
                 setLoading(true);
 
                 const userProfileResponse = await getUserProfile();
-                console.log('User profile response:', userProfileResponse); // Debug
 
                 // axios wraps the response in .data
                 const userProfile = userProfileResponse?.data || userProfileResponse;
                 const user = userProfile?.user || userProfile;
-
-                console.log('User object:', user); // Debug
-                console.log('User organization:', user?.organization); // Debug
 
                 if (!user) {
                     console.error('User not found in response');
@@ -961,15 +954,6 @@ const DashboardPage = () => {
                 setUserRejected(isRejected);
                 setRejectedAt(user.rejectedAt || null);
 
-                // Store rejection status for display
-                if (isRejected && !user.approved) {
-                    // User is rejected
-                    console.log('User account has been rejected. Rejected at:', user.rejectedAt);
-                } else if (!isApproved && !isRejected) {
-                    // User is pending approval
-                    console.log('User account is pending approval');
-                }
-
                 // Extract organization ID and name - handle both populated object and string ObjectId
                 let orgId = null;
                 let orgName = null;
@@ -985,10 +969,6 @@ const DashboardPage = () => {
                     orgName = user.organization.name || null;
                 }
 
-                console.log('User approval status:', isApproved); // Debug
-                console.log('Extracted organization ID:', orgId); // Debug
-                console.log('Organization type:', typeof user.organization); // Debug
-
                 // Store organization ID and name (if available)
                 if (orgId) {
                     setOrganizationId(orgId);
@@ -1001,15 +981,12 @@ const DashboardPage = () => {
                 }
 
                 const response = await getEventsByOrganization(orgId);
-                console.log('API Response (raw):', response); // Debug log
 
                 // axios wraps the response in .data
                 const responseData = response?.data || response;
-                console.log('API Response (unwrapped):', responseData); // Debug log
 
                 // Handle different response formats
                 const eventsArray = responseData?.events || responseData || [];
-                console.log('Events extracted:', eventsArray.length, eventsArray); // Debug log
 
                 if (!Array.isArray(eventsArray)) {
                     console.error('Events is not an array:', eventsArray);
@@ -1018,17 +995,6 @@ const DashboardPage = () => {
                 }
 
                 const transformedEvents = transformEventsForFrontend(eventsArray);
-                console.log('Transformed events:', transformedEvents.length, transformedEvents); // Debug log
-
-                // Debug: Check location data in transformed events
-                if (transformedEvents.length > 0) {
-                    console.log('First event location check:', {
-                        original: eventsArray[0]?.location,
-                        transformed: transformedEvents[0]?.location,
-                        address: transformedEvents[0]?.address,
-                        fullEvent: transformedEvents[0]
-                    });
-                }
 
                 setEvents(transformedEvents);
             } catch (err) {
@@ -1159,7 +1125,7 @@ const DashboardPage = () => {
                         }`}
                     >
                         <PlusCircleIcon className="w-5 h-5"/>
-                        <span>{translate("createEvent")}</span>
+                        <span>{translate("createAnEvent")}</span>
                     </button>
                 </div>
 

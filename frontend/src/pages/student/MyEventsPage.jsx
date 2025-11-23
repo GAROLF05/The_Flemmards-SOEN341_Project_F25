@@ -10,6 +10,8 @@ import { decodeToken } from '../../utils/jwt';
 const eventStatuses = ['all', 'confirmed', 'waitlisted', 'cancelled'];
 
 const EventCard = ({ event, onViewDetails }) => {
+    const { translate, currentLanguage } = useLanguage();
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
             <div className="relative">
@@ -21,9 +23,9 @@ const EventCard = ({ event, onViewDetails }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300 capitalize">{event.category}</span>
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300 capitalize">{translate(event.category.toLowerCase())}</span>
                         <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
-                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
+                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : translate(event.price.toLowerCase())}
                         </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
@@ -31,7 +33,7 @@ const EventCard = ({ event, onViewDetails }) => {
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
                             <CalendarDaysIcon className="w-4 h-4" />
-                            <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                            <span className="capitalize">{new Date(event.date).toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPinIcon className="w-4 h-4" />
@@ -45,7 +47,7 @@ const EventCard = ({ event, onViewDetails }) => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 transition-colors duration-300">
                     <button onClick={() => onViewDetails(event)} className="flex-grow bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        View Details
+                        {translate("viewDetails")}
                     </button>
                 </div>
             </div>
@@ -54,6 +56,7 @@ const EventCard = ({ event, onViewDetails }) => {
 };
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
+    const { translate, currentLanguage } = useLanguage();
     const { showNotification } = useNotification();
     const [isLoadingQRGeneration, setIsLoadingQRGeneration] = useState(false);
 
@@ -61,8 +64,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
         return null;
 
     const eventDate = new Date(event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedDate = eventDate.toLocaleDateString(currentLanguage, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedTime = eventDate.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const handleDownloadQRCode = async () => {
         const ticketNumber = event.ticketNumber;
@@ -115,12 +118,12 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
             <img src={event.imageUrl} alt={event.title} className="w-full h-64 object-cover rounded-t-xl" />
 
             <div className="p-8">
-                <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{event.category}</span>
+                <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{translate(event.category.toLowerCase())}</span>
                 <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                 <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                     <div className="flex items-center gap-3">
                         <CalendarDaysIcon className="w-5 h-5 flex-shrink-0" />
-                        <span>{formattedDate} at {formattedTime}</span>
+                        <span className="capitalize">{formattedDate} {translate("at")} {formattedTime}</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <MapPinIcon className="w-5 h-5 flex-shrink-0" />
@@ -132,7 +135,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     </div>
                     <div className="flex items-center gap-3">
                         <TicketIcon className="w-5 h-5 flex-shrink-0" />
-                        <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price}</span>
+                        <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : translate(event.price.toLowerCase())}</span>
                     </div>
                 </div>
 
@@ -145,7 +148,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <QrCodeIcon className="w-6 h-6" />
-                        Download Ticket QR Code
+                        {translate("downloadQRCode")}
                         {isLoadingQRGeneration && (
                             <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
                         )}
@@ -157,6 +160,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 };
 
 const StatusFilter = ({ activeStatus, setActiveStatus }) => {
+    const { translate } = useLanguage();
+
     return (
         <div className="flex flex-wrap gap-3">
             {eventStatuses.map(status => (
@@ -168,7 +173,7 @@ const StatusFilter = ({ activeStatus, setActiveStatus }) => {
                         ? 'bg-indigo-600 text-white shadow-lg'
                         : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}>
-                    {status}
+                    {translate(status.toLowerCase())}
                 </button>
             ))}
         </div>
@@ -240,8 +245,8 @@ export default function MyEventsPage() {
     return (
         <>
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">My Reserved Events</h1>
-                <p className="mt-1 text-gray-600 dark:text-gray-400">All the events you're scheduled to attend.</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-2 capitalize">{translate("myReservedEvents")}</h1>
+                <p className="mt-1 text-gray-600 dark:text-gray-400">{translate("myReservedEventsDescription")}</p>
             </div>
 
             <div className="flex justify-between items-center mb-8">
@@ -269,8 +274,8 @@ export default function MyEventsPage() {
                 </div>
             ) : (
                 <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">No Reserved Events</h3>
-                    <p className="mt-2 text-gray-500 dark:text-gray-400">You haven't reserved any events yet. Go explore!</p>
+                    <h3 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">{translate("noReservedEvents")}</h3>
+                    <p className="mt-2 text-gray-500 dark:text-gray-400">{translate("noReservedEventsDescription")}</p>
                 </div>
             )}
 

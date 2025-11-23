@@ -8,6 +8,7 @@ import LoadingPage from '../../layouts/LoadingPage';
 import { useNotification } from '../../hooks/useNotification';
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
+    const { translate, currentLanguage } = useLanguage();
     const [isLoadingQRGeneration, setIsLoadingQRGeneration] = useState(false);
     const { showNotification } = useNotification();
 
@@ -15,8 +16,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
         return <></>;
 
     const eventDate = new Date(event.date || event.start_at);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedDate = eventDate.toLocaleDateString(currentLanguage, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedTime = eventDate.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const handleDownloadQRCode = async () => {
         const ticketNumber = event.ticketNumber;
@@ -76,33 +77,33 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     }}
                 />
                 <div className="p-8">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{event.category}</span>
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4 capitalize">{translate(event.category.toLowerCase())}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                     <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                         <div className="flex items-center gap-3">
-                            <CalendarDateRangeIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{formattedDate} at {formattedTime}</span>
+                            <CalendarDateRangeIcon className="w-5 h-5 flex-shrink-0" />
+                            <span className="capitalize">{formattedDate} at {formattedTime}</span>
                         </div>
                         {event.location && (
                             <div className="flex items-center gap-3">
-                                <MapPinIcon className="w-5 h-5 flex-shrink-0"/>
+                                <MapPinIcon className="w-5 h-5 flex-shrink-0" />
                                 <span>{event.location}</span>
                             </div>
                         )}
                         {event.organization && (
                             <div className="flex items-center gap-3">
-                                <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0"/>
+                                <BuildingOfficeIcon className="w-5 h-5 flex-shrink-0" />
                                 <span>{event.organization}</span>
                             </div>
                         )}
                         <div className="flex items-center gap-3">
-                            <TicketIcon className="w-5 h-5 flex-shrink-0"/>
-                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price || 'Free'}</span>
+                            <TicketIcon className="w-5 h-5 flex-shrink-0" />
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : translate(event.price.toLowerCase())}</span>
                         </div>
                         {event.capacity && (
                             <div className="flex items-center gap-3">
-                                <UsersIcon className="w-5 h-5 flex-shrink-0"/>
-                                <span>Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
+                                <UsersIcon className="w-5 h-5 flex-shrink-0" />
+                                <span>{translate("capacity")}: {event.registeredUsers || 0} / {event.capacity}</span>
                             </div>
                         )}
                     </div>
@@ -114,7 +115,7 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                             className="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <QrCodeIcon className="w-6 h-6" />
-                            Download Ticket QR Code
+                            {translate("downloadQRCode")}
                             {isLoadingQRGeneration && (
                                 <span className="animate-spin ml-2 h-5 w-5 border-b-2 rounded-full" />
                             )}
@@ -127,7 +128,9 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
 };
 
 const CalendarPage = () => {
-    const [currentDate, setCurrentDate] = useState(new Date('2025-10-11T12:00:00'));
+    const now = new Date();
+    const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const [currentDate, setCurrentDate] = useState(new Date(firstDayOfCurrentMonth));
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [eventsData, setEventsData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -187,7 +190,7 @@ const CalendarPage = () => {
         const days = [];
         const prevLastDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
         for (let i = startingDay; i > 0; i--) {
-            days.push({ key: `prev-${i}`, date: new Date(currentDate.getFullYear(), currentDate.getMonth() -1, prevLastDay - i + 1), isPadding: true });
+            days.push({ key: `prev-${i}`, date: new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, prevLastDay - i + 1), isPadding: true });
         }
         for (let i = 1; i <= daysInMonth; i++) {
             days.push({ key: `current-${i}`, date: new Date(currentDate.getFullYear(), currentDate.getMonth(), i), isPadding: false });
@@ -239,7 +242,7 @@ const CalendarPage = () => {
 
     return (
         <>
-            <div className="flex-grow flex flex-col bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-colors duration-300">
+            <div className="flex-grow flex flex-col bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-colors duration-300 h-[calc(100vh-185px)]">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
                     <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight transition-colors duration-300 capitalize">
                         {translate("eventCalendar")}
@@ -249,10 +252,10 @@ const CalendarPage = () => {
                     </h2>
                     <div className="flex items-center gap-2">
                         <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 cursor-pointer">
-                            <ChevronLeftIcon className="w-6 h-6 text-gray-600 dark:text-gray-300"/>
+                            <ChevronLeftIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                         </button>
                         <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 cursor-pointer">
-                            <ChevronRightIcon className="w-6 h-6 text-gray-600 dark:text-gray-300"/>
+                            <ChevronRightIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                         </button>
                     </div>
                 </div>
@@ -271,7 +274,7 @@ const CalendarPage = () => {
                         return (
                             <div
                                 key={day.key}
-                                className={`bg-white dark:bg-gray-800 p-2 h-36 flex flex-col overflow-hidden transition-colors duration-300 ${day.isPadding ? 'opacity-50' : ''}`}
+                                className={`bg-white dark:bg-gray-800 p-2 flex flex-col overflow-hidden transition-colors duration-300 ${day.isPadding ? 'opacity-50' : ''}`}
                             >
                                 <span className={`font-semibold mb-1 ${isToday ? 'bg-indigo-600 text-white rounded-full h-6 w-6 flex items-center justify-center' : 'text-gray-800 dark:text-gray-200'}`}>
                                     {day.date ? day.date.getDate() : ''}
@@ -288,7 +291,7 @@ const CalendarPage = () => {
                                     ))}
                                     {dayEvents.length > 2 && (
                                         <button className="w-full text-left text-xs text-gray-500 dark:text-gray-400 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300 cursor-pointer">
-                                            {translate("plusMore", {count : dayEvents.length - 2})}
+                                            {translate("plusMore", { count: dayEvents.length - 2 })}
                                         </button>
                                     )}
                                 </div>

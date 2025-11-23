@@ -25,12 +25,15 @@ const CATEGORY = {
     HEALTH_WELLNESS: 'health & wellness',
     EDUCATION: 'education',
     WORKSHOP: 'workshop',
+    NETWORKING: 'networking',
+    FUNDRAISER: 'fundraiser',
+    ENTERTAINMENT: 'entertainment',
     OTHER: 'other'
 };
 
 // Database that will contain all events on the website
 const eventSchema = new mongoose.Schema({
-    
+
     organization: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Organization',
@@ -139,7 +142,7 @@ const eventSchema = new mongoose.Schema({
         index: true,
     }],
 
-    comments: [{ 
+    comments: [{
         type: String,
         trim: true,
     }],
@@ -154,11 +157,11 @@ const eventSchema = new mongoose.Schema({
     collection: 'events',
     timestamps: true,
     versionKey: false,
-    toJSON: { 
-        virtuals: true 
+    toJSON: {
+        virtuals: true
     },
-    toObject: { 
-        virtuals: true 
+    toObject: {
+        virtuals: true
     }
 });
 

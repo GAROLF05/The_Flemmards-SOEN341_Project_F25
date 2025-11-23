@@ -8,34 +8,10 @@ import { browseEvents, registerToEvent } from '../../api/eventApi';
 import { transformEventsForFrontend, getUniqueCategories, getUniqueLocations, getUniqueOrganizations } from '../../utils/eventTransform';
 import LoadingPage from '../../layouts/LoadingPage';
 import { useNotification } from '../../hooks/useNotification';
-
-// --- HOOKS ---
-const useCountdown = (targetDate) => {
-    const countDownDate = new Date(targetDate).getTime();
-    const [countDown, setCountDown] = useState(countDownDate - new Date().getTime());
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCountDown(countDownDate - new Date().getTime());
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [countDownDate]);
-    return getReturnValues(countDown);
-};
-
-const getReturnValues = (countDown) => {
-    const days = Math.floor(countDown / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
-
-    return [days, hours, minutes, seconds];
-};
+import { useCountdown } from '../../hooks/useCountdown';
 
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const { translate } = useLanguage();
-
     const eventDate = event?.start_at || event?.date;
     const [days, hours, minutes, seconds] = useCountdown(eventDate || new Date().toISOString());
 
@@ -81,9 +57,10 @@ const FeaturedEventSlide = ({ event, onViewDetails }) => {
 };
 
 const EventCard = ({ event, onViewDetails }) => {
+    const { translate, currentLanguage } = useLanguage();
     const eventDate = new Date(event.start_at || event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedDate = eventDate.toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric', year: 'numeric' });
+    const formattedTime = eventDate.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', hour12: true });
     const [isLiked, setIsLiked] = useState(false);
 
     const handleLikeClick = (e) => {
@@ -102,15 +79,15 @@ const EventCard = ({ event, onViewDetails }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{event.category}</span>
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">{translate(event.category.toLowerCase())}</span>
                         <div className="flex gap-2">
                             {event.organizationStatus === 'suspended' && (
                                 <span className="inline-block bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300" title="Organization Suspended">
-                                    Suspended
+                                    {translate("suspended")}
                                 </span>
                             )}
                             <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
-                                {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price || 'Free'}
+                                {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : translate(event.price.toLowerCase())}
                             </span>
                         </div>
                     </div>
@@ -119,7 +96,7 @@ const EventCard = ({ event, onViewDetails }) => {
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
                             <CalendarDaysIcon className="w-4 h-4" />
-                            <span>{formattedDate} at {formattedTime}</span>
+                            <span className="capitalize">{formattedDate} {translate("at")} {formattedTime}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPinIcon className="w-4 h-4" />
@@ -133,7 +110,7 @@ const EventCard = ({ event, onViewDetails }) => {
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center gap-3 transition-colors duration-300">
                     <button onClick={() => onViewDetails(event)} className="flex-grow bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        View Details
+                        {translate("viewDetails")}
                     </button>
                     <button
                         onClick={handleLikeClick}
@@ -150,6 +127,7 @@ const EventCard = ({ event, onViewDetails }) => {
 };
 
 const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) => {
+    const { translate } = useLanguage();
     const scrollContainerRef = useRef(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
@@ -182,7 +160,6 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
         }
     };
 
-
     useEffect(() => {
         const container = scrollContainerRef.current;
 
@@ -210,7 +187,7 @@ const CategoryFilter = ({ categories, activeCategories, setActiveCategories }) =
             {canScrollLeft && (<button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300" aria-label="Scroll left"> <ChevronLeftIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" /> </button>)}
             <div ref={scrollContainerRef} className="flex overflow-x-auto gap-3 py-2 px-2 scroll-smooth" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <style>{`.scroll-smooth::-webkit-scrollbar { display: none; }`}</style>
-                {categories.map(category => (<button key={category} onClick={() => handleCategoryClick(category)} className={`px-4 py-2 text-sm font-medium rounded-full transition-colors duration-300 whitespace-nowrap ${activeCategories.includes(category) ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}> {category} </button>))}
+                {categories.map(category => (<button key={category} onClick={() => handleCategoryClick(category)} className={`px-4 py-2 text-sm font-medium rounded-full transition-colors duration-300 whitespace-nowrap ${activeCategories.includes(category) ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}> {translate(category.toLowerCase())} </button>))}
             </div>
             {canScrollRight && (<button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1.5 shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300" aria-label="Scroll right"> <ChevronRightIcon className="h-6 w-6 text-gray-700 dark:text-gray-300" /> </button>)}
         </div>
@@ -275,7 +252,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="eventType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("eventType")}</label>
                             <TagIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="eventType" id="eventType" value={filters.eventType} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Types</option>
+                                <option value="">{translate("all")}</option>
                                 {modalEventTypes.map(type => <option key={type} value={type}>{type}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -286,7 +263,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="location" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">{translate("location")}</label>
                             <MapPinIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="location" id="location" value={filters.location} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Locations</option>
+                                <option value="">{translate("all")}</option>
                                 {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -297,7 +274,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <label htmlFor="organization" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Organization</label>
                             <BuildingOfficeIcon className="absolute left-3 top-10 h-5 w-5 text-gray-400 pointer-events-none" />
                             <select name="organization" id="organization" value={filters.organization} onChange={handleInputChange} className="w-full appearance-none pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 bg-white dark:bg-gray-800 dark:text-white">
-                                <option value="">All Organizations</option>
+                                <option value="">{translate("all")}</option>
                                 {uniqueOrganizations.map(org => <option key={org} value={org}>{org}</option>)}
                             </select>
                             <ChevronRightIcon className="absolute right-3 top-10 h-5 w-5 text-gray-400 pointer-events-none transform rotate-90" />
@@ -308,7 +285,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                             <div className="flex justify-between items-center mb-2">
                                 <label htmlFor="price" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 transition-colors duration-300">Price Range</label>
                                 <span className="px-3 py-1 text-sm font-medium text-indigo-700 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 rounded-full">
-                                    Up to ${filters.price}
+                                    {translate("upTo", { price: filters.price })}
                                 </span>
                             </div>
                             <input
@@ -322,7 +299,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
                                 className="w-full price-slider accent-indigo-700"
                             />
                             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                <span>Free</span>
+                                <span>{translate("free")}</span>
                                 <span>${maxPrice}</span>
                             </div>
                         </div>
@@ -344,7 +321,7 @@ const FilterModal = ({ isOpen, onClose, filters, setFilters, applyFilters, clear
 };
 
 const EventDetailModal = ({ event, isOpen, onClose }) => {
-    const { translate } = useLanguage();
+    const { translate, currentLanguage } = useLanguage();
     const { showNotification } = useNotification();
     const [isLoadingRegistration, setIsLoadingRegistration] = useState(false);
 
@@ -352,8 +329,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
         return null;
 
     const eventDate = new Date(event.start_at || event.date);
-    const formattedDate = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const formattedTime = eventDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const formattedDate = eventDate.toLocaleDateString(currentLanguage, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formattedTime = eventDate.toLocaleTimeString(currentLanguage, { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const handleCloseModal = () => {
         setIsLoadingRegistration(false);
@@ -389,12 +366,12 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     }}
                 />
                 <div className="p-8">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{event.category}</span>
+                    <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-sm font-semibold px-3 py-1 rounded-full mb-4">{translate(event.category.toLowerCase())}</span>
                     <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h2>
                     <div className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
                         <div className="flex items-center gap-3">
                             <CalendarDaysIcon className="w-5 h-5 flex-shrink-0" />
-                            <span>{formattedDate} at {formattedTime}</span>
+                            <span className="capitalize">{formattedDate} {translate("at")} {formattedTime}</span>
                         </div>
                         {event.address && (
                             <div className="flex items-center gap-3">
@@ -416,12 +393,12 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                         )}
                         <div className="flex items-center gap-3">
                             <TicketIcon className="w-5 h-5 flex-shrink-0" />
-                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : event.price || 'Free'}</span>
+                            <span>{typeof event.price === 'number' ? `$${event.price.toFixed(2)} CAD` : translate(event.price.toLowerCase())}</span>
                         </div>
                         {event.capacity && (
                             <div className="flex items-center gap-3">
                                 <UsersIcon className="w-5 h-5 flex-shrink-0" />
-                                <span>Capacity: {event.registeredUsers || 0} / {event.capacity}</span>
+                                <span>{translate("capacity")}: {event.registeredUsers || 0} / {event.capacity}</span>
                             </div>
                         )}
                     </div>
@@ -433,17 +410,17 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                                 disabled
                                 className="w-full bg-gray-400 dark:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed opacity-60 text-lg"
                             >
-                                Registration Unavailable
+                                {translate("registrationUnavailable")}
                             </button>
                             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                                This event's organization has been suspended. Registration is currently unavailable.
+                                {translate("registrationUnavailableDescription")}
                             </p>
                         </div>
                     ) : (
                         <button
                             onClick={handleEventRegistration}
                             disabled={isLoadingRegistration}
-                            className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 dark:hover:bg-green-500 transition-colors duration-300 text-lg flex items-center justify-center gap-2 cursor-pointer capitalize"
                         >
                             {translate("reserveNow")}
                             {isLoadingRegistration && (

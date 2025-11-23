@@ -47,7 +47,6 @@ export const getEventsByUser = (userId) => api.get(ENDPOINTS.EVENTS_BY_USER(user
 
 // Create event (Admin only, supports multipart/form-data for image upload)
 export const createEvent = (eventData, imageFile = null) => {
-    console.log('Creating event:', eventData.title);
     if (imageFile || (eventData.location && typeof eventData.location === 'object')) {
         // Use FormData for file upload or when location is an object
         const formData = new FormData();
@@ -82,7 +81,6 @@ export const createEvent = (eventData, imageFile = null) => {
 
 // Update event (Admin only, supports multipart/form-data for image upload)
 export const updateEvent = (eventId, eventData, imageFile = null) => {
-    console.log('Updating event:', eventId);
     if (imageFile) {
         // Use FormData for file upload
         const formData = new FormData();
@@ -108,13 +106,11 @@ export const updateEvent = (eventId, eventData, imageFile = null) => {
 
 // Cancel event (Admin only)
 export const cancelEvent = (eventId) => {
-    console.log('Cancelling event:', eventId);
     return api.patch(ENDPOINTS.EVENT_CANCEL(eventId));
 };
 
 // Delete event (Admin only)
 export const deleteEvent = (eventId) => {
-    console.log('Deleting event:', eventId);
     return api.delete(ENDPOINTS.EVENT_DELETE(eventId));
 };
 
@@ -123,8 +119,6 @@ export const getEventAttendees = (eventId) => api.get(ENDPOINTS.EVENT_ATTENDEES(
 
 // Export attendees as CSV (Admin or Organizer)
 export const exportAttendeesCSV = async (eventId) => {
-    console.log('Exporting attendees CSV for event:', eventId);
-
     // Validate eventId
     if (!eventId) {
         throw new Error('Event ID is required');
@@ -159,7 +153,6 @@ export const exportAttendeesCSV = async (eventId) => {
 
         return response;
     } catch (error) {
-        console.error('Error exporting attendees CSV:', error);
         if (error.response?.status === 404) {
             throw new Error('Event not found or no attendees available');
         } else if (error.response?.status === 403) {

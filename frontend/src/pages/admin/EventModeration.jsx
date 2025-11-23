@@ -8,6 +8,8 @@ import { approveEvent, flagEvent, getAllEvents, rejectEvent } from '../../api/ev
 const moderationStatuses = ['all', 'pending_approval', 'approved', 'rejected', 'flagged'];
 
 const StatusFilter = ({ activeStatus, setActiveStatus }) => {
+    const { translate } = useLanguage();
+
     return (
         <div className="flex flex-wrap gap-3">
             {moderationStatuses.map(status => (
@@ -18,7 +20,7 @@ const StatusFilter = ({ activeStatus, setActiveStatus }) => {
                         ? 'bg-indigo-600 text-white shadow-lg'
                         : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}>
-                    {status.replace("_", " ")}
+                    {translate(status.toLowerCase())}
                 </button>
             ))}
         </div>
@@ -26,6 +28,8 @@ const StatusFilter = ({ activeStatus, setActiveStatus }) => {
 };
 
 const EventCard = ({ event, onApprove, onDeny, onFlag, isLoadingApproval }) => {
+    const { translate, currentLanguage } = useLanguage();
+
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-700/50 overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl group flex flex-col">
             <div className="relative">
@@ -37,9 +41,9 @@ const EventCard = ({ event, onApprove, onDeny, onFlag, isLoadingApproval }) => {
             <div className="p-6 flex flex-col flex-grow">
                 <div className="flex-grow">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300 capitalize">{event.category}</span>
+                        <span className="inline-block bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300 capitalize">{translate(event.category.toLowerCase())}</span>
                         <span className="inline-block bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs font-semibold px-2.5 py-0.5 rounded-full transition-colors duration-300">
-                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : event.price}
+                            {typeof event.price === 'number' ? `$${event.price.toFixed(2)}` : translate(event.price.toLowerCase())}
                         </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 truncate transition-colors duration-300">{event.title}</h3>
@@ -47,7 +51,7 @@ const EventCard = ({ event, onApprove, onDeny, onFlag, isLoadingApproval }) => {
                     <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2 transition-colors duration-300">
                         <div className="flex items-center gap-2">
                             <CalendarDaysIcon className="w-4 h-4" />
-                            <span>{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                            <span className="capitalize">{new Date(event.date).toLocaleDateString(currentLanguage, { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(event.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <MapPinIcon className="w-4 h-4" />
@@ -65,14 +69,14 @@ const EventCard = ({ event, onApprove, onDeny, onFlag, isLoadingApproval }) => {
                         disabled={['rejected', 'flagged'].includes(event.moderationStatus) || isLoadingApproval}
                         className="cursor-pointer flex-grow bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700 dark:hover:bg-red-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-600"
                     >
-                        {event.moderationStatus === 'pending_approval' ? "Reject" : "Flag"}
+                        {translate(event.moderationStatus === 'pending_approval' ? "reject" : "flag")}
                     </button>
                     <button
                         onClick={() => onApprove(event.id, event.title)}
                         disabled={event.moderationStatus === 'approved' || isLoadingApproval}
                         className="cursor-pointer flex-grow bg-green-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-green-700 dark:hover:bg-green-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-600"
                     >
-                        Approve
+                        {translate("approve")}
                     </button>
                 </div>
             </div>
