@@ -91,6 +91,9 @@ exports.browseEvents = async (req, res) => {
         // Filter by moderation status - only show approved events to students
         query.moderationStatus = MODERATION_STATUS.APPROVED;
 
+        // Filter for events that have not passed yet
+        query.start_at = { $gte: new Date() };
+
         // Search in title and description
         if (q) {
             query.$or = [
@@ -133,7 +136,7 @@ exports.browseEvents = async (req, res) => {
 
         // Fetch events
         const events = await Event.find(query)
-            .select('organization title description category start_at end_at capacity status location image')
+            .select('organization title description category start_at end_at capacity status location image imageLink')
             .populate({
                 path: 'organization',
                 select: 'name description website status'

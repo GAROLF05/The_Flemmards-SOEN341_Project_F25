@@ -151,6 +151,11 @@ const eventSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: null,
+    },
+    imageLink: {
+        type: String,
+        trim: true,
+        default: null,
     }
 
 }, {
