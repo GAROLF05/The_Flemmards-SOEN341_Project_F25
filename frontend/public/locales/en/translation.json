@@ -114,6 +114,8 @@
     "language": "Language",
     "learnMore": "Learn more",
     "light": "Light",
+    "loadingOrganizationDetails": "Loading organization details...",
+    "loadingOrganizations": "Loading organizations...",
     "loadingOrganizerDetails": "Loading organizer details...",
     "loadingPendingOrganizers": "Loading pending organizers...",
     "loadingRejectedOrganizers": "Loading rejected organizers...",
