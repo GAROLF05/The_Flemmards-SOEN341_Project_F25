@@ -176,7 +176,7 @@ export default function Organizations() {
                             {loading ? (
                                 <tr>
                                     <td colSpan="4" className="px-6 py-12 text-center">
-                                        <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">Loading organizations...</p>
+                                        <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">{translate("loadingOrganizations")}</p>
                                     </td>
                                 </tr>
                             ) : organizations.length > 0 ? (
@@ -257,7 +257,7 @@ export default function Organizations() {
                         <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
                         {loadingDetails ? (
                             <div className="text-center py-8">
-                                <p className="text-gray-500 dark:text-gray-400">Loading organization details...</p>
+                                <p className="text-gray-500 dark:text-gray-400">{translate("loadingOrganizationDetails")}</p>
                             </div>
                         ) : (
                             <div className="space-y-6">

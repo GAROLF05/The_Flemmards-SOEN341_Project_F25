@@ -114,6 +114,8 @@
     "language": "Langue",
     "learnMore": "Voir plus",
     "light": "Clair",
+    "loadingOrganizationDetails": "Chargement des détails de l'organisation...",
+    "loadingOrganizations": "Chargement des organisations...",
     "loadingOrganizerDetails": "Chargement des détails de l'organisateur...",
     "loadingPendingOrganizers": "Chargement des organisateurs en attente...",
     "loadingRejectedOrganizers": "Chargement des organisateurs rejetés...",
