@@ -25,7 +25,8 @@ export function useLanguage() {
     const availableLanguages = [
         "en",
         "fr",
-        "es"
+        "es",
+        "zh"
     ]
 
     return {
