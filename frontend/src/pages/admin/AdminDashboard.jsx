@@ -14,22 +14,6 @@ import LoadingPage from '../../layouts/LoadingPage';
 import { useLanguage } from '../../hooks/useLanguage';
 import { adminApi } from '../../api/adminApi';
 
-// Mock data for the participation trend chart
-const participationTrendData = [
-    { month: 'january', 'Tickets Issued': 2200, 'Attended': 1900 },
-    { month: 'february', 'Tickets Issued': 2500, 'Attended': 2300 },
-    { month: 'march', 'Tickets Issued': 2800, 'Attended': 2600 },
-    { month: 'april', 'Tickets Issued': 2700, 'Attended': 2400 },
-    { month: 'may', 'Tickets Issued': 3200, 'Attended': 2900 },
-    { month: 'june', 'Tickets Issued': 4500, 'Attended': 4100 },
-    { month: 'july', 'Tickets Issued': 5000, 'Attended': 4700 },
-    { month: 'august', 'Tickets Issued': 4800, 'Attended': 4500 },
-    { month: 'september', 'Tickets Issued': 5200, 'Attended': 4900 },
-    { month: 'october', 'Tickets Issued': 6000, 'Attended': 5600 },
-    { month: 'november', 'Tickets Issued': 8500, 'Attended': 8100 },
-    { month: 'december', 'Tickets Issued': 9000, 'Attended': 8500 },
-];
-
 const StatCard = ({ title, value, icon, color }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center gap-6 transition-colors duration-300">
         <div className={`p-4 rounded-full ${color.bg} ${color.text} transition-colors duration-300`}>
@@ -73,8 +57,8 @@ const TrendChart = ({ data }) => {
                         labelClassName="font-bold text-gray-800"
                     />
                     <Legend />
-                    <Area type="monotone" dataKey="Tickets Issued" name={translate("ticketsIssued")} stroke="#4f46e5" fillOpacity={1} fill="url(#colorTickets)" />
-                    <Area type="monotone" dataKey="Attended" name={translate("attended")} stroke="#10b981" fillOpacity={1} fill="url(#colorAttended)" />
+                    <Area type="monotone" dataKey="registered" name={translate("registered")} stroke="#4f46e5" fillOpacity={1} fill="url(#colorTickets)" />
+                    <Area type="monotone" dataKey="ticketsIssued" name={translate("ticketsIssued")} stroke="#10b981" fillOpacity={1} fill="url(#colorAttended)" />
                 </AreaChart>
             </ResponsiveContainer>
         </div>
@@ -119,9 +103,9 @@ export default function AdminDashboard() {
         );
     }
 
-    const chartData = participationTrendData.map(x => ({
+    const chartData = stats.participationTrends.map(x => ({
         ...x,
-        month: translate(x.month)
+        month: translate(x.month.toLowerCase())
     }));
 
     return (
