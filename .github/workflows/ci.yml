@@ -27,6 +27,7 @@ jobs:
       run: |
         npm ci
         npm ci --prefix frontend
+        npm ci --prefix backend
 
     # Step 4: Run frontend linting
     - name: Lint frontend code
