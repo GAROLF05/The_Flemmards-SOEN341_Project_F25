@@ -1,5 +1,5 @@
 import { describe, test, expect, jest, beforeEach } from "@jest/globals";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Modal from "../../src/components/modal/Modal";
 
