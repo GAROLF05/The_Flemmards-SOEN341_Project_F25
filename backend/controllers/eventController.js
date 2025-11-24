@@ -136,7 +136,7 @@ exports.browseEvents = async (req, res) => {
 
         // Fetch events
         const events = await Event.find(query)
-            .select('organization title description category start_at end_at capacity status location image imageLink')
+            .select('organization title description category start_at end_at capacity status location image')
             .populate({
                 path: 'organization',
                 select: 'name description website status'
