@@ -9,6 +9,7 @@ import { transformEventsForFrontend, getUniqueCategories, getUniqueLocations, ge
 import LoadingPage from '../../layouts/LoadingPage';
 import { useNotification } from '../../hooks/useNotification';
 import { useCountdown } from '../../hooks/useCountdown';
+import preloadImages from '../../utils/preloadImages';
 
 const FeaturedEventSlide = ({ event, onViewDetails }) => {
     const { translate } = useLanguage();
@@ -477,6 +478,12 @@ const HomePage = () => {
                 }
 
                 const transformedEvents = transformEventsForFrontend(events);
+
+                const eventImages = transformedEvents.map(e => e.imageUrl);
+
+                preloadImages(eventImages)
+                    .catch(err => console.error('Error preloading images:', err));
+
                 setEventsData(transformedEvents);
             } catch (err) {
                 console.error('Error fetching events:', err);
