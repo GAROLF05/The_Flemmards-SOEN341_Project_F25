@@ -36,7 +36,7 @@ This document highlights the individual work done by each member of **The Flemma
   
 ### Elliot Boismartel
 - Conceptualized and detailed the ideas for:
-  - US.15
+  - US.09, US.10, US.15
 - Helped organize and assign tasks in GitHub Issues.
 
 ### Mostafa Maraie
@@ -87,7 +87,10 @@ Time spent working : 48h
 
   
 ### Elliot Boismartel
+- Finished most of the implementation for US.XX1
+  - Finished task 2,3,4 and finished designing the sorting algorithm for comment filtering
 
+Time spent: 4h
 
 ### Mostafa Maraie
 
@@ -153,7 +156,17 @@ Total time spent : 36h
 
   
 ### Elliot Boismartel
+- Finished implementing US.XX1 Comment Filtering
+  - Finished task 1 to collect and store all event review comments in MongoDB
+  - Finished task.EXTRA to finalize comment filtering
+- Implemented US.06 Event Analytics
+  - Finished task 2 to calculate total tickets issued, remaining capacity, and attendance rates per event
+- Implemented US.11 Administrator Analytics
+  - Finished task 1 to count events, tickets, and participation
+  - Finished task 2 to fetch number of events, total tickets issued, and participation data through API endpoint
+  - Finished task 3 to format the data into JSON and send it to frontend
 
+Total time spent: 15h
 
 ### Mostafa Maraie
 
