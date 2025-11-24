@@ -9,7 +9,7 @@
 **Time:** 8:00 PM
 
 **In Attendance:**
-Elliot Boismartel, Omar Dbaa, Nameer Hanif, Curtis Moxebo, Nihit Patel, Bijoy Sengupta, Mostafa Maraie
+Elliot Boismartel, Omar Dbaa, Nameer Hanif, Curtis Moxebo, Nihit Patel, Bijoy Sengupta, Mostafa Maraie, Hesham Rabie
 
 **Goal of Minutes:**
 The goal of the meeting was to finalize the tasks for Sprint 3 which were completing the core features and creating tests. Another step was to ensure that both frontend and backend work together and to meet all requirements. The team will fix any issues that may arise.

@@ -1,6 +1,6 @@
 # The Flemmards - Meeting Minutes
 
-## Sprint #2
+## Sprint #3
 
 ### Meeting #2
 
@@ -9,7 +9,7 @@
 **Time:** 6:30 PM
 
 **In Attendance:**
-Elliot Boismartel, Omar Dbaa, Nameer Hanif, Curtis Moxebo, Nihit Patel, Hesham Rabie, Bijoy Sengupta, Mostafa Maraie 
+Elliot Boismartel, Omar Dbaa, Nameer Hanif, Curtis Moxebo, Nihit Patel, Bijoy Sengupta, Mostafa Maraie, Hesham Rabie
 
 **Goal of Minutes:**
 The goal of the meeting was to have a small discussion to review the current progress towards Sprint 3 to ensure that all team members were still on track to complete their tasks, and resolve possible technical difficulties.
