@@ -69,16 +69,22 @@ exports.registerUser = async (req, res) => {
     const isOrganizer = role === USER_ROLE.ORGANIZER;
     const verificationToken = emailService.generateVerificationToken();
 
-    const newUser = new User({
+    const userData = {
       name: name ? name.trim() : null,
-      username: username ? username.trim() : null,
       email: email.toLowerCase().trim(),
       password: hashedPassword,
       role: role,
       approved: !isOrganizer, // Students approved by default, organizers need approval
       verificationToken: verificationToken,
       verified: false,
-    });
+    };
+    
+    // Only include username if provided (to avoid unique index issues with null)
+    if (username && username.trim()) {
+      userData.username = username.trim();
+    }
+    
+    const newUser = new User(userData);
 
     await newUser.save();
 
