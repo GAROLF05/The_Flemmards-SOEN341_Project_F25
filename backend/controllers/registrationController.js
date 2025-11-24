@@ -240,16 +240,16 @@ exports.registerToEvent = async (req, res) => {
         )}`;
 
         // Fetch the QR code image
-        const response = await axios.get(ticketLink, {
-          responseType: "arraybuffer",
-        });
-        const qrImageBuffer = Buffer.from(response.data, "binary");
+        try {
+          const response = await axios.get(ticketLink, {
+            responseType: "arraybuffer",
+          });
+          qrImageBuffer = Buffer.from(response.data, "binary");
+        } catch (qrError) {
+          console.error("Failed to fetch QR code image:", qrError);
+          // Continue without QR image - non-critical
+        }
       }
-
-      const response = await axios.get(ticketLink, {
-        responseType: "arraybuffer",
-      });
-      qrImageBuffer = Buffer.from(response.data, "binary");
 
       // Set up email transporter
       const transporter = nodemailer.createTransport({
@@ -294,11 +294,11 @@ exports.registerToEvent = async (req, res) => {
                 <p>Thanks for registering for <strong>${eventTitle}</strong>!</p>
                 ${message}
                 ${
-                  registration.status === REGISTRATION_STATUS.CONFIRMED
+                  registration.status === REGISTRATION_STATUS.CONFIRMED && ticketLink
                     ? `<p><strong>Your Ticket QR Code:</strong></p>
                        <img src="cid:qrcode_${registrationId}" alt="Ticket QR Code" style="max-width: 200px; border: 1px solid #ddd; padding: 10px;" />
                        <p><strong>Can't see the image?</strong> <a href="${ticketLink}" style="color: #007bff; text-decoration: none;">Click here to view your ticket</a></p>
-                        <p style="font-size: 12px; color: #666;">Ticket Code: ${ticketCode}</p>`
+                        <p style="font-size: 12px; color: #666;">Ticket Code: ${ticketCode || 'N/A'}</p>`
                     : ``
                 }
                 <p style="margin-top: 30px; color: #666; font-size: 12px;">
