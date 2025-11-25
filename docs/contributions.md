@@ -180,3 +180,40 @@ Total time spent: 15h
 - Defined a list of acceptance tests for every user story.
 
 Time Spent: 8h
+
+---
+
+## Sprint 4
+
+### Nameer Hanif
+
+
+### Bijoy Sengupta
+
+
+### Omar Dbaa
+
+
+### Hesham Rabie
+
+  
+### Elliot Boismartel
+
+
+### Mostafa Maraie
+
+
+### Curtis Moxebo
+
+
+### Nihit Patel
+- Implemented the "Forgot My Password" feature by creating the necessary backend APIs, the frontend pages, as well as implementing the email reset token system to make this feature function.
+- Updated the architecture block diagram to reflect latest system architectire and organization.
+- Create the UML Class Diagrams for the frontend components, and for the backend models.
+- Documented all the meeting minutes for Sprint 4 - Meetings 1-4.
+- Worked on the final report for the project.
+- Made the powerpoint slides for the presentation of the project.
+- Recorded and edited the video demo for the student walkthrough.
+- Added new issues for US.XX4 tasks, and assigned risks and priorities.
+
+Time Spent: 24h
