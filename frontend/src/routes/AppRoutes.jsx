@@ -6,15 +6,24 @@ import StudentRoutes from './StudentRoutes';
 import OrganizerRoutes from './OrganizerRoutes';
 import AdminRoutes from './AdminRoutes';
 
+/**
+ * Combines all route configurations from different files into a single array.
+ * The order of routes is important. `react-router-dom` picks the first match it finds.
+ */
 const routes = [
     ...HomeRoutes,
     ...AuthenticationRoutes,
-    ...PageNotFoundRoutes,
     ...StudentRoutes,
     ...OrganizerRoutes,
-    ...AdminRoutes
+    ...AdminRoutes,
+    ...PageNotFoundRoutes
 ];
 
+/**
+ * The main routing component for the application.
+ * It uses the `useRoutes` hook from `react-router-dom` to render the appropriate
+ * component tree based on the current URL and the defined routes.
+ */
 const AppRoutes = () => {
     const element = useRoutes(routes);
 

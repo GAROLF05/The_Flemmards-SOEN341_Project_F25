@@ -1,6 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { classNames } from "../../utils/classNames";
 import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
 
 /**
  * A simple reusable Modal component.
@@ -13,8 +14,52 @@ import PropTypes from "prop-types";
  */
 
 const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
+    // State to control rendering (mount/unmount from DOM)
+    const [shouldRender, setShouldRender] = useState(isOpen);
+
+    // State to control the transition styles (opacity and scale)
+    const [opacityClass, setOpacityClass] = useState("opacity-0");
+    const [scaleClass, setScaleClass] = useState("scale-95");
+
+    // Transition duration in milliseconds, must match Tailwind's duration-300
+    const TRANSITION_DURATION = 300;
+
+    useEffect(() => {
+        if (isOpen) {
+            // 1. If opening, render immediately
+            setShouldRender(true);
+            // 2. Wait a tick for the DOM element to be available, then apply the "open" classes
+            const openTimer = setTimeout(() => {
+                setOpacityClass("opacity-100");
+                setScaleClass("scale-100");
+            }, 10); // Minimal delay
+
+            return () => clearTimeout(openTimer);
+        } else {
+            // 1. If closing, apply the "closed" classes immediately to start the animation
+            setOpacityClass("opacity-0");
+            setScaleClass("scale-95");
+            // 2. Wait for the transition duration before unmounting the element
+            const closeTimer = setTimeout(() => {
+                setShouldRender(false);
+            }, TRANSITION_DURATION);
+
+            return () => clearTimeout(closeTimer);
+        }
+    }, [isOpen]);
+
+    // Don't render anything if we shouldn't be in the DOM
+    if (!shouldRender) return null;
+
+    const handleBackdropClick = (e) => {
+        // Only close if the click is directly on the backdrop (not the modal content)
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
-        <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
+        <div className={`fixed inset-0 z-[200] transition-all duration-300 ${isOpen ? 'visible' : 'invisible'} ${opacityClass}`} onClick={handleBackdropClick}>
             {/* Overlay */}
             <div
                 className="fixed inset-0 bg-black/70 transition-opacity duration-300"
@@ -32,6 +77,8 @@ const Modal = ({ isOpen, onClose, children, width = "medium", className }) => {
                     width === "xlarge" && "w-4xl",
                     width === "full" && "w-full",
                     Boolean(width) === false && "w-full max-w-2xl",
+                    opacityClass,
+                    scaleClass,
                     className
                 )}
             >

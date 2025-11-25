@@ -244,7 +244,7 @@ const CalendarPage = () => {
         <>
             <div className="flex-grow flex flex-col bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-colors duration-300 h-[calc(100vh-185px)]">
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                    <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 tracking-tight transition-colors duration-300 capitalize">
+                    <h1 className="text-xl font-bold text-indigo-600 tracking-tight transition-colors duration-300 capitalize">
                         {translate("eventCalendar")}
                     </h1>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300 capitalize">

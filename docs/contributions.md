@@ -33,7 +33,7 @@ This document highlights the individual work done by each member of **The Flemma
 - Conceptualized and detailed the ideas for:
   - US.13 - US.14
 - Helped organize and assign tasks in GitHub Issues.
-  
+
 ### Elliot Boismartel
 - Conceptualized and detailed the ideas for:
   - US.09, US.10, US.15
@@ -50,7 +50,7 @@ This document highlights the individual work done by each member of **The Flemma
 - Helped organize and assign tasks in GitHub Issues.
 
 ### Nihit Patel
-- Wrote and formatted the **Meeting Minutes 1** and **Meeting Minutes 2**.  
+- Wrote and formatted the **Meeting Minutes 1** and **Meeting Minutes 2**.
 - Created and documented the **README file**, including the tech stack, project description, objectives, and core features.
 - Created and documented the contributions page.
 - Time Spent: 2h
@@ -85,7 +85,7 @@ Time spent working : 48h
 
 ### Hesham Rabie
 
-  
+
 ### Elliot Boismartel
 - Finished most of the implementation for US.XX1
   - Finished task 2,3,4 and finished designing the sorting algorithm for comment filtering
@@ -122,7 +122,7 @@ Time Spent: 13h
   - Fetching all events, displaying them in the main page
   - Added a default image for all events without a picture
   - Implemented a score system algorithm for featured events so it automatically changes based on the score
- 
+
 - Did the frontend-backend implementation of US.08 (Event Creation)
   - Modified the form to include an image input
   - Modified date to be start at and end at fields
@@ -154,7 +154,7 @@ Total time spent : 36h
 
 ### Hesham Rabie
 
-  
+
 ### Elliot Boismartel
 - Finished implementing US.XX1 Comment Filtering
   - Finished task 1 to collect and store all event review comments in MongoDB
@@ -172,10 +172,14 @@ Total time spent: 15h
 
 
 ### Curtis Moxebo
+- Designed and implemented the admin dashboard UI (US.11)
+- Designed and implemented the admin event moderation UI (US.11)
+- Designed and implemented the organizer ticket QR scanner page (US.08)
 
+Time spent: 30h
 
 ### Nihit Patel
-- Wrote and formatted all the **Meeting Minutes 1-4** for Sprint 3.  
+- Wrote and formatted all the **Meeting Minutes 1-4** for Sprint 3.
 - Created the block diagram describing the system's architecture.
 - Defined a list of acceptance tests for every user story.
 
@@ -203,7 +207,7 @@ Time Spent: 24h
 
 ### Hesham Rabie
 
-  
+
 ### Elliot Boismartel
 
 
@@ -211,7 +215,13 @@ Time Spent: 24h
 
 
 ### Curtis Moxebo
+- Developed, implemented and performed all frontend unit test.
+- Completed the language translation feature and added 2 more languages (US.XX6).
+- Fixed noticed frontend bugs.
+- Implemented the backend admin analytics data, as well as the display on the frontend graph.
+- Restructured the project seperate the backend and make it independent.
 
+Time Spent: 24h
 
 ### Nihit Patel
 - Implemented the "Forgot My Password" feature by creating the necessary backend APIs, the frontend pages, as well as implementing the email reset token system to make this feature function.

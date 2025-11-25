@@ -101,7 +101,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
-export default function EventModeration() {
+export default function EventModerationPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingApproval, setIsLoadingApproval] = useState(false);
     const [events, setEvents] = useState([]);

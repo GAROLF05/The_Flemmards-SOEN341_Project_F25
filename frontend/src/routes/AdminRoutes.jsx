@@ -1,9 +1,9 @@
 import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import ApproveOrganizers from "../pages/admin/ApproveOrganizers";
-import EventModeration from "../pages/admin/EventModeration";
-import Organizations from "../pages/admin/Organizations";
+import DashboardPage from "../pages/admin/DashboardPage";
+import ApproveOrganizersPage from "../pages/admin/ApproveOrganizersPage";
+import EventModerationPage from "../pages/admin/EventModerationPage";
+import OrganizationsPage from "../pages/admin/OrganizationsPage";
 import ProtectedRoutes from "./ProtectedRoutes";
 
 const AdminRoutes = [
@@ -17,7 +17,7 @@ const AdminRoutes = [
         children: [
             {
                 path: '',
-                element: <AdminDashboard />
+                element: <DashboardPage />
             },
             {
                 path: 'home',
@@ -29,15 +29,15 @@ const AdminRoutes = [
             },
             {
                 path: 'approveOrganizers',
-                element: <ApproveOrganizers />
+                element: <ApproveOrganizersPage />
             },
             {
                 path: 'eventModeration',
-                element: <EventModeration />
+                element: <EventModerationPage />
             },
             {
                 path: 'organizations',
-                element: <Organizations />
+                element: <OrganizationsPage />
             }
         ]
     }
