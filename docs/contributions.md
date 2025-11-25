@@ -186,13 +186,13 @@ Time Spent: 8h
 ## Sprint 4
 
 ### Nameer Hanif
-- Developed, implemented and performed all backend unit, integration and system tests for all API endpoints.
-- Developed, implemented and performed all acceptance tests for all user stories (US.01 -> US.12 and US.XX4).
-- Performed full regression testing after the implementation of new tests, bug fixes and new feature implementation using `npm test`.
+- Developed, implemented and performed all backend unit, integration and system tests for all API endpoints
+- Developed, implemented and performed all acceptance tests for all user stories (US.01 -> US.12 and US.XX4)
+- Performed full regression testing after the implementation of new tests, bug fixes and new feature implementation using `npm test`
 - Performed all static analysis using `eslint` for JavaScript.
-- Provided with full testing documentation containing, acceptance criteria, test results and bug fixes.
+- Provided with full testing documentation containing, acceptance criteria, test results and bug fixes
 
-Time Spent: 8h
+Time Spent: 24h
 
 
 ### Bijoy Sengupta
