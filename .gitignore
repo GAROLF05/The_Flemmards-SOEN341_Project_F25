@@ -7,6 +7,9 @@ backend/yarn-error.log*
 # Note: package-lock.json SHOULD be committed to ensure consistent dependency versions
 
 # Environment variables
+.env
+.env.local
+.env.*.local
 backend/.env
 backend/.env.local
 backend/.env.*.local

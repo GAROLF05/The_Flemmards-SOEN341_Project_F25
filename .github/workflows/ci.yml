@@ -41,7 +41,7 @@ jobs:
     - name: Run frontend tests
       run: npm test --prefix frontend
 
-    # Step 7: Run backend tests (unit and API tests)
+    # Step 7: Run backend tests
     - name: Run backend tests
       run: npm test --prefix backend
       env:

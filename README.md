@@ -45,3 +45,96 @@ This is a web-app for Campus Event & Ticketing Application to help students disc
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB (mongoose)
 - **Other:** Cookie-based session handling
+
+---
+
+## Installation
+
+### Prerequisites
+- **Node.js** (version 18 or higher)
+- **npm** (comes with Node.js)
+- **MongoDB** (local installation or MongoDB Atlas account)
+
+### Steps
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/GAROLF05/The_Flemmards-SOEN341_Project_F25.git
+   cd The_Flemmards-SOEN341_Project_F25
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   npm install --prefix backend
+   npm install --prefix frontend
+   ```
+
+---
+
+## Setup
+
+1. **Create a `.env` file in the root directory:**
+   ```env
+   MONGO_URI=mongodb://localhost:27017/The-Flemmards-ConUEvents
+   JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASS=your-app-specific-password
+   ```
+
+2. **Set up MongoDB:**
+   - **Local MongoDB:** Start MongoDB service and use `mongodb://localhost:27017/The-Flemmards-ConUEvents`
+   - **MongoDB Atlas:** Create a cluster, get connection string, and update `MONGO_URI` in `.env`
+
+3. **Configure email (optional for development):**
+   - For Gmail, use an App Password (not regular password)
+   - Generate at: https://myaccount.google.com/apppasswords
+
+---
+
+## Usage
+
+### Development Mode
+
+Run both backend and frontend in development mode:
+
+```bash
+npm run dev
+```
+
+This starts:
+- Backend server at `http://localhost:3000`
+- Frontend development server at `http://localhost:5173`
+
+### Run Separately
+
+```bash
+# Backend only
+npm run dev:backend
+
+# Frontend only
+npm run dev:frontend
+```
+
+### Production Mode
+
+```bash
+# Build frontend
+npm run build
+
+# Start production server
+cd backend
+npm start
+```
+
+### Running Tests
+
+```bash
+# Backend tests
+cd backend
+npm test
+
+# Frontend tests
+cd frontend
+npm test
+```
