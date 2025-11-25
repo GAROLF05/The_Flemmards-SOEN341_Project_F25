@@ -6,7 +6,7 @@ import { adminApi } from '../../api/adminApi';
 import { getOrganizationById } from '../../api/organizationApi';
 import Modal from '../../components/modal/Modal';
 
-export default function ApproveOrganizers() {
+export default function ApproveOrganizersPage() {
     const [activeTab, setActiveTab] = useState('pending');
     const [pendingOrganizers, setPendingOrganizers] = useState([]);
     const [rejectedOrganizers, setRejectedOrganizers] = useState([]);
@@ -26,6 +26,7 @@ export default function ApproveOrganizers() {
         } else {
             fetchRejectedOrganizers();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const fetchPendingOrganizers = async () => {

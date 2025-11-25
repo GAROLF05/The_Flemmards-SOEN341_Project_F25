@@ -65,7 +65,7 @@ const TrendChart = ({ data }) => {
     )
 };
 
-export default function AdminDashboard() {
+export default function DashboardPage() {
     const { translate } = useLanguage();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);

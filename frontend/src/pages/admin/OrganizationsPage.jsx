@@ -7,7 +7,7 @@ import { getEventsByOrganization } from '../../api/eventApi';
 import { adminApi } from '../../api/adminApi';
 import Modal from '../../components/modal/Modal';
 
-export default function Organizations() {
+export default function OrganizationsPage() {
     const [organizations, setOrganizations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [moderationModalOpen, setModerationModalOpen] = useState(false);
