@@ -36,7 +36,7 @@ This document highlights the individual work done by each member of **The Flemma
   
 ### Elliot Boismartel
 - Conceptualized and detailed the ideas for:
-  - US.15
+  - US.09, US.10, US.15
 - Helped organize and assign tasks in GitHub Issues.
 
 ### Mostafa Maraie
@@ -87,7 +87,10 @@ Time spent working : 48h
 
   
 ### Elliot Boismartel
+- Finished most of the implementation for US.XX1
+  - Finished task 2,3,4 and finished designing the sorting algorithm for comment filtering
 
+Time spent: 4h
 
 ### Mostafa Maraie
 
@@ -153,7 +156,17 @@ Total time spent : 36h
 
   
 ### Elliot Boismartel
+- Finished implementing US.XX1 Comment Filtering
+  - Finished task 1 to collect and store all event review comments in MongoDB
+  - Finished task.EXTRA to finalize comment filtering
+- Implemented US.06 Event Analytics
+  - Finished task 2 to calculate total tickets issued, remaining capacity, and attendance rates per event
+- Implemented US.11 Administrator Analytics
+  - Finished task 1 to count events, tickets, and participation
+  - Finished task 2 to fetch number of events, total tickets issued, and participation data through API endpoint
+  - Finished task 3 to format the data into JSON and send it to frontend
 
+Total time spent: 15h
 
 ### Mostafa Maraie
 
@@ -167,3 +180,47 @@ Total time spent : 36h
 - Defined a list of acceptance tests for every user story.
 
 Time Spent: 8h
+
+---
+
+## Sprint 4
+
+### Nameer Hanif
+- Developed, implemented and performed all backend unit, integration and system tests for all API endpoints
+- Developed, implemented and performed all acceptance tests for all user stories (US.01 -> US.12 and US.XX4)
+- Performed full regression testing after the implementation of new tests, bug fixes and new feature implementation using `npm test`
+- Performed all static analysis using `eslint` for JavaScript.
+- Provided with full testing documentation containing, acceptance criteria, test results and bug fixes
+
+Time Spent: 24h
+
+
+### Bijoy Sengupta
+
+
+### Omar Dbaa
+
+
+### Hesham Rabie
+
+  
+### Elliot Boismartel
+
+
+### Mostafa Maraie
+
+
+### Curtis Moxebo
+
+
+### Nihit Patel
+- Implemented the "Forgot My Password" feature by creating the necessary backend APIs, the frontend pages, as well as implementing the email reset token system to make this feature function.
+- Updated the architecture block diagram to reflect latest system architectire and organization.
+- Create the UML Class Diagrams for the frontend components, and for the backend models.
+- Documented all the meeting minutes for Sprint 4 - Meetings 1-4.
+- Worked on the final report for the project.
+- Made the powerpoint slides for the presentation of the project.
+- Recorded and edited the video demo for the student walkthrough.
+- Added new issues for US.XX4 tasks, and assigned risks and priorities.
+
+Time Spent: 24h

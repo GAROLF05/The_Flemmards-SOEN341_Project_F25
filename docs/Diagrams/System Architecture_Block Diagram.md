@@ -8,8 +8,8 @@ graph TB
         end
 
         subgraph "Core Components"
-            UI[UI Components<br/>Button, Modal, Forms, Carousel, Notification]
-            Layout[Layout<br/>Header, Footer, Mobile Menu]
+            UI[UI Components<br/>Button, Modal, Forms,<br/>Carousel, Notification]
+            Layout[Layout<br/>Header, Footer,<br/>Mobile Menu]
             Context[Providers<br/>Theme, Notification]
         end
 
